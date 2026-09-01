@@ -196,7 +196,7 @@ function runSim(){
     return [...bands.reach.slice(0,5),...bands.match.slice(0,10),...bands.safety.slice(0,10)].slice(0,25);
   }
   const sel0=pickSel(bt0);
-  sel0.forEach(x=>{const b=API.bandOf(x.P);bandStat[b].pred+=x.P;bandStat[b].n++;});
+  sel0.forEach(x=>{const b=x.band;bandStat[b].pred+=x.P;bandStat[b].n++;});
 
   for(let i=0;i<N;i++){
     const G=buildG(a);
@@ -215,7 +215,7 @@ function runSim(){
     let cnt=0;
     sel.forEach(x=>{ if(Math.random()<x.P) cnt++; });
     rdAdmitSum+=cnt; if(cnt>0) rdAtLeastOne++;
-    sel.forEach(x=>{const b=API.bandOf(x.P); if(Math.random()<x.P) bandStat[b].emp++;});
+    sel.forEach(x=>{const b=x.band; if(Math.random()<x.P) bandStat[b].emp++;});
   }
 
   // 渲染
@@ -244,10 +244,10 @@ function runSim(){
     html+=`<tr><td>${name}</td><td class="r">${s.n}</td><td class="r">${pred.toFixed(1)}%</td><td class="r">${emp.toFixed(1)}%</td><td><span class="bar"><i style="width:${w}%;background:var(--accent)"></i></span></td></tr>`;
   });
   html+=`</table>`;
-  // 顶部梦校示例
+  // 顶部梦校示例（reach 升序：reach[0] 最难，reach[末] 为冲刺档中最易）
   if(bt0.reach.length){
-    const top=bt0.reach[bt0.reach.length-1], mid=bt0.reach[0];
-    html+=`<div class="muted" style="margin-top:10px">冲刺档最难校：#${top.sc.rank} ${top.sc.nameZh}（RD ${(top.P*100).toFixed(1)}%）· 最易冲刺校：#${mid.sc.rank} ${mid.sc.nameZh}（RD ${(mid.P*100).toFixed(1)}%）</div>`;
+    const hard=bt0.reach[0], easy=bt0.reach[bt0.reach.length-1];
+    html+=`<div class="muted" style="margin-top:10px">冲刺档最难校：#${hard.sc.rank} ${hard.sc.nameZh}（RD ${(hard.P*100).toFixed(1)}%）· 最易冲刺校：#${easy.sc.rank} ${easy.sc.nameZh}（RD ${(easy.P*100).toFixed(1)}%）</div>`;
   }
   document.getElementById("tables").innerHTML=html;
 }

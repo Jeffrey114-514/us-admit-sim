@@ -355,7 +355,7 @@ const ICON={
 const ic=(n,cls)=>'<span class="ico'+(cls?' '+cls:'')+'">'+(ICON[n]||ICON.star)+'</span>';
 
 /* ---------- config ---------- */
-const TOTAL_ROUNDS=8, AP_PER_ROUND=4, START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, RD_MAX=25;
+const TOTAL_ROUNDS=8, AP_PER_ROUND=4, START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=25;
 const STAT_NAMES={academic:"学术",english:"英语",stamina:"精力上限",creativity:"创造力",social:"社交",luck:"运气"};
 const STAT_ICON={academic:"book",english:"globe",stamina:"bolt",creativity:"bulb",social:"people",luck:"star"};
 const TPL_DESC={"卷王":"学术拉满","快乐青年":"样样平均","斜杠":"活动与创意","躺平":"交给运气"};
@@ -1236,11 +1236,14 @@ function renderActions(){
 let PICK={p:null,bands:{},cand:{},off:{},edSel:null,rdSel:[]};
 function bandOf(P){ return P<0.10?"reach":(P<0.55?"match":"safety"); }
 function buildBands(p){
-  const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc)}));
+  // 按录取概率降序（最难在前），再按数量分档：
+  // 冲刺 = 最难 5 所（多数申请人情况下录取率<10%）；匹配 = 次难 10 所；保底 = 最易 10 所（你最有可能录取的 10 所）
+  const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc),band:null})).filter(x=>x.P>0.001);
+  all.sort((a,b)=>a.P-b.P); // 升序：index 0 = 录取率最低（最难），末位 = 最易
   const bands={reach:[],match:[],safety:[]};
-  all.forEach(x=>bands[bandOf(x.P)].push(x));
-  // 每档按录取概率降序；冲刺档末尾即最难的「梦校」（P 最低），选校时固定放入
-  Object.keys(bands).forEach(k=>bands[k].sort((a,b)=>b.P-a.P));
+  all.slice(0,REACH_MAX).forEach(x=>{x.band="reach";bands.reach.push(x);});
+  all.slice(REACH_MAX,REACH_MAX+MATCH_MAX).forEach(x=>{x.band="match";bands.match.push(x);});
+  all.slice(REACH_MAX+MATCH_MAX,REACH_MAX+MATCH_MAX+SAFETY_MAX).forEach(x=>{x.band="safety";bands.safety.push(x);});
   return bands;
 }
 function goPick(){
@@ -1255,18 +1258,9 @@ function goPick(){
   renderPick();
 }
 function takeBand(k){
-  const pool=PICK.bands[k], n=pool.length;
+  const pool=PICK.bands[k]||[], n=pool.length;
   const cap=k==="reach"?REACH_MAX:RD_PER_BAND;
   const want=Math.min(cap,n);
-  if(k==="reach" && n>cap){
-    // 冲刺档固定包含 1–2 所录取率极低的「梦校」（池尾 P 最低），总数只给 5 所
-    const dream=pool.slice(-2);
-    const rest=pool.slice(0,n-2);
-    const off=rest.length?PICK.off[k]%rest.length:0, out=[];
-    for(let i=0;i<Math.max(0,cap-2);i++) out.push(rest[(off+i)%rest.length]);
-    out.push(...dream);
-    return out;
-  }
   const off=n?PICK.off[k]%n:0, out=[];
   for(let i=0;i<want;i++) out.push(pool[(off+i)%n]);
   return out;
@@ -1296,7 +1290,7 @@ function toggleRD(k,x){
   else {
     if(PICK.rdSel.length>=RD_MAX){ $("pickHint").textContent=`已达上限 ${RD_MAX} 所。`; return; }
     const P=admitProb(PICK.p,x.sc);
-    PICK.rdSel.push({nameEn:x.sc.nameEn,band:bandOf(P),P});
+    PICK.rdSel.push({nameEn:x.sc.nameEn,band:x.band,P});
   }
   renderPick();
 }
@@ -1353,8 +1347,8 @@ function admitProb(p,sc,ed){
   S+=(p.reputation/100-0.4)*0.12;
   const mw=(sc.admitByMajor==="major"||sc.admitByMajor==="major-strict"||sc.region==="UK"||sc.region==="HK")?0.5:0.18;
   S+=(p.majorFit-0.5)*mw;
-  let P=1/(1+Math.exp(-(logit+2.4*S)));
-  if(p.isIntl){ if(sc.aidIntl==="none")P*=0.55; else if(sc.aidIntl==="need-aware")P*=0.82; }
+  let P=1/(1+Math.exp(-(logit+3.0*S)));
+  if(p.isIntl){ if(sc.aidIntl==="none")P*=0.62; else if(sc.aidIntl==="need-aware")P*=0.88; }
   if(p.toefl===0) P*=0.75;
   else if(sc.toeflMin!=null&&p.toefl<sc.toeflMin) P*=0.6;
   if(p.sat===0) P*=0.7;   // 与托福一致：未考标化同样明显惩罚（顶尖校基本都要求）
@@ -1431,7 +1425,7 @@ function goEnd(){
     rows.sort((a,b)=>b.P-a.P);
     const got=rows.filter(r=>r.admit).length;
     let html=`<table class="mini"><tr><th>校</th><th>档</th><th>概率</th><th>结果</th></tr>`;
-    rows.forEach(r=>{ html+=`<tr><td>${tagOf(r.sc)} ${r.sc.nameZh}</td><td>${bandOf(r.P)==="reach"?"冲刺":bandOf(r.P)==="match"?"匹配":"保底"}</td><td>${(r.P*100).toFixed(1)}%</td><td style="color:${r.admit?'var(--good)':'var(--bad)'}">${r.admit?'录取':'拒绝'}</td></tr>`; });
+    rows.forEach(r=>{ html+=`<tr><td>${tagOf(r.sc)} ${r.sc.nameZh}</td><td>${r.band==="reach"?"冲刺":r.band==="match"?"匹配":"保底"}</td><td>${(r.P*100).toFixed(1)}%</td><td style="color:${r.admit?'var(--good)':'var(--bad)'}">${r.admit?'录取':'拒绝'}</td></tr>`; });
     html+=`</table><div class="small" style="margin-top:6px">常规 RD 录取 <b>${got}</b> / ${rows.length} 所。</div>`;
     rdBox.innerHTML=html;
   }
@@ -1494,9 +1488,9 @@ const HELP=`
 
 <div class="help-sec"><h3>选校与录取</h3>
 <ul>
-<li>按你的最终画像算出全部 57 所学校的录取概率，分成<b>冲刺（&lt;10%）、匹配（10–55%）、保底（≥55%）</b>三档。</li>
+<li>按你的最终画像算出全部 57 所学校的录取概率，按难度排序分成三档：<b>冲刺（最难 5 所，多数情况录取率&lt;10%）、匹配（次难 10 所）、保底（最易 10 所，你最有可能录取的 10 所）</b>。</li>
 <li><b>ED（早决定）</b>：从美国提供 ED 的校中选 1 所绑定提交；部分校 ED 录取率明显高于 RD。<b>一旦 ED 录取即绑定入学，须撤回全部 RD 申请</b>——此时结局页不再显示任何 RD 录取信息，符合真实规则。</li>
-<li><b>RD（常规）</b>：<b>冲刺 5 所</b>（录取率 &lt;10%，固定包含 1–2 所梦校）、<b>匹配 10 所</b>、<b>保底 10 所</b>（某档学校不足时如实减少，绝不串档）。可勾选 <b>10–25 所</b>提交，最后按概率逐封拆开。</li>
+<li><b>RD（常规）</b>：<b>冲刺 5 所</b>（录取率最低的 5 所，多数情况 &lt;10%）、<b>匹配 10 所</b>、<b>保底 10 所</b>（按难度从难到易排列，保底为你最有可能录取的 10 所）。可勾选 <b>10–25 所</b>提交，最后按概率逐封拆开。</li>
 <li>录取模型基于 <b>美国 US News 2026 Top 40 的 Common Data Set 真实数据 + 英国/香港名校国际生录取率估算</b>（录取率、SAT 区间、GPA、国际生政策等），在你的 GPA、标化、活动、文书、推荐信、课程难度、声望上做校正。</li>
 </ul></div>
 
