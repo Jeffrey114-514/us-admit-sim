@@ -138,6 +138,7 @@ h1{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;
 .summer-card:hover{border-color:var(--ink)}
 .summer-card.sel{border-color:var(--ink);background:#f2ece2}
 .summer-card.disabled{opacity:.5;cursor:not-allowed}
+.summer-card.grind{border-style:dashed;border-color:var(--ink);background:#f7f2e8}
 .summer-card .sc-top{display:flex;align-items:baseline;gap:8px}
 .summer-card .sc-top b{font-size:14px}
 .summer-card .sc-sel{margin-left:auto;font-size:11px;color:var(--mut)}
@@ -308,10 +309,10 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
   <section id="summer" class="screen">
     <div class="card">
       <p class="label">高二升高三 · 夏校申请季</p>
-      <div class="narr" style="font-size:13.5px;margin-bottom:10px">顶尖夏校（如 RSI / SSP / MITES，录取率仅 3–10%）是冲顶尖校的“信号弹”——招生官看重的不是名校光环，而是你的 <b>GPA、标化、学术/英语实力与声望</b>。挑 1–2 个你达标的提交申请，结果按达标程度摇号；录上越好，顶尖校录取加成越高。</div>
+      <div class="narr" style="font-size:13.5px;margin-bottom:10px">顶尖夏校（如 RSI / SSP / MITES，录取率仅 3–10%）是冲顶尖校的“信号弹”——招生官看重的不是名校光环，而是你的 <b>GPA、标化、学术/英语实力与声望</b>。挑 1–2 个你达标的提交申请，结果按达标程度摇号；录上越好，顶尖校录取加成越高。<b>若一个都够不到（或想补强标化），可选最下方「跳过申请 · 苦心冲标化」——英语 +1 并多考一次 SAT。</b></div>
       <div id="summerList" class="summer-list"></div>
       <div class="foot">
-        <button class="btn" id="summerApplyBtn">提交申请</button>
+        <button class="btn" id="summerApplyBtn">确认</button>
         <span class="small" id="summerHint" style="flex:1"></span>
       </div>
     </div>
@@ -1398,11 +1399,9 @@ const SUMMER_PROGRAMS=[
   {name:"CMU SAMS 计算",  sel:"≈12% 录取", need:{gpa:3.6,sat:1440,academic:8,rep:25}, boost:0.6,  desc:"卡耐基梅隆计算/领导力项目。"},
   {name:"耶鲁全球青年学者",sel:"≈10% 录取", need:{gpa:3.6,english:8,social:7,rep:30},  boost:0.6,  desc:"人文社科向，耶鲁主办。"},
   {name:"Garcia 材料科研", sel:"≈12% 录取", need:{gpa:3.5,sat:1420,academic:7,rep:20}, boost:0.55, desc:"石溪大学材料科学真实科研。"},
-  {name:"JHU CTY 天才营", sel:"中高",       need:{gpa:3.4,sat:1380,academic:6,rep:15}, boost:0.4,  desc:"老牌天才营，宽度大于深度。"},
-  {name:"本地大学科研助理",sel:"中等",       need:{gpa:3.3,academic:6,rep:10},          boost:0.3,  desc:"冷邮件争取的校内 lab 助理，性价比高。"},
-  {name:"品牌大学付费预科",sel:"易",         need:{},                                 boost:0.15, desc:"名校办的付费暑校，含金量有限但聊胜于无。"}
+  {name:"本地大学科研助理",sel:"中等",       need:{gpa:3.3,academic:6,rep:10},          boost:0.3,  desc:"冷邮件争取的校内 lab 助理，门槛低、性价比高。"}
 ];
-let SUMMER={list:[],sel:[]};
+let SUMMER={list:[],sel:[],grind:false};
 function summerQualify(pp){
   const need=pp.need; if(!need) return {ok:true,score:1};
   const r=G.results,s=G.stats,gpa=cumGPA("U");
@@ -1416,7 +1415,7 @@ function goSummer(){
   $("summer").classList.add("on");
   G.phase="summer";
   SUMMER.list=shuffle(SUMMER_PROGRAMS).slice(0,4).map(pp=>({pp, q:summerQualify(pp)}));
-  SUMMER.sel=[];
+  SUMMER.sel=[]; SUMMER.grind=false;
   renderSummer();
 }
 function renderSummer(){
@@ -1431,23 +1430,51 @@ function renderSummer(){
     }).join(""):`<span class="req met">无门槛</span>`;
     const sel=SUMMER.sel.includes(i);
     const b=document.createElement("div");
-    b.className="summer-card"+(sel?" sel":"")+(q.ok?"":" disabled");
+    b.className="summer-card"+(sel?" sel":"")+(q.ok&&!SUMMER.grind?"":" disabled");
     b.innerHTML=`<div class="sc-top"><b>${pp.name}</b><span class="sc-sel">${pp.sel}</span></div>
       <div class="sc-desc">${pp.desc}</div><div class="sc-reqs">${reqs}</div>`;
-    if(q.ok){
+    if(q.ok && !SUMMER.grind){
       b.onclick=()=>{
+        SUMMER.grind=false;
         const idx=SUMMER.sel.indexOf(i);
         if(idx>=0) SUMMER.sel.splice(idx,1);
         else { if(SUMMER.sel.length>=2){ $("summerHint").textContent="最多申请 2 个。"; return; } SUMMER.sel.push(i); }
         renderSummer();
       };
-    } else { b.title="未达标，无法申请"; }
+    } else if(!q.ok){ b.title="未达标，无法申请"; }
+    else { b.title="已选「苦心冲标化」，先取消它才能选夏校。"; }
     box.appendChild(b);
   });
-  $("summerHint").textContent=SUMMER.sel.length?`已选 ${SUMMER.sel.length} / 2，点“提交申请”摇号。`:"选 1–2 个你达标的夏校提交申请（结果按达标程度摇号）。";
+  // 保底选项（始终可用）：跳过申请、苦心冲标化
+  const gb=document.createElement("div");
+  gb.className="summer-card grind"+(SUMMER.grind?" sel":"");
+  gb.innerHTML=`<div class="sc-top"><b>🚫 跳过申请 · 苦心冲标化</b><span class="sc-sel">无需条件</span></div>
+    <div class="sc-desc">不申夏校，把暑假全部用来刷标化：<b>英语 +1</b>，并<b>额外多考一次 SAT</b>（可能刷新最佳）。够不到好夏校、或想补强标化时的稳妥选择。</div>`;
+  gb.onclick=()=>{ SUMMER.grind=!SUMMER.grind; if(SUMMER.grind) SUMMER.sel=[]; renderSummer(); };
+  box.appendChild(gb);
+  $("summerHint").textContent = SUMMER.grind
+    ? "已选「苦心冲标化」，点“确认”生效。"
+    : (SUMMER.sel.length?`已选 ${SUMMER.sel.length} / 2，点“确认”摇号。`:"选 1–2 个达标的夏校提交，或选下方「苦心冲标化」作为替代。");
+}
+// 苦心冲标化：基于当前（已 +1 英语）的状态额外多考一次 SAT
+function doFreeSAT(){
+  const e=G.stats.english,lk=G.stats.luck;
+  const base=1090+40*e;
+  const noise=gauss(0,55)*(1-0.04*lk);
+  let sat=Math.round(clamp(base+noise+(lk-6)*5,400,1560)/10)*10;
+  const prev=G.results.satBest;
+  let improved=false;
+  if(sat>prev){ G.results.satBest=sat; improved=true; }
+  return improved?`考出 ${sat}，刷新最佳！`:`考了 ${sat}（未超过最佳 ${prev}）`;
 }
 function summerApply(){
-  if(SUMMER.sel.length===0){ $("summerHint").textContent="先选至少 1 个要申请的夏校。"; return; }
+  if(SUMMER.grind){
+    G.stats.english=clamp(G.stats.english+1,1,12);
+    const retake=doFreeSAT();
+    finishSummer(`—— 高二升高三 · 夏校申请季 结束 —— 你跳过了夏校申请、苦心冲标化：英语 +1（现 ${G.stats.english}），并多考一次 SAT（${retake}）。这段专注让你在申请季更从容。`);
+    return;
+  }
+  if(SUMMER.sel.length===0){ $("summerHint").textContent="先选至少 1 个达标的夏校，或选「苦心冲标化」。"; return; }
   let got=[];
   SUMMER.sel.forEach(i=>{
     const {pp,q}=SUMMER.list[i];
@@ -1457,6 +1484,9 @@ function summerApply(){
       got.push(pp.name);
     }
   });
+  finishSummer(`—— 高二升高三 · 夏校申请季 结束 —— ${got.length?("录取："+got.join("、")+"（顶尖校录取加成已计入）"):"均未录取，但这段经历本身也是申请素材。"}`);
+}
+function finishSummer(logMsg){
   G.summerDone=true;
   G.ap=AP_PER_ROUND+sumFx('apDelta',0);
   dealActions();
@@ -1464,7 +1494,7 @@ function summerApply(){
   G.stress=clamp(G.stress-3,0,100);
   const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][G.round];
   const sem=G.round%2===0?"上":"下";
-  pushLog("info",`—— 高二升高三 · 夏校申请季 结束 —— ${got.length?("录取："+got.join("、")+"（顶尖校录取加成已计入）"):"均未录取，但这段经历本身也是申请素材。"}`);
+  pushLog("info",logMsg);
   pushLog("info",`—— ${yr}${sem}学期 开始 ——`);
   document.querySelectorAll(".screen").forEach(x=>x.classList.remove("on"));
   $("game").classList.add("on");
@@ -1677,7 +1707,8 @@ const HELP=`
 </ul></div>
 
 <div class="help-sec"><h3>夏校申请季（高二升高三）</h3>
-<p>高二下结束后会插入一个<b>夏校申请季</b>：系统给出 4 个随机夏校（难度从 RSI/SSP/MITES 这类 3–10% 录取的研究型，到付费预科）。能否申请取决于你的 <b>GPA、SAT、学术/英语、声望</b> 是否达标；提交后按达标程度<b>摇号</b>录取。录上越好（boost 越高），后续顶尖校录取加成越大——这是冲名校的一条真实路径。</p></div>
+<p>高二下结束后会插入一个<b>夏校申请季</b>：系统从 8 个夏校里随机给出 4 个（难度从 RSI/SSP/MITES 这类 3–10% 录取的研究型，到本地大学科研助理）。能否申请取决于你的 <b>GPA、SAT、学术/英语、声望</b> 是否达标；提交后按达标程度<b>摇号</b>录取。录上越好（boost 越高），后续顶尖校录取加成越大——这是冲名校的一条真实路径。</p>
+<p><b>一个都够不到？</b>最下方还有一栏<b>永远可选</b>的<b>「跳过申请 · 苦心冲标化」</b>：不申夏校，把暑假全用来刷标化，立即获得 <b>英语 +1</b> 并<b>额外多考一次 SAT</b>（可能刷新最佳分数）。它与申请夏校<b>二选一</b>，确保你在夏校季永远有得选、不会空手而归。</p></div>
 
 <div class="help-sec"><h3>成就</h3>
 <p>结局页会结算 12 项成就，作为重复游玩的目标。</p></div>
