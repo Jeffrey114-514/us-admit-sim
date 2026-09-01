@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申请人生 · 多轮模拟报告</title>
+<style>
+:root{--paper:#faf7f2;--card:#fffdf9;--ink:#1a1917;--mut:#6f6a62;--line:#e5ded3;--accent:#8f3d20;--good:#3d6b4f;--warn:#8a6a1f;--bad:#98342a;}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.6;color:var(--ink);background:var(--paper)}
+.wrap{max-width:860px;margin:0 auto;padding:48px 24px 100px}
+h1{font-family:Georgia,"Songti SC",serif;font-size:30px;font-weight:400;margin:0 0 6px}
+.kicker{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin:0 0 22px}
+.rule{height:1px;background:var(--line);border:0;margin:0 0 24px}
+.card{border:1px solid var(--line);background:var(--card);padding:22px;margin-bottom:18px}
+.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 12px}
+.btn{font:inherit;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:9px 18px;font-size:13px;transition:.15s}
+.btn:hover{background:var(--accent);border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+.small{font-size:12px;color:var(--mut)}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:14px}
+.controls>div{display:flex;flex-direction:column;gap:4px}
+select,input[type=number]{font:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--line2,var(--line));background:var(--card);color:var(--ink)}
+input[type=file]{font:inherit;font-size:12px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:10px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+th{color:var(--mut);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.narr{font-family:Georgia,"Songti SC",serif;font-size:14.5px;line-height:1.7}
+.sec{margin-top:26px}
+.sec h2{font-family:Georgia,"Songti SC",serif;font-size:19px;font-weight:400;margin:0 0 10px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;width:90px;margin-right:6px}
+.bar>i{display:block;height:100%}
+code{background:#f0eae0;padding:1px 5px;font-size:12px}
+.pill{display:inline-block;border:1px solid var(--line2);padding:1px 7px;font-size:11px;margin:2px 3px 2px 0;border-radius:10px}
+.err{color:var(--bad)}
+.muted{color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>申请人生 · 多轮模拟报告</h1>
+<p class="kicker">真实执行游戏代码 · Monte Carlo · 游戏设计师视角</p>
+<hr class="rule">
+
+<div class="card">
+  <p class="label">第 1 步 · 载入游戏原代码</p>
+  <p class="small" style="margin-top:-6px">本页会在你的浏览器里<strong>真实执行</strong> <code>index.html</code> 的录取/选校逻辑（用 DOM 桩隔离界面），然后跑 thousands 局模拟。文件不会上传，只在本地读取。</p>
+  <div class="controls">
+    <div><span class="small">选择 index.html</span><input type="file" id="file" accept=".html"></div>
+    <div><span class="small">玩家画像</span>
+      <select id="arch">
+        <option value="weak">弱（躺平型）</option>
+        <option value="avg" selected>中（均衡型）</option>
+        <option value="strong">强（学霸型）</option>
+      </select>
+    </div>
+    <div><span class="small">是否走 ED</span>
+      <select id="edon"><option value="1">走 ED（1 所绑定）</option><option value="0">不走 ED（纯 RD）</option></select>
+    </div>
+    <div><span class="small">每画像局数</span><input type="number" id="N" value="2000" style="width:90px"></div>
+    <div><button class="btn" id="run" disabled>运行模拟</button></div>
+  </div>
+  <div id="status" class="small">请先选择 index.html。</div>
+</div>
+
+<div class="card" id="out" style="display:none">
+  <p class="label">模拟结果</p>
+  <div id="tables"></div>
+</div>
+
+<div class="card">
+  <p class="label">游戏设计师报告（静态分析）</p>
+  <div class="narr" style="font-family:inherit;font-size:13.5px;line-height:1.8">
+  <p><b>一、Debug 与一致性核对</b></p>
+  <ul style="color:var(--mut);font-size:13px">
+    <li><b>开局空白 bug（前轮已修）</b>：ED/RD 重构残留的孤儿 <code>$("pickSearchBtn")</code> 绑定会在加载时抛错、中断初始化。已删除并补上 <code>edPickBtn</code> 绑定。</li>
+    <li><b>选校档位串档（前轮已修）</b>：旧 <code>buildBands</code> 跨档借学校导致"选校显示匹配、结果标冲刺"。已删除借调，档位严格按真实概率。</li>
+    <li><b>ED 绑定（前轮已修）</b>：ED 录取后结局页不再摇 RD、明确"撤回全部 RD、无最终录取信息"。</li>
+    <li><b>本轮修正 3 处</b>：① HELP 文案"固定 4 个基础行动"改为"随年级变化"（背单词/啃硬课常驻，初三加中考复习、高二起加托福、高三加打磨文书）；② 游戏页 label 同改；③ <code>admitProb</code> 增加 SAT=0 时 ×0.7 惩罚，与托福 0 时 ×0.75 对称。</li>
+    <li><b>本轮再修正 2 处</b>：① 事件阶段错配：「申请系统崩了」「朋友圈焦虑」原 stage 过宽，会出现在初三/高一；已改为仅高三申请季 <code>[6,7]</code>。② RD 选校池改为「冲刺 5 所（录取率 &lt;10%）+ 匹配 10 所 + 保底 10 所」，冲刺档强制含 1–2 所梦校，数量严格 ≤5。</li>
+    <li><b>一致性确认</b>：学校总数（顶部 kicker）= <code>SCHOOLS.length</code>（运行后见下方）；<code>RD_PER_BAND=10</code>、<code>REACH_MAX=5</code> 与 HELP"冲刺 5/匹配 10/保底 10"一致；<code>RD_MAX=25</code>、下限 10 与文案一致；强力事件概率 0.13、冲刺梦校强制 2 所、专业门控（und 可见全部）均符合需求。</li>
+  </ul>
+  <p><b>二、多轮模拟会验证什么（运行后看数字）</b></p>
+  <ul style="color:var(--mut);font-size:13px">
+    <li><b>分档命中率</b>：冲刺档（&lt;10%）实际录取率应明显低于匹配（10–55%），保底档最高。冲刺档固定只给 5 所，保证每局都能看到高难度校。</li>
+    <li><b>ED 加成</b>：同一校 ED 概率应 &gt; RD 概率（部分校 ED 率显著更高）。</li>
+    <li><b>ED 绑定</b>：ED 录取的局里，RD 录取数应为 0，且显示"无最终录取信息"。</li>
+    <li><b>海投效应</b>："强"画像勾满 25 所时，至少 1 所录取的概率应显著上升；"弱"画像即便海投也极低——体现难度梯度。</li>
+    <li><b>完美标化罕见</b>：顶级玩家满分约 1–1.7%/局，普通玩家≈0（前轮公式下调 + 3% 封顶门控）。</li>
+  </ul>
+  <p><b>三、UI / 体验评估</b></p>
+  <ul style="color:var(--mut);font-size:13px">
+    <li><b>排版（已按你上一轮反馈改好）</b>：行动区拆成"基础行动（按年级）+ 休息"与"随机行动 6 个"两个独立区块，不再混排。</li>
+    <li><b>阶段感</b>：事件卡顶部有"初三上 · 中考备考"等阶段标签，符合"事件符合当前阶段"。</li>
+    <li><b>可选改进</b>：① 选校页可加"换一批"按钮浏览更大学校池（当前每档静态 10 候选）；② 结局页 RD 表在 25 所时较长，可考虑折叠或高亮录取项；③ 行动点用完后的"结束回合"可加微弱高亮提示；④ 移动端窄屏下 .act-grid 已降为 2 列，体验 OK。</li>
+  </ul>
+  </div>
+</div>
+
+</div>
+
+<script>
+/* ---------- DOM 桩：让游戏脚本在无界面下也能初始化 ---------- */
+function makeEl(){
+  const el={
+    innerHTML:"",textContent:"",value:"",style:{},dataset:{},classList:{add(){},remove(){},contains(){return false}},
+    appendChild(){},querySelectorAll(){return []},querySelector(){return null},
+    addEventListener(){},scrollTop:0,scrollHeight:0,onclick:null
+  };
+  return el;
+}
+const docStub={
+  getElementById(){return makeEl();},
+  createElement(){return makeEl();},
+  querySelectorAll(){return [];},
+  querySelector(){return null;},
+  addEventListener(){}
+};
+let API=null;
+const statusEl=document.getElementById("status");
+const fileInput=document.getElementById("file");
+const runBtn=document.getElementById("run");
+const N_INPUT=document.getElementById("N");
+
+fileInput.addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f){return;}
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const text=r.result;
+      const m=text.match(/<script>([\s\S]*?)<\/script>/);
+      if(!m){statusEl.innerHTML='<span class="err">未找到 &lt;script&gt;，请选择本游戏的 index.html。</span>';return;}
+      const script=m[1];
+      const factory=new Function("document","window",script+
+        "\n;return {SCHOOLS,admitProb,buildBands,bandOf,buildProfile,freshState,MAJORS,MAJOR_BYID,cumGPA,setG:function(g){G=g;}};");
+      API=factory(docStub,{addEventListener(){}});
+      statusEl.innerHTML=`已载入：<b>${API.SCHOOLS.length}</b> 所大学 · ED 校 <b>${API.SCHOOLS.filter(s=>s.region==="US"&&s.ed).length}</b> 所。可运行模拟。`;
+      runBtn.disabled=false;
+    }catch(err){
+      statusEl.innerHTML='<span class="err">载入失败：'+err.message+'</span>';
+    }
+  };
+  r.readAsText(f);
+});
+
+runBtn.addEventListener("click",runSim);
+
+/* ---------- 玩家画像 ---------- */
+const ARCH={
+  weak:{label:"弱（躺平型）",stats:{academic:3,english:3,stamina:4,creativity:3,social:3,luck:4},rigor:"regular",major:"und",majorFit:30,
+        sat:0,toefl:0,gpaU:3.0,gpaW:3.0,awards:0,ecs:3,reputation:8,recQuality:3,essayQuality:3,stressMax:55},
+  avg:{label:"中（均衡型）",stats:{academic:6,english:6,stamina:5,creativity:5,social:5,luck:5},rigor:"mixed",major:"und",majorFit:30,
+        sat:1350,toefl:100,gpaU:3.5,gpaW:3.8,awards:1,ecs:6,reputation:35,recQuality:6,essayQuality:6,stressMax:50},
+  strong:{label:"强（学霸型）",stats:{academic:9,english:9,stamina:7,creativity:8,social:7,luck:7},rigor:"heavy",major:"cs",majorFit:85,
+        sat:1520,toefl:115,gpaU:3.9,gpaW:4.4,awards:3,ecs:11,reputation:72,recQuality:9,essayQuality:9,stressMax:45}
+};
+
+function buildG(a){
+  const G=API.freshState(a.stats,[],a.rigor,a.major);
+  G.majorFit=a.majorFit;
+  G.results.satBest=a.sat; G.results.toeflBest=a.toefl;
+  G.results.awards=a.awards;
+  G.results.ecs=Array.from({length:a.ecs},(_,i)=>"ec"+i);
+  G.results.reputation=a.reputation; G.results.recQuality=a.recQuality; G.results.essayQuality=a.essayQuality;
+  G.results.stressMax=a.stressMax;
+  G.results.semesters=[{i:0,courses:[],gpaU:a.gpaU,gpaW:a.gpaW,credits:8}];
+  return G;
+}
+
+function runSim(){
+  if(!API){return;}
+  const key=document.getElementById("arch").value;
+  const edOn=document.getElementById("edon").value==="1";
+  const N=Math.max(100,Math.min(50000,parseInt(N_INPUT.value||"2000",10)||2000));
+  const a=ARCH[key];
+  const {SCHOOLS,admitProb,buildBands,buildProfile,freshState}=API;
+
+  // 选一所"典型 ED 校"：在提供 ED 的美国校里取 edAcceptRate 中位数，代表一般 ED 选择
+  const edSchools=SCHOOLS.filter(s=>s.region==="US"&&s.ed&&s.edAcceptRate!=null);
+  let edSchool=null,edPed=0;
+  if(edOn&&edSchools.length){
+    const sorted=edSchools.slice().sort((x,y)=>x.edAcceptRate-y.edAcceptRate);
+    edSchool=sorted[Math.floor(sorted.length/2)];
+  }
+
+  let edAccept=0, rdWithdrawn=0;
+  let rdAdmitSum=0, rdAtLeastOne=0, rdGames=0;
+  const bandStat={reach:{pred:0,emp:0,n:0},match:{pred:0,emp:0,n:0},safety:{pred:0,emp:0,n:0}};
+
+  // 代表性 profile（确定性，用于预测均值与展示）
+  const G0=buildG(a); API.setG(G0); const p0=buildProfile();
+  const bt0=buildBands(p0);
+  // RD 选校池：冲刺前 5、匹配前 10、保底前 10，封顶 25
+  function pickSel(bands){
+    return [...bands.reach.slice(0,5),...bands.match.slice(0,10),...bands.safety.slice(0,10)].slice(0,25);
+  }
+  const sel0=pickSel(bt0);
+  sel0.forEach(x=>{const b=API.bandOf(x.P);bandStat[b].pred+=x.P;bandStat[b].n++;});
+
+  for(let i=0;i<N;i++){
+    const G=buildG(a);
+    API.setG(G);
+    const p=buildProfile();
+    const bands=buildBands(p);
+    const sel=pickSel(bands);
+    // ED
+    let edHit=false;
+    if(edOn&&edSchool){
+      edPed=admitProb(p,edSchool,true);
+      if(Math.random()<edPed){edHit=true;edAccept++;}
+    }
+    if(edHit){ rdWithdrawn++; continue; } // ED 绑定：撤回 RD
+    rdGames++;
+    let cnt=0;
+    sel.forEach(x=>{ if(Math.random()<x.P) cnt++; });
+    rdAdmitSum+=cnt; if(cnt>0) rdAtLeastOne++;
+    sel.forEach(x=>{const b=API.bandOf(x.P); if(Math.random()<x.P) bandStat[b].emp++;});
+  }
+
+  // 渲染
+  const out=document.getElementById("out"); out.style.display="block";
+  const edRate=edOn&&edSchool?(edAccept/N*100):null;
+  const avgRd=(rdAdmitSum/(rdGames||1));
+  const pOne=(rdAtLeastOne/(rdGames||1)*100);
+  let html="";
+  html+=`<div class="muted" style="margin-bottom:8px">画像：<b>${a.label}</b> · ED：${edOn?"走":"不走"} · 每画像 <b>${N}</b> 局 · RD 封顶 25 所</div>`;
+  html+=`<table><tr><th>指标</th><th class="r">数值</th><th>说明</th></tr>`;
+  html+=`<tr><td>ED 校</td><td class="r">${edSchool?("#"+edSchool.rank+" "+edSchool.nameZh):"—"}</td><td>${edSchool?("ED 率 "+admitProb(p0,edSchool,true).toFixed(1)+"% · RD 仅 "+admitProb(p0,edSchool).toFixed(1)+"%"):"无 ED 校可选"}</td></tr>`;
+  if(edRate!=null) html+=`<tr><td>ED 录取率</td><td class="r">${edRate.toFixed(1)}%</td><td>真实绑定：一旦录取即撤回全部 RD</td></tr>`;
+  html+=`<tr><td>ED 绑定导致的 RD 撤回局</td><td class="r">${rdWithdrawn}</td><td>这些局 RD 录取数 = 0、无最终录取信息</td></tr>`;
+  html+=`<tr><td>平均 RD 录取数（非绑定局）</td><td class="r">${avgRd.toFixed(2)}</td><td>勾 25 所时的期望命中</td></tr>`;
+  html+=`<tr><td>至少 1 所 RD 录取的概率</td><td class="r">${pOne.toFixed(1)}%</td><td>海投的"保底"价值</td></tr>`;
+  html+=`</table>`;
+
+  // 分档表
+  html+=`<div class="label" style="margin-top:18px">分档命中率（预测 vs 实际，${N} 局平均）</div>`;
+  html+=`<table><tr><th>档位</th><th class="r">候选校数</th><th class="r">预测均值 P</th><th class="r">实际录取率</th><th>对比</th></tr>`;
+  ["reach","match","safety"].forEach(b=>{
+    const s=bandStat[b]; if(!s.n){return;}
+    const pred=s.pred/s.n*100, emp=(s.emp/(s.n*N))*100;
+    const name=b==="reach"?"冲刺":b==="match"?"匹配":"保底";
+    const w=Math.max(4,Math.min(90,emp));
+    html+=`<tr><td>${name}</td><td class="r">${s.n}</td><td class="r">${pred.toFixed(1)}%</td><td class="r">${emp.toFixed(1)}%</td><td><span class="bar"><i style="width:${w}%;background:var(--accent)"></i></span></td></tr>`;
+  });
+  html+=`</table>`;
+  // 顶部梦校示例
+  if(bt0.reach.length){
+    const top=bt0.reach[bt0.reach.length-1], mid=bt0.reach[0];
+    html+=`<div class="muted" style="margin-top:10px">冲刺档最难校：#${top.sc.rank} ${top.sc.nameZh}（RD ${(top.P*100).toFixed(1)}%）· 最易冲刺校：#${mid.sc.rank} ${mid.sc.nameZh}（RD ${(mid.P*100).toFixed(1)}%）</div>`;
+  }
+  document.getElementById("tables").innerHTML=html;
+}
+</script>
+</body>
+</html>

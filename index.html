@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申请人生 · College Life Sim</title>
+<style>
+:root{
+  --paper:#faf7f2; --card:#fffdf9; --ink:#1a1917; --mut:#6f6a62;
+  --line:#e5ded3; --line2:#d3c9ba; --accent:#8f3d20;
+  --good:#3d6b4f; --warn:#8a6a1f; --bad:#98342a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:14px;line-height:1.6;color:var(--ink);background:var(--paper);
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:740px;margin:0 auto;padding:56px 24px 100px}
+h1{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;
+  font-size:34px;font-weight:400;line-height:1.18;letter-spacing:.01em;margin:0 0 8px}
+.kicker{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin:0 0 24px}
+.rule{height:1px;background:var(--line);border:0;margin:0 0 28px}
+.screen{display:none}
+.screen.on{display:block}
+.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 12px}
+.card{border:1px solid var(--line);background:var(--card);padding:24px;margin-bottom:18px}
+.btn{font:inherit;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--paper);
+  padding:9px 20px;font-size:13px;letter-spacing:.03em;transition:background .15s,border-color .15s,color .15s}
+.btn:hover{background:var(--accent);border-color:var(--accent)}
+.btn.ghost{background:transparent;color:var(--mut);border:1px solid var(--line2)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--ink);background:transparent}
+.btn:disabled{opacity:.28;cursor:default}
+.btn:disabled:hover{background:var(--ink);border-color:var(--ink)}
+.small{font-size:12px;color:var(--mut)}
+.link{background:none;border:0;color:var(--mut);font:inherit;font-size:12px;cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;padding:0}
+.link:hover{color:var(--ink)}
+.ico{display:inline-flex;width:15px;height:15px;flex:0 0 auto;color:var(--mut)}
+.ico svg{width:100%;height:100%;display:block}
+.ico.dk{color:var(--ink)}
+
+/* setup */
+.tpl-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+.tpl{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:12px 10px;text-align:center;transition:border-color .15s}
+.tpl:hover{border-color:var(--ink)}
+.tpl b{display:block;font-size:14px;font-weight:600;margin-bottom:3px}
+.tpl small{color:var(--mut);font-size:11px;line-height:1.4}
+.pts{font-size:12px;color:var(--mut);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.stat-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.stat-row .nm{display:flex;align-items:center;gap:8px;width:112px;font-size:13px}
+.stat-row .val{width:26px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+.stepper{display:flex;gap:4px}
+.stepper button{width:26px;height:26px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font-size:14px;line-height:1;cursor:pointer;padding:0}
+.stepper button:hover{border-color:var(--ink)}
+.bar{height:3px;background:var(--line);flex:1;overflow:hidden}
+.bar > i{display:block;height:100%;background:var(--ink)}
+.rigor-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.rigor{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:11px;text-align:left;font:inherit;color:var(--ink);transition:border-color .15s}
+.rigor:hover{border-color:var(--ink)}
+.rigor.on{border-color:var(--ink);background:#f2ece2}
+.rigor b{display:block;font-size:13px;font-weight:600;margin-bottom:3px}
+.rigor small{color:var(--mut);font-size:11px;line-height:1.4}
+.traits{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.trait{border:1px solid var(--line2);background:var(--card);padding:8px 12px;font-size:12px;flex:1 1 45%}
+.trait b{font-weight:600}
+.trait small{color:var(--mut);display:block;margin-top:2px;line-height:1.4}
+
+/* status */
+.status{border:1px solid var(--line);background:var(--card);padding:18px 20px;margin-bottom:18px}
+.srow{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;flex-wrap:wrap}
+.srow .k{color:var(--mut);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.srow .v{font-weight:600}
+.sep{color:var(--line2)}
+.apdots{display:inline-flex;gap:4px;align-items:center}
+.apdot{width:7px;height:7px;border-radius:50%;background:var(--line2)}
+.apdot.on{background:var(--ink)}
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 20px;margin-bottom:14px}
+.meter{display:flex;align-items:center;gap:8px;font-size:12px}
+.meter .k{color:var(--mut);width:28px;flex:0 0 auto}
+.meter .bar{flex:1}
+.meter .v{font-variant-numeric:tabular-nums;color:var(--mut);width:52px;text-align:right;flex:0 0 auto}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;padding-top:12px;border-top:1px solid var(--line);font-size:12px}
+.stats .st{display:flex;align-items:center;gap:6px}
+.stats b{font-variant-numeric:tabular-nums;font-weight:600}
+.scores{margin-top:10px;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums;display:flex;gap:14px;flex-wrap:wrap}
+
+/* event */
+.event .ev-cat{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.event .ev-cat span{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.event h3{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;
+  font-size:21px;font-weight:400;line-height:1.3;margin:0 0 8px}
+.event p{color:var(--mut);font-size:13.5px;margin:0 0 16px}
+.choices{display:flex;gap:8px;flex-wrap:wrap}
+.choices .btn small{display:block;font-size:11px;opacity:.75;letter-spacing:0;margin-top:2px}
+
+/* actions */
+.acts{display:flex;flex-direction:column;gap:16px}
+.act-section{display:flex;flex-direction:column;gap:6px}
+.act-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.act{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:12px;text-align:left;color:var(--ink);font:inherit;transition:border-color .15s}
+.act:hover:not(:disabled){border-color:var(--ink)}
+.act:disabled{opacity:.32;cursor:default}
+.act .top{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.act b{font-size:13px;font-weight:600}
+.act small{display:block;color:var(--mut);font-size:11px}
+.acts-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:0 0 2px}
+.act-grid.basic .act{background:var(--paper)}
+.majors{display:flex;flex-wrap:wrap;gap:8px}
+.major{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:9px 14px;font:inherit;font-size:13px;color:var(--ink);transition:border-color .15s,background .15s}
+.major:hover{border-color:var(--ink)}
+.major.on{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+
+/* log */
+.log{font-size:12.5px;line-height:1.65;color:var(--mut);max-height:132px;overflow:auto}
+.log .e{padding:2px 0 2px 10px;border-left:1px solid var(--line2)}
+.log .e.good{border-color:var(--good)}
+.log .e.bad{border-color:var(--bad)}
+.log .e.warn{border-color:var(--warn)}
+
+/* pick schools */
+.band{margin-bottom:20px}
+.bandhead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bandhead .t{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.bandhead .cnt{margin-left:auto;font-size:12px;color:var(--mut)}
+.cands{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cand{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:11px;text-align:left;font:inherit;color:var(--ink);transition:border-color .15s}
+.cand:hover{border-color:var(--ink)}
+.cand.sel{border-color:var(--ink);background:#f2ece2}
+.cand .rk{font-size:11px;color:var(--mut)}
+.cand .nm{font-size:13.5px;font-weight:600;margin:2px 0}
+.cand .pp{font-size:11.5px;color:var(--mut)}
+.searchbar{display:flex;gap:8px;margin:14px 0 4px}
+.searchbar input{flex:1;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line2);background:var(--card);color:var(--ink)}
+.searchbar input:focus{outline:none;border-color:var(--ink)}
+
+/* endgame */
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tag{border:1px solid var(--ink);color:var(--ink);font-size:12px;padding:3px 11px}
+.narr{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;font-size:15px;line-height:1.75}
+.achs{display:grid;grid-template-columns:repeat(2,1fr);gap:5px 18px;margin-top:10px}
+.ach{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)}
+.ach.got{color:var(--ink)}
+.ach .dot{width:6px;height:6px;border-radius:50%;background:var(--line2);flex:0 0 auto}
+.ach.got .dot{background:var(--accent)}
+.tierlabel{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:18px 0 8px}
+.slate{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.env{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:16px;min-height:88px;transition:border-color .15s}
+.env:hover{border-color:var(--ink)}
+.env .rank{font-size:11px;color:var(--mut)}
+.env .nm{font-size:15px;font-weight:600;margin:3px 0 6px}
+.env .hint{font-size:12px;color:var(--mut)}
+.env .result{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;font-size:22px;font-weight:400;margin:4px 0}
+.env.open{animation:pop .3s ease}
+@keyframes pop{from{opacity:.4;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.env .result.ad{color:var(--good)}
+.env .result.rej{color:var(--bad)}
+.env .pp{font-size:12px;color:var(--mut);line-height:1.5}
+table.mini,table.trans{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+table.mini th,table.mini td,table.trans th,table.trans td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.gpill{display:inline-block;min-width:20px;text-align:center;border:1px solid var(--line2);font-size:11px;padding:0 4px;margin-right:3px}
+.collapsed{display:none}
+.foot{display:flex;gap:8px;align-items:center;margin-top:18px;flex-wrap:wrap}
+
+/* help */
+.help-sec{margin-bottom:22px}
+.help-sec h3{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;
+  font-size:15px;font-weight:600;margin:0 0 8px}
+.help-sec p,.help-sec li{font-size:13px;color:var(--mut);line-height:1.75;margin:0 0 6px}
+.help-sec ul{margin:0 0 6px;padding-left:18px}
+.help-sec code{background:#f0eae0;padding:1px 5px;font-size:12px;color:var(--ink)}
+.help-sec b{color:var(--ink)}
+
+/* event 左侧强调条 */
+.event{border-left:2px solid var(--ink)}
+.event .ev-cat .ico{color:var(--accent)}
+.event .ev-cat span{color:var(--accent)}
+
+/* 休息行动弱化显示 */
+.act[data-rest]{border-style:dashed}
+
+/* 响应式：窄屏收起多列网格 */
+@media (max-width:620px){
+  .wrap{padding:36px 16px 84px}
+  h1{font-size:28px}
+  .act-grid,.cands,.slate{grid-template-columns:repeat(2,1fr)}
+  .tpl-row{grid-template-columns:repeat(3,1fr)}
+  .meters{grid-template-columns:1fr}
+  .achs{grid-template-columns:1fr}
+}
+@media (max-width:420px){
+  .act-grid,.cands,.slate,.tpl-row,.rigor-row{grid-template-columns:1fr}
+  .srow{gap:6px}
+}
+
+/* 事件阶段标签 */
+.ev-stage{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.env{cursor:pointer}
+#rdTable table.mini th:nth-child(4),#rdTable table.mini td:nth-child(4){text-align:right;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>申请人生</h1>
+  <p class="kicker">初三到高三 · 8 个学期 · 57 所大学</p>
+  <hr class="rule">
+
+  <section id="setup" class="screen on">
+    <div class="card">
+      <p class="label">人设模板</p>
+      <div class="tpl-row" id="tplRow"></div>
+      <div class="pts" id="ptsLeft"></div>
+      <div id="statEditors"></div>
+      <div style="margin-top:18px;display:flex;gap:8px">
+        <button class="btn" id="startBtn">开始</button>
+        <button class="btn ghost" id="randBtn">随机</button>
+        <button class="btn ghost" id="rerollTraitBtn">重抽特质</button>
+      </div>
+    </div>
+    <div class="card">
+      <p class="label">课程难度（影响 GPA 与申请）</p>
+      <div class="rigor-row" id="rigorRow"></div>
+      <div class="small" id="rigorDesc"></div>
+    </div>
+    <div class="card">
+      <p class="label">专业方向（影响录取 · 可规划）</p>
+      <div class="majors" id="majorRow"></div>
+      <div class="small" id="majorDesc"></div>
+    </div>
+    <div class="card">
+      <p class="label">天性特质（开局抽取）</p>
+      <div class="traits" id="traitBox"></div>
+    </div>
+    <div style="text-align:center"><button class="link" id="helpBtn1">玩法说明</button></div>
+  </section>
+
+  <section id="game" class="screen">
+    <div class="card status" id="status"></div>
+    <div class="card event" id="eventCard"></div>
+    <div class="card">
+      <p class="label">行动（基础行动按年级 + 随机 6 个 · 本回合 4 个行动点）</p>
+      <div class="acts" id="acts"></div>
+      <div class="foot">
+        <button class="btn ghost" id="endRoundBtn">结束回合</button>
+        <span id="roundHint" class="small" style="flex:1"></span>
+        <button class="link" id="helpBtn2">玩法说明</button>
+      </div>
+    </div>
+    <div class="card">
+      <p class="label">记录</p>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+
+  <section id="pick" class="screen">
+    <div class="card">
+      <p class="label">早申 ED（可选 · 绑定 1 所）</p>
+      <div class="narr" style="font-size:13.5px;margin-bottom:8px">部分美国名校提供 ED（早决定），录取率显著高于 RD。选 1 所提交，录取即绑定入学。无 ED 的校（如哈佛/斯坦福 REA）与英/港校只能走 RD。</div>
+      <div class="searchbar">
+        <input id="edSearch" placeholder="搜索美国 ED 校（中/英文名）" list="edList">
+        <datalist id="edList"></datalist>
+        <button class="btn ghost" id="edPickBtn">选为 ED</button>
+      </div>
+      <div class="small" id="edHint"></div>
+      <div id="edCard"></div>
+    </div>
+    <div class="card">
+      <p class="label">常规 RD（勾选 10–25 所）</p>
+      <div class="narr" style="font-size:13.5px;margin-bottom:8px">RD 可海投。冲刺 5 所 · 匹配 10 所 · 保底 10 所，按档勾选，已选 <b id="rdCount">0</b> / 25（至少 10 所方可提交）。</div>
+      <div class="band">
+        <div class="bandhead"><span class="t">冲刺</span><span class="cnt" id="cntReach">0</span></div>
+        <div class="cands" id="candReach"></div>
+      </div>
+      <div class="band">
+        <div class="bandhead"><span class="t">匹配</span><span class="cnt" id="cntMatch">0</span></div>
+        <div class="cands" id="candMatch"></div>
+      </div>
+      <div class="band">
+        <div class="bandhead"><span class="t">保底</span><span class="cnt" id="cntSafety">0</span></div>
+        <div class="cands" id="candSafety"></div>
+      </div>
+      <div class="foot">
+        <button class="btn" id="confirmPickBtn" disabled>提交申请，看结果</button>
+        <span class="small" id="pickHint" style="flex:1"></span>
+        <button class="link" id="helpBtn3">玩法说明</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="endgame" class="screen">
+    <div class="card">
+      <p class="label">人设卡</p>
+      <div class="tags" id="persTags"></div>
+      <div class="narr" id="persNarr"></div>
+      <div class="stats" id="finalChips" style="margin-top:18px;border-top:1px solid var(--line);"></div>
+    </div>
+    <div class="card">
+      <p class="label">成就</p>
+      <div class="achs" id="achList"></div>
+    </div>
+    <div class="card">
+      <p class="label">成绩单</p>
+      <div id="transcript"></div>
+    </div>
+    <div class="card">
+      <p class="label">录取结果</p>
+      <div id="edResult"></div>
+      <div class="tierlabel">常规 RD</div>
+      <div id="rdTable"></div>
+      <div class="foot">
+        <button class="btn" id="restartBtn">再玩一局</button>
+        <button class="btn ghost" id="allBtn">全部 57 校</button>
+      </div>
+      <div id="allTable" class="collapsed"></div>
+    </div>
+  </section>
+
+  <section id="help" class="screen">
+    <div class="card" id="helpBody"></div>
+    <div style="text-align:center"><button class="btn ghost" id="helpBackBtn">返回</button></div>
+  </section>
+</div>
+
+<script>
+const SCHOOLS = [{"rank":1,"nameEn":"Princeton University","nameZh":"普林斯顿大学","state":"NJ","type":"private","acceptRate":4.4,"acceptRateIntl":2.29,"sat25":1490,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.96,"toeflMin":null,"intlPct":14.1,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Intl rate = 250/10,897 (official). SCEA rate no longer published. Test-optional in 2025-26.","region":"US"},{"rank":2,"nameEn":"Massachusetts Institute of Technology","nameZh":"麻省理工学院","state":"MA","type":"private","acceptRate":4.56,"acceptRateIntl":1.96,"sat25":1520,"sat75":1580,"act25":34,"act75":36,"gpaAvg":null,"toeflMin":90,"intlPct":10.0,"aidIntl":"need-blind","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT/ACT are ADMITTED-student mid-50 (M 780-800, ERW 740-780). EA 5.98%. Test-required.","region":"US"},{"rank":3,"nameEn":"Harvard University","nameZh":"哈佛大学","state":"MA","type":"private","acceptRate":4.18,"acceptRateIntl":null,"sat25":1450,"sat75":1560,"act25":33,"act75":35,"gpaAvg":null,"toeflMin":null,"intlPct":15.8,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT composite summed from CDS sections (ERW 720-770, M 730-790). CDS avg GPA 4.22 is weighted, so null.","region":"US"},{"rank":4,"nameEn":"Stanford University","nameZh":"斯坦福大学","state":"CA","type":"private","acceptRate":3.8,"acceptRateIntl":null,"sat25":1520,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.94,"toeflMin":null,"intlPct":12.7,"aidIntl":"need-aware","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Last test-optional class; SAT/ACT required again from Class of 2030. No ED, REA only.","region":"US"},{"rank":4,"nameEn":"Yale University","nameZh":"耶鲁大学","state":"CT","type":"private","acceptRate":4.8,"acceptRateIntl":null,"sat25":1480,"sat75":1560,"act25":33,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":11.0,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-flexible (SAT/ACT/AP/IB). Official 4.8% (CDS 2,387/50,264). No published avg GPA.","region":"US"},{"rank":6,"nameEn":"University of Chicago","nameZh":"芝加哥大学","state":"IL","type":"private","acceptRate":4.48,"acceptRateIntl":null,"sat25":1500,"sat75":1560,"act25":34,"act75":35,"gpaAvg":null,"toeflMin":null,"intlPct":13.0,"aidIntl":"need-aware","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-optional; offers EA + ED0/EDI/EDII. CDS avg GPA 4.54 is weighted, so gpaAvg null.","region":"US"},{"rank":7,"nameEn":"Duke University","nameZh":"杜克大学","state":"NC","type":"private","acceptRate":5.2,"acceptRateIntl":null,"sat25":1520,"sat75":1570,"act25":34,"act75":36,"gpaAvg":null,"toeflMin":100,"intlPct":11.0,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":12.6,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT/ACT = mid-50 of admits who reported. Apply to Trinity or Pratt; Pratt is harder.","region":"US"},{"rank":7,"nameEn":"Johns Hopkins University","nameZh":"约翰斯·霍普金斯大学","state":"MD","type":"private","acceptRate":5.14,"acceptRateIntl":null,"sat25":1530,"sat75":1570,"act25":35,"act75":35,"gpaAvg":3.95,"toeflMin":100,"intlPct":13.5,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":10.49,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Apply to Krieger or Whiting; Whiting harder. Official avg unweighted GPA 3.95; ACT mid-50 = 35.","region":"US"},{"rank":7,"nameEn":"Northwestern University","nameZh":"西北大学","state":"IL","type":"private","acceptRate":7.0,"acceptRateIntl":null,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":10.0,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":20.0,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Apply to one of 6 schools (Medill/McCormick/Bienen hardest). SAT/ACT = submitters' mid-50.","region":"US"},{"rank":7,"nameEn":"University of Pennsylvania","nameZh":"宾夕法尼亚大学","state":"PA","type":"private","acceptRate":4.9,"acceptRateIntl":null,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":15.0,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Wharton far harder than College/Nursing. SAT/ACT = enrolled submitters. Tests required from 2030.","region":"US"},{"rank":11,"nameEn":"California Institute of Technology","nameZh":"加州理工学院","state":"CA","type":"private","acceptRate":3.78,"acceptRateIntl":null,"sat25":1550,"sat75":1580,"act25":35,"act75":36,"gpaAvg":null,"toeflMin":null,"intlPct":14.0,"aidIntl":"need-aware","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"REA only; Caltech says REA and RD both under 5%. SAT composite summed from CDS sections.","region":"US"},{"rank":12,"nameEn":"Cornell University","nameZh":"康奈尔大学","state":"NY","type":"private","acceptRate":8.38,"acceptRateIntl":null,"sat25":1490,"sat75":1550,"act25":33,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":9.8,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":18.78,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Admits by 7 colleges with very different rates (Engineering/Dyson lowest, Hotel/CALS highest).","region":"US"},{"rank":13,"nameEn":"Brown University","nameZh":"布朗大学","state":"RI","type":"private","acceptRate":5.65,"acceptRateIntl":null,"sat25":1480,"sat75":1560,"act25":34,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":14.0,"aidIntl":"need-blind","ed":true,"ea":false,"rea":false,"edAcceptRate":17.95,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Need-blind for internationals from Class of 2029. Test-required again since 2024-25 cycle.","region":"US"},{"rank":13,"nameEn":"Dartmouth College","nameZh":"达特茅斯学院","state":"NH","type":"private","acceptRate":6.02,"acceptRateIntl":null,"sat25":1440,"sat75":1550,"act25":32,"act75":35,"gpaAvg":null,"toeflMin":null,"intlPct":12.8,"aidIntl":"need-blind","ed":true,"ea":false,"rea":false,"edAcceptRate":21.62,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"No longer publishes mid-50 SAT/ACT; shown values are CDS 2025-26 enrolled figures. ED-only.","region":"US"},{"rank":15,"nameEn":"Columbia University","nameZh":"哥伦比亚大学","state":"NY","type":"private","acceptRate":4.94,"acceptRateIntl":null,"sat25":1510,"sat75":1560,"act25":34,"act75":36,"gpaAvg":null,"toeflMin":105,"intlPct":16.0,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Permanently test-optional. SAT/ACT = enrolled submitters. Columbia Engineering harder than CC.","region":"US"},{"rank":15,"nameEn":"University of California, Berkeley","nameZh":"加州大学伯克利分校","state":"CA","type":"public","acceptRate":11.4,"acceptRateIntl":5.8,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":80,"intlPct":11.4,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind. EECS/CS and capped majors far harder than campus average. No need aid for intl.","region":"US"},{"rank":17,"nameEn":"Rice University","nameZh":"莱斯大学","state":"TX","type":"private","acceptRate":8.01,"acceptRateIntl":null,"sat25":1510,"sat75":1560,"act25":34,"act75":36,"gpaAvg":null,"toeflMin":100,"intlPct":13.0,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":13.2,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-optional (scores recommended). SAT/ACT = deposited students. ED I 13.2%, ED II 6.0%.","region":"US"},{"rank":17,"nameEn":"University of California, Los Angeles","nameZh":"加州大学洛杉矶分校","state":"CA","type":"public","acceptRate":9.4,"acceptRateIntl":6.3,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":87,"intlPct":8.4,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind. By school: Nursing 0.5%, Engineering 6.8%, College 11%. No need aid for intl.","region":"US"},{"rank":17,"nameEn":"Vanderbilt University","nameZh":"范德堡大学","state":"TN","type":"private","acceptRate":4.7,"acceptRateIntl":null,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":11.0,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":13.2,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"ED I + ED II combined 13.2% (891/6,762); RD 3.3%. Test-optional through Class of 2031.","region":"US"},{"rank":20,"nameEn":"Carnegie Mellon University","nameZh":"卡内基梅隆大学","state":"PA","type":"private","acceptRate":11.1,"acceptRateIntl":null,"sat25":1500,"sat75":1570,"act25":34,"act75":36,"gpaAvg":null,"toeflMin":102,"intlPct":19,"aidIntl":"none","ed":true,"ea":false,"rea":false,"edAcceptRate":20.6,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"SCS <5% vs Dietrich ~24%; CMU gives no need-based aid to internationals","region":"US"},{"rank":20,"nameEn":"University of Michigan--Ann Arbor","nameZh":"密歇根大学安娜堡分校","state":"MI","type":"public","acceptRate":16.4,"acceptRateIntl":null,"sat25":1370,"sat75":1530,"act25":32,"act75":34,"gpaAvg":null,"toeflMin":100,"intlPct":null,"aidIntl":"none","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"OOS/intl far below 16.4%; Ross 7.1%, CoE 14%; binding ED added for Class of 2030","region":"US"},{"rank":20,"nameEn":"University of Notre Dame","nameZh":"圣母大学","state":"IN","type":"private","acceptRate":9,"acceptRateIntl":null,"sat25":1460,"sat75":1540,"act25":33,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":8,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"REA 12.9% vs RD 6.7%; need-blind, no-loan aid for all students incl. international","region":"US"},{"rank":20,"nameEn":"Washington University in St. Louis","nameZh":"圣路易斯华盛顿大学","state":"MO","type":"private","acceptRate":12,"acceptRateIntl":null,"sat25":1490,"sat75":1550,"act25":33,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":12,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"61% of class via ED; need-aware for intl; EA being added for Class of 2031","region":"US"},{"rank":24,"nameEn":"Emory University","nameZh":"埃默里大学","state":"GA","type":"private","acceptRate":10.3,"acceptRateIntl":6.3,"sat25":1500,"sat75":1570,"act25":33,"act75":35,"gpaAvg":3.83,"toeflMin":100,"intlPct":null,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":22.2,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"ED 22.2% vs RD 8.6%; Oxford Coll 13.3% vs Emory Coll 10.3%","region":"US"},{"rank":24,"nameEn":"Georgetown University","nameZh":"乔治城大学","state":"DC","type":"private","acceptRate":12.2,"acceptRateIntl":null,"sat25":1410,"sat75":1530,"act25":32,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":12,"aidIntl":"need-aware","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Admits by school (CAS/SFS/Health/Nursing); EA is restrictive; test-required","region":"US"},{"rank":26,"nameEn":"University of North Carolina--Chapel Hill","nameZh":"北卡罗来纳大学教堂山分校","state":"NC","type":"public","acceptRate":16.7,"acceptRateIntl":null,"sat25":1400,"sat75":1530,"act25":29,"act75":34,"gpaAvg":null,"toeflMin":null,"intlPct":5.6,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"82% of class must be NC residents; OOS/intl rate far lower than 16.7%","region":"US"},{"rank":26,"nameEn":"University of Virginia","nameZh":"弗吉尼亚大学","state":"VA","type":"public","acceptRate":15.4,"acceptRateIntl":null,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":90,"intlPct":null,"aidIntl":"none","ed":true,"ea":true,"rea":false,"edAcceptRate":25.8,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 23% vs OOS 12.5%; ED 25.8%, EA 16.1%, RD 9.7%; no aid for internationals","region":"US"},{"rank":28,"nameEn":"University of Southern California","nameZh":"南加州大学","state":"CA","type":"private","acceptRate":11.2,"acceptRateIntl":null,"sat25":1470,"sat75":1540,"act25":32,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":21,"aidIntl":"need-aware","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Fall-only rate; SCA ~2-4%; ED = Marshall pilot only; need-blind domestic only","region":"US"},{"rank":29,"nameEn":"University of California, San Diego","nameZh":"加州大学圣迭戈分校","state":"CA","type":"public","acceptRate":28.4,"acceptRateIntl":30.6,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":80,"intlPct":11,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; capped majors (CS/bioeng) far harder than 28.4%","region":"US"},{"rank":30,"nameEn":"The University of Texas--Austin","nameZh":"德克萨斯大学奥斯汀分校","state":"TX","type":"public","acceptRate":22.2,"acceptRateIntl":null,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":79,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"TX top 6% auto-admit fills ~75% of in-state seats; OOS/intl ~10%; no ED","region":"US"},{"rank":30,"nameEn":"University of Florida","nameZh":"佛罗里达大学","state":"FL","type":"public","acceptRate":19.8,"acceptRateIntl":null,"sat25":1380,"sat75":1510,"act25":31,"act75":34,"gpaAvg":null,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Published 4.5-4.7 GPA is WEIGHTED; 10,510 EA + 7,659 RD admits; tests required","region":"US"},{"rank":32,"nameEn":"Georgia Institute of Technology","nameZh":"佐治亚理工学院","state":"GA","type":"public","acceptRate":12.7,"acceptRateIntl":null,"sat25":1430,"sat75":1530,"act25":31,"act75":35,"gpaAvg":null,"toeflMin":90,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 30% vs non-resident 9%; EA1 ~33% (GA only) vs EA2 ~8%; test-required","region":"US"},{"rank":32,"nameEn":"New York University","nameZh":"纽约大学","state":"NY","type":"private","acceptRate":7.7,"acceptRateIntl":null,"sat25":1480,"sat75":1550,"act25":34,"act75":35,"gpaAvg":3.81,"toeflMin":100,"intlPct":26,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"CAS/Stern/Nursing <5% each; >50% of class via ED; ED rate not published","region":"US"},{"rank":32,"nameEn":"University of California, Davis","nameZh":"加州大学戴维斯分校","state":"CA","type":"public","acceptRate":44.6,"acceptRateIntl":57.1,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":80,"intlPct":12.8,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; UC-weighted GPA 4.00-4.26; admits by college","region":"US"},{"rank":32,"nameEn":"University of California, Irvine","nameZh":"加州大学欧文分校","state":"CA","type":"public","acceptRate":28.7,"acceptRateIntl":42.8,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; Nursing 0.8%, CS 27.6%, Engineering 26.6%","region":"US"},{"rank":36,"nameEn":"Boston College","nameZh":"波士顿学院","state":"MA","type":"private","acceptRate":14,"acceptRateIntl":null,"sat25":1440,"sat75":1520,"act25":33,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":null,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"14% includes waitlist admits (initial ~12.6%); 4 undergrad schools","region":"US"},{"rank":36,"nameEn":"Tufts University","nameZh":"塔夫茨大学","state":"MA","type":"private","acceptRate":10.5,"acceptRateIntl":null,"sat25":1480,"sat75":1540,"act25":33,"act75":35,"gpaAvg":null,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":32,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"ED I & II only (no EA); ED 32% vs RD 8.5%; scores from CDS enrolled profile","region":"US"},{"rank":36,"nameEn":"University of Illinois Urbana-Champaign","nameZh":"伊利诺伊大学厄巴纳-香槟分校","state":"IL","type":"public","acceptRate":36.6,"acceptRateIntl":null,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.76,"toeflMin":null,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"First-choice-major rate 30.2% vs 36.6% campus; CS ~7-8%; Grainger Eng 21.1%","region":"US"},{"rank":36,"nameEn":"University of Wisconsin--Madison","nameZh":"威斯康星大学麦迪逊分校","state":"WI","type":"public","acceptRate":40.8,"acceptRateIntl":31.6,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 56.4%, OOS 40.3%, intl 31.6%; admits by college/school","region":"US"},{"rank":40,"nameEn":"University of California, Santa Barbara","nameZh":"加州大学圣塔芭芭拉分校","state":"CA","type":"public","acceptRate":38.3,"acceptRateIntl":48.1,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; Engineering 21.3% vs 38.3% campus-wide","region":"US"},{"rank":1,"nameEn":"University of Oxford","nameZh":"牛津大学","state":"UK","type":"public","acceptRate":16.0,"acceptRateIntl":9.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":2,"nameEn":"University of Cambridge","nameZh":"剑桥大学","state":"UK","type":"public","acceptRate":21.0,"acceptRateIntl":13.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":3,"nameEn":"Imperial College London","nameZh":"帝国理工学院","state":"UK","type":"public","acceptRate":14.0,"acceptRateIntl":11.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":4,"nameEn":"University College London","nameZh":"伦敦大学学院","state":"UK","type":"public","acceptRate":30.0,"acceptRateIntl":13.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":50,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":5,"nameEn":"London School of Economics and Political Science","nameZh":"伦敦政治经济学院","state":"UK","type":"public","acceptRate":16.0,"acceptRateIntl":9.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":6,"nameEn":"University of Edinburgh","nameZh":"爱丁堡大学","state":"UK","type":"public","acceptRate":47.0,"acceptRateIntl":20.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":7,"nameEn":"King's College London","nameZh":"伦敦国王学院","state":"UK","type":"public","acceptRate":40.0,"acceptRateIntl":15.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":8,"nameEn":"University of Manchester","nameZh":"曼彻斯特大学","state":"UK","type":"public","acceptRate":56.0,"acceptRateIntl":25.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":35,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":9,"nameEn":"University of Warwick","nameZh":"华威大学","state":"UK","type":"public","acceptRate":50.0,"acceptRateIntl":18.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":10,"nameEn":"University of Bristol","nameZh":"布里斯托大学","state":"UK","type":"public","acceptRate":68.0,"acceptRateIntl":22.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":11,"nameEn":"University of Glasgow","nameZh":"格拉斯哥大学","state":"UK","type":"public","acceptRate":70.0,"acceptRateIntl":25.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":12,"nameEn":"University of Southampton","nameZh":"南安普顿大学","state":"UK","type":"public","acceptRate":80.0,"acceptRateIntl":30.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":13,"nameEn":"University of Hong Kong","nameZh":"香港大学","state":"HK","type":"public","acceptRate":40.0,"acceptRateIntl":12.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},{"rank":14,"nameEn":"Chinese University of Hong Kong","nameZh":"香港中文大学","state":"HK","type":"public","acceptRate":40.0,"acceptRateIntl":15.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},{"rank":15,"nameEn":"Hong Kong University of Science and Technology","nameZh":"香港科技大学","state":"HK","type":"public","acceptRate":40.0,"acceptRateIntl":15.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},{"rank":16,"nameEn":"City University of Hong Kong","nameZh":"香港城市大学","state":"HK","type":"public","acceptRate":45.0,"acceptRateIntl":20.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},{"rank":17,"nameEn":"Hong Kong Polytechnic University","nameZh":"香港理工大学","state":"HK","type":"public","acceptRate":50.0,"acceptRateIntl":25.0,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":null,"toeflMin":null,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"}];
+
+/* ---------- utils ---------- */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rnd(a,b+1));
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+const $=id=>document.getElementById(id);
+function gauss(mu,sg){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();
+  return mu+sg*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- icons ---------- */
+const _s=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON={
+  book:_s('<path d="M4 5.5A2 2 0 016 3.5h6v15H6a2 2 0 01-2-2z"/><path d="M20 5.5a2 2 0 00-2-2h-6v15h6a2 2 0 002-2z"/>'),
+  globe:_s('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.4 2.4 2.4 14.6 0 17"/><path d="M12 3.5c-2.4 2.4-2.4 14.6 0 17"/>'),
+  bolt:_s('<path d="M13.5 3L6 13h4.5l-1 8L18 10h-4.5z"/>'),
+  bulb:_s('<path d="M9.5 18h5"/><path d="M10.5 21h3"/><path d="M12 3.5a5.5 5.5 0 00-3.2 10c.5.4.8 1 .8 1.6v.4h4.8v-.4c0-.6.3-1.2.8-1.6a5.5 5.5 0 00-3.2-10z"/>'),
+  people:_s('<circle cx="9.5" cy="8.5" r="3"/><path d="M4 20c0-3 2.5-5.2 5.5-5.2S15 17 15 20"/><path d="M16.5 6.2a3 3 0 010 4.6"/><path d="M17.5 14.9c1.7.7 2.8 2.3 2.8 4.1"/>'),
+  star:_s('<path d="M12 3.5l2.2 6.3 6.3 2.2-6.3 2.2L12 20.5l-2.2-6.3L3.5 12l6.3-2.2z"/>'),
+  heart:_s('<path d="M12 20.2C9.6 18.2 4.5 14.6 4.5 10.6A3.9 3.9 0 0112 8.6a3.9 3.9 0 017.5 2c0 4-5.1 7.6-7.5 9.6z"/>'),
+  house:_s('<path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 19z"/><path d="M9.5 20.5v-6h5v6"/>'),
+  pencil:_s('<path d="M4 20h4L19 9a2.5 2.5 0 00-3.5-3.5L4.5 16.5z"/><path d="M14.5 6.5l3.5 3.5"/>'),
+  flag:_s('<path d="M5.5 21V3.8"/><path d="M5.5 4.5h11.5l-2.2 3.7 2.2 3.7H5.5"/>'),
+  moon:_s('<path d="M20.5 14.8A8.5 8.5 0 019.2 3.5a8.5 8.5 0 1011.3 11.3z"/>'),
+  award:_s('<circle cx="12" cy="9" r="5.5"/><path d="M8.8 13.8L7 20.5l5-2.6 5 2.6-1.8-6.7"/>')
+};
+const ic=(n,cls)=>'<span class="ico'+(cls?' '+cls:'')+'">'+(ICON[n]||ICON.star)+'</span>';
+
+/* ---------- config ---------- */
+const TOTAL_ROUNDS=8, AP_PER_ROUND=4, START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, RD_MAX=25;
+const STAT_NAMES={academic:"学术",english:"英语",stamina:"精力上限",creativity:"创造力",social:"社交",luck:"运气"};
+const STAT_ICON={academic:"book",english:"globe",stamina:"bolt",creativity:"bulb",social:"people",luck:"star"};
+const TPL_DESC={"卷王":"学术拉满","快乐青年":"样样平均","斜杠":"活动与创意","躺平":"交给运气"};
+const TEMPLATES={
+  "卷王":   {academic:9,english:6,stamina:4,creativity:1,social:1,luck:3},
+  "快乐青年":{academic:4,english:4,stamina:5,creativity:4,social:4,luck:3},
+  "斜杠":   {academic:4,english:4,stamina:4,creativity:5,social:5,luck:2},
+  "躺平":   {academic:2,english:2,stamina:4,creativity:3,social:3,luck:10}
+};
+const CAT_NAME={academic:"学业",social:"人际",chance:"机遇",health:"健康",family:"家庭",creative:"创意",award:"荣誉"};
+const CAT_ICON={academic:"book",social:"people",chance:"star",health:"heart",family:"house",creative:"bulb",award:"award"};
+
+/* GPA：真实成绩单制 */
+const GRADE_SCALE=[["A",4.0],["A-",3.7],["B+",3.3],["B",3.0],["B-",2.7],["C+",2.3],["C",2.0],["C-",1.7],["D+",1.3],["D",1.0],["F",0.0]];
+const LEVEL_NAME={AP:"AP",H:"Honors",R:"常规"};
+const LEVEL_BONUS={AP:1.0,H:0.5,R:0};
+const LEVEL_DIFF={AP:0.20,H:0.10,R:0};
+const RIGOR={
+  regular:{name:"全常规",desc:"5 门常规课。最容易拿 A，但加权 GPA 上限就是 4.0，申请时课程强度偏弱。",mix:[["R",5]]},
+  mixed:  {name:"混搭",  desc:"2 门 AP + 1 门 Honors + 2 门常规。稳中求进，多数人的选择。",mix:[["AP",2],["H",1],["R",2]]},
+  heavy:  {name:"多 AP", desc:"4 门 AP + 1 门 Honors。加权 GPA 可冲 5.0、申请加分，但更难拿 A，压力与精力消耗更大。",mix:[["AP",4],["H",1]]}
+};
+function snapGrade(raw){
+  let best=GRADE_SCALE[0];
+  for(const g of GRADE_SCALE) if(Math.abs(g[1]-raw)<Math.abs(best[1]-raw)) best=g;
+  return best;
+}
+
+/* 天性特质 */
+const TRAITS=[
+  {id:"earlybird",name:"早起鸟",desc:"每回合额外恢复 6 点精力",fx:{energyRegen:6}},
+  {id:"socialbf", name:"社牛",  desc:"社交/人脉类行动收益 +35%，声望额外 +1",fx:{socialGain:1.35,repBonus:1}},
+  {id:"koi",      name:"锦鲤",  desc:"运气 +2",fx:{luck:2}},
+  {id:"bookworm", name:"书虫",  desc:"学术类行动收益 +35%",fx:{academicGain:1.35}},
+  {id:"linguist", name:"语言天赋",desc:"英语类行动收益 +40%",fx:{englishGain:1.4}},
+  {id:"athlete",  name:"运动健将",desc:"精力上限 +8，压力增长 -15%",fx:{stamina:8,stressMul:0.85}},
+  {id:"iron",     name:"抗压体质",desc:"压力增长 -30%",fx:{stressMul:0.7}},
+  {id:"glass",    name:"玻璃心",desc:"压力增长 +30%，但创造力 +1",fx:{stressMul:1.3,creativity:1}},
+  {id:"procras",  name:"拖延症",desc:"行动精力消耗 +25%，但英语 +2 起步",fx:{energyCostMul:1.25,english:2}},
+  {id:"perfection",name:"完美主义",desc:"文书与推荐信成长 +30%，但压力增长 +10%",fx:{craftGain:1.3,stressMul:1.1}}
+];
+const sumFx=(k,d)=>{let v=d;G.traits.forEach(t=>{if(t.fx[k]!=null)v+=t.fx[k];});return v;};
+const mulFx=(k,d)=>{let v=d;G.traits.forEach(t=>{if(t.fx[k]!=null)v*=t.fx[k];});return v;};
+
+/* 成就 */
+const ACHIEVEMENTS=[
+  {id:"sat1500", name:"SAT 1500+",        test:(r,s)=>r.satBest>=1500},
+  {id:"sat1550", name:"SAT 1550+",        test:(r,s)=>r.satBest>=1550},
+  {id:"toefl110",name:"托福 110+",         test:(r,s)=>r.toeflBest>=110},
+  {id:"gpa39",   name:"GPA 3.9+（未加权）",test:(r,s)=>cumGPA("U")>=3.9},
+  {id:"wgp45",   name:"加权 GPA 4.5+",     test:(r,s)=>cumGPA("W")>=4.5},
+  {id:"awards3", name:"3 个以上国家级奖项",  test:(r,s)=>r.awards>=3},
+  {id:"perfect", name:"单学期满绩 4.0",     test:(r,s)=>r.semesters.some(x=>x.gpaU>=3.98)},
+  {id:"zen",     name:"零压力毕业（峰值<30）",test:(r,s)=>r.stressMax<30},
+  {id:"rep80",   name:"声望 80+",           test:(r,s)=>r.reputation>=80},
+  {id:"craft9",  name:"文书与推荐信双 9+",   test:(r,s)=>r.essayQuality>=9&&r.recQuality>=9},
+  {id:"noC",     name:"全学期无 C 及以下",   test:(r,s)=>r.semesters.every(x=>x.courses.every(c=>c.p>=3.0))},
+  {id:"balanced",name:"六维全部 6+",         test:(r,s)=>Object.values(s).every(v=>v>=6)}
+];
+
+/* ---------- state ---------- */
+let G=null;
+function freshState(stats,traits,rigor,major){
+  return {
+    round:0, ap:AP_PER_ROUND,
+    energy:55, stress:0,
+    stats:Object.assign({},stats),
+    traits:traits||[], rigor:rigor||"mixed", major:major||"und",
+    majorFit:30,
+    results:{satBest:0,toeflBest:0,semesters:[],awards:0,ecs:[],
+             reputation:0,recQuality:3,essayQuality:3,stressMax:0},
+    log:[], usedEvents:[], phase:'event', dealtBasic:null, dealtRand:[]
+  };
+}
+function maxEnergy(){ return 55 + 4*G.stats.stamina + sumFx('stamina',0); }
+function cumGPA(kind){
+  const ss=G.results.semesters;
+  if(!ss.length) return 0;
+  let totC=0,tot=0;
+  ss.forEach(s=>{ totC+=s.credits; tot+=(kind==="W"?s.gpaW:s.gpaU)*s.credits; });
+  return tot/totC;
+}
+
+/* ---------- setup UI ---------- */
+let editStats={academic:4,english:4,stamina:4,creativity:4,social:4,luck:4};
+let editTraits=[], editRigor="mixed", editMajor="und";
+function renderMajors(){
+  const row=$("majorRow"); if(!row) return;
+  row.innerHTML=MAJORS.map(m=>`<button class="major ${editMajor===m.id?'on':''}" data-m="${m.id}"><b>${m.name}</b></button>`).join("");
+  row.querySelectorAll("button").forEach(b=>{ b.onclick=()=>{ editMajor=b.dataset.m; renderMajors(); }; });
+  $("majorDesc").textContent=(MAJOR_BYID[editMajor]||{}).desc||"";
+}
+function ptsUsed(){return Object.values(editStats).reduce((a,b)=>a+b,0);}
+function rollTraits(){
+  const pool=shuffle(TRAITS);
+  editTraits=[pool[0],pool[1]];
+  renderTraits();
+}
+function renderTraits(){
+  $("traitBox").innerHTML=editTraits.map(t=>`<div class="trait"><b>${t.name}</b><small>${t.desc}</small></div>`).join("");
+}
+function renderRigor(){
+  $("rigorRow").innerHTML=Object.keys(RIGOR).map(k=>
+    `<button class="rigor ${editRigor===k?'on':''}" data-r="${k}"><b>${RIGOR[k].name}</b><small>${RIGOR[k].desc}</small></button>`).join("");
+  $("rigorRow").querySelectorAll("button").forEach(b=>{
+    b.onclick=()=>{editRigor=b.dataset.r;renderRigor();};
+  });
+  $("rigorDesc").textContent=RIGOR[editRigor].desc;
+}
+function renderSetup(){
+  const tr=$("tplRow"); tr.innerHTML="";
+  Object.keys(TEMPLATES).forEach(name=>{
+    const t=document.createElement("div"); t.className="tpl";
+    t.innerHTML=`<b>${name}</b><small>${TPL_DESC[name]}</small>`;
+    t.onclick=()=>{editStats=Object.assign({},TEMPLATES[name]);renderSetup();};
+    tr.appendChild(t);
+  });
+  const r0=document.createElement("div"); r0.className="tpl";
+  r0.innerHTML=`<b>随机</b><small>交给骰子</small>`;
+  r0.onclick=()=>{Object.keys(editStats).forEach(k=>editStats[k]=ri(1,10));normalizeTo24();renderSetup();};
+  tr.appendChild(r0);
+
+  $("ptsLeft").textContent=`剩余 ${START_POINTS-ptsUsed()} 点`;
+  const ed=$("statEditors"); ed.innerHTML="";
+  Object.keys(STAT_NAMES).forEach(k=>{
+    const row=document.createElement("div"); row.className="stat-row";
+    row.innerHTML=`<div class="nm">${ic(STAT_ICON[k])}${STAT_NAMES[k]}</div>
+      <div class="stepper"><button data-k="${k}" data-d="-1">−</button></div>
+      <div class="val" id="v_${k}">${editStats[k]}</div>
+      <div class="stepper"><button data-k="${k}" data-d="1">+</button></div>
+      <div class="bar"><i style="width:${editStats[k]/12*100}%"></i></div>`;
+    ed.appendChild(row);
+  });
+  ed.querySelectorAll("button").forEach(b=>{
+    b.onclick=()=>{
+      const k=b.dataset.k,d=+b.dataset.d;
+      if(d>0 && ptsUsed()>=START_POINTS) return;
+      editStats[k]=clamp(editStats[k]+d,1,12);
+      renderSetup();
+    };
+  });
+  renderRigor();
+  renderMajors();
+}
+function normalizeTo24(){
+  while(ptsUsed()>START_POINTS){
+    const ks=Object.keys(editStats).sort((a,b)=>editStats[b]-editStats[a]);
+    for(const k of ks){ if(editStats[k]>1){editStats[k]--;break;} }
+  }
+}
+
+const STAGES=[
+ {yr:"初三",sem:"上",theme:"中考备考 · 兴趣萌芽"},
+ {yr:"初三",sem:"下",theme:"中考冲刺"},
+ {yr:"高一",sem:"上",theme:"适应高中"},
+ {yr:"高一",sem:"下",theme:"社团与探索"},
+ {yr:"高二",sem:"上",theme:"标化首考 · 竞赛"},
+ {yr:"高二",sem:"下",theme:"深度学习 · 成长期"},
+ {yr:"高三",sem:"上",theme:"文书与早申"},
+ {yr:"高三",sem:"下",theme:"提交申请"}
+];
+const yrLabel=r=>STAGES[r].yr+STAGES[r].sem;
+
+/* ---------- events ---------- */
+const EVENTS=[
+  {
+id:"flu",icon:"烧",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"模考当天发烧",text:"喉咙像吞了砂纸，今天状态全无，考试直接请假。",
+   effect:g=>{g.stress=clamp(g.stress+12,0,100);g.energy=clamp(g.energy-10,0,maxEnergy());return ["bad","发烧退赛，压力 +12、精力 −10。"];}
+  },
+  {
+id:"pet",icon:"猫",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"撸猫治愈",text:"邻居的猫主动蹭过来，紧绷的神经一下松了。",
+   effect:g=>{g.stress=clamp(g.stress-15,0,100);g.energy=clamp(g.energy+5,0,maxEnergy());return ["good","猫猫治愈，压力 −15、精力 +5。"];}
+  },
+  {
+id:"carepkg",icon:"箱",cat:"family",stage:[0,1,2,3,4,5,6,7],title:"爸妈空投补给",text:"一箱零食加现金寄到，家的味道最治愈。",
+   effect:g=>{g.energy=clamp(g.energy+12,0,maxEnergy());g.stress=clamp(g.stress-8,0,100);return ["good","家庭补给，精力 +12、压力 −8。"];}
+  },
+  {
+id:"gacha",icon:"金",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"抽卡出金",text:"游戏里一发入魂，今天运气玄学在线。",
+   effect:g=>{g.stats.luck=clamp(g.stats.luck+1,1,12);return ["good","欧气转移，运气 +1。"];}
+  },
+  {
+id:"lucky",icon:"鲤",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"锦鲤附体",text:"干啥都顺，连抽卡都出金。",
+   effect:g=>{g.stats.luck=clamp(g.stats.luck+1,1,12);return ["good","欧气满满，运气 +1。"];}
+  },
+  {
+id:"burnout",icon:"崩",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"倦怠预警",text:"连续高强度，身体亮红灯。",
+   effect:g=>{g.energy=clamp(g.energy-15,0,maxEnergy());g.stress=clamp(g.stress+12,0,100);return ["bad","倦怠预警，精力 −15、压力 +12。快去休息！"];}
+  },
+  {
+id:"shorts",icon:"短",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"短视频上头",text:"刷了一晚短视频，啥也没干。",
+   effect:g=>{g.energy=clamp(g.energy-8,0,maxEnergy());g.stress=clamp(g.stress-5,0,100);return ["warn","时间黑洞，精力 −8、压力 −5。"];}
+  },
+  {
+id:"proc",icon:"瘫",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"沙发封印一整天",text:"意志力被封印，啥也没干。",
+   effect:g=>{g.stress=clamp(g.stress-8,0,100);return ["warn","摆烂一天，压力 −8，但进度为零。"];}
+  },
+  {
+id:"scholar",icon:"光",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"天降奖学金情报",text:"刷到一条小众项目，正好对口你的特长。",
+   effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);return ["good","情报到手，创造力 +1。"];}
+  },
+  {
+id:"glitch",icon:"崩",cat:"chance",stage:[6,7],title:"申请系统崩了",text:"申请系统抽风，全网哀嚎，纯属倒霉。",
+   effect:g=>{g.stats.luck=clamp(g.stats.luck-1,1,12);return ["bad","系统背刺，运气 −1。"];}
+  },
+  {
+id:"talent",icon:"弹",cat:"creative",stage:[0,1,2,3,4,5,6,7],title:"才艺夜惊艳",text:"学校才艺夜你弹唱封神，成了校园红人。",
+   effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.stats.social=clamp(g.stats.social+1,1,12);return ["good","才艺出圈，创造力 +1、社交 +1。"];}
+  },
+  {
+id:"book",icon:"书",cat:"creative",stage:[0,1,2,3,4,5,6,7],title:"读到神书",text:"一本传记点燃斗志，全属性微涨。",
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);return ["good","被激励到，学术 +1、创造力 +1。"];}
+  },
+  {
+id:"meme",icon:"梗",cat:"creative",stage:[2,3,4,5,6,7],title:"校园梗图主",text:"你做的梗图在校内疯传，成了隐形 KOL。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);return ["good","梗图出圈，社交 +1、创造力 +1。"];}
+  },
+  {
+id:"alumni",icon:"脉",cat:"social",stage:[0,1,2,3,4,5,6,7],title:"校友讲座",text:"听了一场校友分享，拿到内推实习线索。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);return ["good","人脉+灵感，社交 +1、创造力 +1。"];}
+  },
+  {
+id:"exchange",icon:"飞",cat:"social",stage:[2,3,4,5,6,7],title:"交流项目名额",text:"学校放出海外交流，简历镀金好机会。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("海外交流");return ["good","拿下交流名额，社交 +1、履历 +。"];}
+  },
+  {
+id:"fit",icon:"跑",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"健身打卡",text:"坚持晨跑一个月，体能和精神都好了。",
+   effect:g=>{g.stats.stamina=clamp(g.stats.stamina+1,1,12);g.stress=clamp(g.stress-6,0,100);return ["good","健身回血，精力上限 +1、压力 −6。"];}
+  },
+  {
+id:"roommate",icon:"室",cat:"academic",stage:[2,3,4,5,6,7],title:"室友是卷王",text:"室友天天打卡图书馆，你被卷进去了。",
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","被室友带飞，学术 +1、压力 +6。"];}
+  },
+  {
+id:"farewell",icon:"别",cat:"social",stage:[2,3,4,5,6,7],title:"好友转学",text:"最好的朋友去了别的城市，有点失落。",
+   effect:g=>{g.stats.social=clamp(g.stats.social-1,1,12);g.stress=clamp(g.stress+6,0,100);return ["bad","离别情绪，社交 −1、压力 +6。"];}
+  },
+  {
+id:"fomo",icon:"焦",cat:"social",stage:[6,7],title:"朋友圈焦虑",text:"看别人晒 offer 预热，开始自我怀疑。",
+   effect:g=>{g.stress=clamp(g.stress+9,0,100);return ["bad","同辈压力，压力 +9。"];}
+  },
+  {
+id:"family",icon:"家",cat:"family",stage:[2,3,4,5,6,7],title:"家里出了点事",text:"家里临时有变故，你不得不分担。",
+   choices:[
+     {label:"自己扛下来",hint:"社交+1 压力+6",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","顶住压力，社交 +1、压力 +6。"];}},
+     {label:"找老师求助",hint:"压力-4 精力-5",apply:g=>{g.stress=clamp(g.stress-4,0,100);g.energy=clamp(g.energy-5,0,maxEnergy());return ["good","及时求助，压力 −4、精力 −5。"];}}
+   ]
+  },
+  {
+id:"family_trip",icon:"家",cat:"family",stage:[0,1,2,3,4,5,6,7],title:"全家短途旅行",text:"爸妈强行把你拖去周边游，强制断电两天。",
+   effect:g=>{g.stress=clamp(g.stress-12,0,100);g.energy=clamp(g.energy+10,0,maxEnergy());return ["good","旅行回血，压力 −12、精力 +10。"];}
+  },
+  {
+id:"zk_mock",icon:"测",cat:"academic",stage:[0,1],fit:4,title:"中考一模出炉",text:"成绩不理想，但暴露了薄弱知识点。",
+   choices:[
+     {label:"分析错题复盘",hint:"学术+1 压力-3",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","查漏补缺，学术 +1、压力 −3。"];}},
+     {label:"先摆烂两天",hint:"压力-6",apply:g=>{g.stress=clamp(g.stress-6,0,100);return ["warn","缓口气，压力 −6，但没涨分。"];}}
+   ]
+  },
+  {
+id:"zk_sports",icon:"跑",cat:"health",stage:[0,1],title:"中考体育集训",text:"每天放学后狂练跑步，体能肉眼可见地上来了。",
+   effect:g=>{g.stats.stamina=clamp(g.stats.stamina+1,1,12);g.energy=clamp(g.energy-8,0,maxEnergy());g.stress=clamp(g.stress+3,0,100);return ["good","体能提升，精力上限 +1、精力 −8。"];}
+  },
+  {
+id:"zk_club",icon:"戏",cat:"social",stage:[0,1],title:"初中社团招新",text:"你挑了一个感兴趣的社团，认识了同好。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("初中社团");return ["good","社团初体验，社交 +1、履历 +。"];}
+  },
+  {
+id:"zk_interest",icon:"灵",cat:"creative",stage:[0,1],fit:4,title:"兴趣萌芽",text:"你迷上了某样东西，眼睛一下亮了。",
+   choices:[
+     {label:"深究下去",hint:"创造力+1.5 压力-3",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+1.5,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","天赋被点燃，创造力 +1.5、压力 −3。"];}},
+     {label:"浅尝辄止",hint:"创造力+0.5",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+0.5,1,12);return ["good","体验一下，创造力 +0.5。"];}}
+   ]
+  },
+  {
+id:"zk_parent",icon:"压",cat:"family",stage:[0,1],title:"家长会后施压",text:"“别人家孩子都签约重点了！”压力暴增。",
+   effect:g=>{g.stress=clamp(g.stress+14,0,100);return ["bad","家长施压，压力 +14。记得找时间休息。"];}
+  },
+  {
+id:"zk_burnout",icon:"熬",cat:"health",stage:[0,1],title:"刷题到吐",text:"中考题海战术，人麻了。",
+   effect:g=>{g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+10,0,100);return ["bad","连轴转，精力 −12、压力 +10。"];}
+  },
+  {
+id:"zk_friend",icon:"友",cat:"social",stage:[0,1],title:"初中死党",text:"和死党约好以后要同校。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);return ["good","友谊万岁，社交 +1。"];}
+  },
+  {
+id:"hs_adapt",icon:"书",cat:"academic",stage:[2,3],title:"高中第一课",text:"节奏和初中完全不同，你有点懵。",
+   choices:[
+     {label:"调整节奏",hint:"学术+1 压力-3",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","找到节奏，学术 +1、压力 −3。"];}},
+     {label:"硬扛",hint:"学术+0 压力+6",apply:g=>{g.stress=clamp(g.stress+6,0,100);return ["warn","硬撑着，压力 +6。"];}}
+   ]
+  },
+  {
+id:"hs_clubfair",icon:"选",cat:"social",stage:[2,3],title:"百团大战",text:"社团招新，你挑花了眼。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("社团");return ["good","加入社团，社交 +1、履历 +。"];}
+  },
+  {
+id:"hs_teacher",icon:"导",cat:"academic",stage:[2,3],title:"遇上好老师",text:"一位老师看中你，课后开小灶。",
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);return ["good","名师指点，学术 +1。"];}
+  },
+  {
+id:"hs_fail",icon:"砸",cat:"academic",stage:[2,3],title:"第一次月考翻车",text:"高中第一次大考，措手不及。",
+   effect:g=>{g.stress=clamp(g.stress+6,0,100);return ["bad","小测翻车，压力 +6。"];}
+  },
+  {
+id:"hs_explore",icon:"探",cat:"creative",stage:[2,3],title:"社团初体验",text:"你在社团里找到归属感。",
+   effect:g=>{g.stats.creativity=clamp(g.stats.creativity+0.5,1,12);g.stats.social=clamp(g.stats.social+0.5,1,12);return ["good","探索自我，创造力 +0.5、社交 +0.5。"];}
+  },
+  {
+id:"sat_prep",icon:"测",cat:"academic",stage:[4,5],fit:4,title:"SAT 首考倒计时",text:"标化首考临近，你开始紧张。",
+   choices:[
+     {label:"全力冲刺",hint:"英语+1 精力-12 压力+6",apply:g=>{g.stats.english=clamp(g.stats.english+1,1,12);g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+6,0,100);return ["warn","冲刺提分，英语 +1、精力 −12、压力 +6。"];}},
+     {label:"平常心",hint:"压力-3",apply:g=>{g.stress=clamp(g.stress-3,0,100);return ["good","稳住心态，压力 −3。"];}}
+   ]
+  },
+  {
+id:"contest_season",icon:"奥",cat:"award",stage:[4,5],fit:4,title:"竞赛季来临",text:"各类学科竞赛扎堆，你挑了主攻方向。",
+   choices:[
+     {label:"全力冲奖",hint:"奖项+2 精力-15",apply:g=>{g.results.awards+=2;g.energy=clamp(g.energy-15,0,maxEnergy());return ["good","竞赛发力，奖项 +2，精力 −15。"];}},
+     {label:"浅尝辄止",hint:"压力-5",apply:g=>{g.stress=clamp(g.stress-5,0,100);return ["warn","体验一下，压力 −5，没拿奖。"];}}
+   ]
+  },
+  {
+id:"research_start",icon:"研",cat:"academic",stage:[4,5],fit:4,title:"进实验室搬砖",text:"教授招本科生助研，你被选上了。",
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.energy=clamp(g.energy-10,0,maxEnergy());return ["good","助研入门，学术 +1、精力 −10。"];}
+  },
+  {
+id:"ap_exam",icon:"考",cat:"academic",stage:[4,5],title:"AP 大考周",text:"一周五门 AP，脑子快要炸了。",
+   effect:g=>{g.energy=clamp(g.energy-10,0,maxEnergy());g.stress=clamp(g.stress+8,0,100);return ["warn","AP 周，精力 −10、压力 +8。"];}
+  },
+  {
+id:"summer_program",icon:"夏",cat:"chance",stage:[4,5],title:"夏校放榜",text:"梦校夏校结果下来了。",
+   choices:[
+     {label:"录取！",hint:"社交+1 履历+",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("夏校");return ["good","夏校录取，社交 +1、履历 +。"];}},
+     {label:"被拒",hint:"学术+1 压力+6",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","被拒但更拼了，学术 +1、压力 +6。"];}}
+   ]
+  },
+  {
+id:"club_lead",icon:"社",cat:"social",stage:[4,5],fit:3,title:"社团上位",text:"换届选举你当选了社长。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+2,1,12);g.results.ecs.push("社团社长");return ["good","从零带社，社交 +2、履历 +。"];}
+  },
+  {
+id:"hack_season",icon:"黑",cat:"creative",stage:[4,5],title:"科创节",text:"学校科创节，你做了个项目。",
+   effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("科创");return ["good","科创出手，创造力 +1、声望 +2、履历 +。"];}
+  },
+  {
+id:"essay_block",icon:"灵",cat:"creative",stage:[6,7],fit:5,title:"文书卡壳",text:"主文书改了八版还是不对味。",
+   choices:[
+     {label:"推倒重写",hint:"文书+1 压力+5",apply:g=>{g.results.essayQuality=clamp(g.results.essayQuality+1,0,10);g.stress=clamp(g.stress+5,0,100);return ["good","灵感来了，文书质量 +1、压力 +5。"];}},
+     {label:"先放着",hint:"压力-3",apply:g=>{g.stress=clamp(g.stress-3,0,100);return ["warn","缓一缓，压力 −3。"];}}
+   ]
+  },
+  {
+id:"rec_ask",icon:"导",cat:"award",stage:[6,7],fit:5,title:"找推荐人",text:"你鼓起勇气找老师写推荐信。",
+   effect:g=>{g.results.recQuality=clamp(g.results.recQuality+1,0,10);return ["good","拿到承诺，推荐信质量 +1。"];}
+  },
+  {
+id:"early_night",icon:"夜",cat:"chance",stage:[6,7],title:"早申提交夜",text:"ED 截止前最后一晚，心跳加速。",
+   effect:g=>{g.stress=clamp(g.stress+6,0,100);g.energy=clamp(g.energy-5,0,maxEnergy());return ["warn","截止夜，压力 +6、精力 −5。"];}
+  },
+  {
+id:"waitlist_dread",icon:"焦",cat:"social",stage:[6,7],title:"早申放榜日",text:"同学早申陆续上岸，你五味杂陈。",
+   choices:[
+     {label:"替他人开心",hint:"社交+1",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);return ["good","大方祝福，社交 +1。"];}},
+     {label:"自我怀疑",hint:"压力+8",apply:g=>{g.stress=clamp(g.stress+8,0,100);return ["bad","陷入内耗，压力 +8。"];}}
+   ]
+  },
+  {
+id:"final_rush",icon:"考",cat:"academic",stage:[6,7],title:"申请季冲刺",text:"RD 截止前最后两周，连轴转。",
+   effect:g=>{g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+10,0,100);return ["bad","冲刺期，精力 −12、压力 +10。"];}
+  },
+  {
+id:"interview",icon:"谈",cat:"social",stage:[6,7],title:"校友面试",text:"和校友面试官聊得投机。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.recQuality=clamp(g.results.recQuality+0.5,0,10);return ["good","面试顺利，社交 +1、推荐信 +。"];}
+  },
+  {
+id:"submit_relief",icon:"舒",cat:"health",stage:[6,7],title:"提交完毕",text:"最后一所提交，如释重负。",
+   effect:g=>{g.stress=clamp(g.stress-15,0,100);g.energy=clamp(g.energy+8,0,maxEnergy());return ["good","尘埃落定，压力 −15、精力 +8。"];}
+  },
+  {
+id:"power_rec",icon:"导",cat:"award",stage:[2,3,4,5,6,7],power:true,title:"业界大牛亲笔推荐",text:"你帮过的教授主动要给你写强推，分量极重。",
+   effect:g=>{g.results.recQuality=clamp(g.results.recQuality+3,0,10);g.results.reputation=clamp(g.results.reputation+8,0,100);return ["good","神级推荐信！推荐信 +3、声望 +8。"];}
+  },
+  {
+id:"power_intl_award",icon:"奖",cat:"award",stage:[2,3,4,5,6,7],power:true,title:"国际大赛折桂",text:"你站上了国际领奖台，惊艳众人。",
+   effect:g=>{g.results.awards+=3;g.results.reputation=clamp(g.results.reputation+10,0,100);g.stats.academic=clamp(g.stats.academic+1,1,12);return ["good","国际大奖！奖项 +3、声望 +10、学术 +1。"];}
+  },
+  {
+id:"power_paper",icon:"光",cat:"academic",stage:[2,3,4,5,6,7],power:true,title:"一作论文发表",text:"你的研究被顶会接收，署名第一作者。",
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+10,0,100);g.results.ecs.push("一作论文");return ["good","论文发表！学术 +1、声望 +10、履历 +1。"];}
+  },
+  {
+id:"power_patron",icon:"脉",cat:"chance",stage:[2,3,4,5,6,7],power:true,title:"贵人引路",text:"一位校友长辈愿意内推并长期指导你。",
+   effect:g=>{g.results.reputation=clamp(g.results.reputation+10,0,100);g.results.recQuality=clamp(g.results.recQuality+2,0,10);return ["good","贵人相助，声望 +10、推荐信 +2。"];}
+  },
+  {
+id:"power_tip",icon:"灵",cat:"chance",stage:[6,7],power:true,title:"招生官点拨",text:"线上活动里招生官私下给了关键建议。",
+   effect:g=>{g.results.essayQuality=clamp(g.results.essayQuality+2,0,10);g.results.recQuality=clamp(g.results.recQuality+1,0,10);return ["good","内部点拨，文书 +2、推荐信 +1。"];}
+  },
+  {
+id:"cs_opensource",icon:"黑",cat:"creative",stage:[4,5],majors:["cs"],fit:8,title:"开源项目爆火",text:"你写的库被很多人用，star 疯涨。",
+   effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("开源项目");return ["good","项目出圈，创造力 +1、声望 +3、履历 +。"];}
+  },
+  {
+id:"cs_ctf",icon:"黑",cat:"award",stage:[4,5],majors:["cs"],fit:8,title:"CTF 全国冠军",text:"你和队友一路过关拿下全国第一。",
+   effect:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+5,0,100);g.results.ecs.push("CTF 冠军");return ["good","CTF 夺冠，奖项 +1、创造力 +1、声望 +5。"];}
+  },
+  {
+id:"biz_angel",icon:"旗",cat:"social",stage:[4,5],majors:["biz"],fit:8,title:"创业拿天使",text:"你的项目拿到第一笔投资。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("创业");return ["good","拿到天使轮，社交 +1、声望 +3、履历 +。"];}
+  },
+  {
+id:"biz_final",icon:"旗",cat:"award",stage:[4,5],majors:["biz"],fit:8,title:"商赛全国总决",text:"带队杀进全国总决赛。",
+   effect:g=>{g.results.awards++;g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("商赛总决赛");return ["good","商赛折桂，奖项 +1、社交 +1、声望 +3。"];}
+  },
+  {
+id:"sci_isef",icon:"奥",cat:"award",stage:[4,5],majors:["sci"],fit:8,title:"工程大赛入围",text:"你的课题入围国际科学与工程大赛。",
+   effect:g=>{g.results.awards++;g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("科研大赛");return ["good","大赛入围，奖项 +1、学术 +1、声望 +3。"];}
+  },
+  {
+id:"sci_lab",icon:"研",cat:"academic",stage:[4,5],majors:["sci"],fit:8,title:"独立课题",text:"你有了自己的研究课题。",
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("独立课题");return ["good","独立科研，学术 +1、声望 +2、履历 +。"];}
+  },
+  {
+id:"soc_mun",icon:"辩",cat:"award",stage:[4,5],majors:["soc"],fit:8,title:"模拟联合国获奖",text:"你在模联拿下最佳代表。",
+   effect:g=>{g.results.awards++;g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("模联");return ["good","模联获奖，奖项 +1、社交 +1、声望 +2。"];}
+  },
+  {
+id:"soc_media",icon:"脉",cat:"social",stage:[4,5],majors:["soc"],fit:8,title:"调研被转载",text:"你的社会调研被媒体转载。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("调研发表");return ["good","调研出圈，社交 +1、创造力 +1、声望 +2。"];}
+  },
+  {
+id:"art_gallery",icon:"弹",cat:"creative",stage:[4,5],majors:["art"],fit:8,title:"作品集被收藏",text:"你的作品被画廊收藏。",
+   effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("作品集");return ["good","作品被收藏，创造力 +1、声望 +3、履历 +。"];}
+  },
+  {
+id:"art_award",icon:"弹",cat:"award",stage:[4,5],majors:["art"],fit:8,title:"设计大赛金奖",text:"你拿下了设计金奖。",
+   effect:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("设计金奖");return ["good","设计金奖，奖项 +1、创造力 +1、声望 +3。"];}
+  },
+  {
+id:"med_shadow",icon:"研",cat:"academic",stage:[4,5],majors:["med"],fit:8,title:"名医见习",text:"你跟随医生临床见习。",
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stats.social=clamp(g.stats.social+0.5,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("临床见习");return ["good","临床见习，学术 +1、社交 +、声望 +2、履历 +。"];}
+  },
+  {
+id:"med_olympiad",icon:"奥",cat:"award",stage:[4,5],majors:["med"],fit:8,title:"医学竞赛获奖",text:"你拿了生物奥赛奖。",
+   effect:g=>{g.results.awards++;g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("生物奥赛");return ["good","奥赛获奖，奖项 +1、学术 +1、声望 +2。"];}
+  }
+];
+const catOf=e=>e.cat||"chance";
+function drawEvent(){
+  const r=G.round;
+  const majorOk=e=>G.major==="und"?true:(!e.majors||e.majors.includes(G.major));
+  let pool=EVENTS.filter(e=>e.stage.includes(r)&&majorOk(e)&&!G.usedEvents.includes(e.id));
+  if(!pool.length) pool=EVENTS.filter(e=>majorOk(e)&&!G.usedEvents.includes(e.id));
+  if(!pool.length) pool=EVENTS;
+  const powers=pool.filter(e=>e.power);
+  if(powers.length && Math.random()<0.13){
+    const e=pick(powers); G.usedEvents.push(e.id); if(G.usedEvents.length>20)G.usedEvents.shift(); return e;
+  }
+  const norm=pool.filter(e=>!e.power);
+  const src=norm.length?norm:pool;
+  const e=pick(src); G.usedEvents.push(e.id); if(G.usedEvents.length>20)G.usedEvents.shift(); return e;
+}
+
+/* 专业方向：开局选择，影响录取与行动契合度 */
+const MAJORS=[
+  {id:"und", name:"未定",        icon:"star",   desc:"先广泛探索，后期再聚焦。录取上不偏不倚。", related:[]},
+  {id:"cs",  name:"计算机/工程",  icon:"bolt",   desc:"写代码、做项目、打 CTF。契合工程/CS 强校（如帝国理工、CMU 类）。", related:["code","research","contest","study"]},
+  {id:"biz", name:"商科/经济",    icon:"flag",   desc:"商赛、创业、读财报。契合 LSE/沃顿类商强校。", related:["biz","club","contest","network"]},
+  {id:"sci", name:"自然科学",      icon:"book",   desc:"进实验室、发论文。契合科研型大学。", related:["lab","research","contest","study"]},
+  {id:"soc", name:"人文社科",      icon:"people", desc:"调研、写作、辩论。契合 LSE/社科强校。", related:["debate","write","club","read"]},
+  {id:"art", name:"艺术设计",      icon:"bulb",   desc:"创作、参展、作品集。契合艺术类/综合校艺术系。", related:["art","talent","contest","read"]},
+  {id:"med", name:"医学预科",      icon:"heart",  desc:"医疗志愿、科研、生物。契合 Pre-med 强校。", related:["med","research","club"]}
+];
+const MAJOR_BYID={}; MAJORS.forEach(m=>MAJOR_BYID[m.id]=m);
+const BASIC_IDS=["vocab","study","toefl","sat"];
+function bumpFit(n){ if(G&&G.major!=="und") G.majorFit=clamp(G.majorFit+n,0,100); }
+function majorGainFrom(a){ if(!G||G.major==="und"||!a) return 0; const m=MAJOR_BYID[G.major]; if(!m) return 0; if(a.major===G.major) return 8; if(m.related.includes(a.id)) return 6; return 0; }
+
+/* ---------- actions ---------- */
+const ACTIONS=[
+  {id:"vocab",   name:"背单词",   icon:"globe", energy:15, stress:5,  run:doVocab},
+  {id:"oral",    name:"口语角",   icon:"people",energy:15, stress:4,  run:doOral},
+  {id:"read",    name:"读外刊",   icon:"book",  energy:12, stress:3,  run:doRead},
+  {id:"write",   name:"打磨文书", icon:"pencil",energy:18, stress:6,  run:doWrite},
+  {id:"sat",     name:"刷 SAT",   icon:"pencil",energy:35, stress:12, run:doSAT},
+  {id:"toefl",   name:"刷托福",   icon:"globe", energy:25, stress:8,  run:doTOEFL},
+  {id:"study",   name:"啃硬课",   icon:"book",  energy:25, stress:10, run:doStudy},
+  {id:"library", name:"泡图书馆", icon:"book",  energy:20, stress:6,  run:doLibrary},
+  {id:"research",name:"做科研",   icon:"bulb",  energy:28, stress:12, run:doResearch},
+  {id:"contest", name:"冲竞赛",   icon:"award", energy:30, stress:14, run:doContest},
+  {id:"club",    name:"搞社团",   icon:"flag",  energy:20, stress:8,  run:doClub},
+  {id:"talent",  name:"发展特长", icon:"bulb",  energy:20, stress:6,  run:doTalent},
+  {id:"network", name:"经营人脉", icon:"people",energy:15, stress:5,  run:doNetwork},
+  {id:"zk",      name:"中考复习", icon:"book",  energy:18, stress:8,  run:doZk, stage:[0,1]},
+  {id:"code",    name:"写代码做项目", icon:"bolt",  energy:26, stress:10, major:"cs",  run:doCode},
+  {id:"biz",     name:"搞商赛/创业", icon:"flag",  energy:24, stress:9,  major:"biz", run:doBiz},
+  {id:"lab",     name:"进实验室", icon:"book", energy:26, stress:10, major:"sci", run:doLab},
+  {id:"debate",  name:"社科调研", icon:"people",energy:18, stress:5,  major:"soc", run:doDebate},
+  {id:"art",     name:"艺术创作", icon:"bulb", energy:18, stress:5,  major:"art", run:doArt},
+  {id:"med",     name:"医疗志愿", icon:"heart", energy:20, stress:6,  major:"med", run:doMed}
+];
+const REST={id:"rest",name:"休息",icon:"moon",energy:-45,stress:-25,run:doRest};
+function dealActions(){
+  const r=G.round;
+  let basicIds=["vocab","study"];
+  if(r>=2) basicIds.push("toefl");
+  if(r>=4) basicIds.push("sat");
+  if(r>=6) basicIds.push("write");
+  if(r<=1) basicIds.push("zk");
+  G.dealtBasic=ACTIONS.filter(a=>basicIds.includes(a.id));
+  let pool=shuffle(ACTIONS.filter(a=>!basicIds.includes(a.id) && (!a.stage || a.stage.includes(r))));
+  if(G.major!=="und"){
+    const m=MAJOR_BYID[G.major];
+    const rel=pool.filter(a=>a.major===G.major||(m&&m.related.includes(a.id)));
+    const others=pool.filter(a=>!rel.includes(a));
+    G.dealtRand=rel.slice(0,Math.min(2,rel.length)).concat(others).slice(0,DEALT);
+  }else{
+    G.dealtRand=pool.slice(0,DEALT);
+  }
+}
+
+/* —— 英语类 —— */
+function doVocab(){
+  const g=mulFx('englishGain',1)*0.35*pen();
+  G.stats.english=clamp(G.stats.english+g,1,12);
+  return ["good",`词汇量上涨，英语 +${g.toFixed(2)}（现 ${G.stats.english.toFixed(1)}）。`];
+}
+function doOral(){
+  const e=mulFx('englishGain',1)*0.30*pen(), s=mulFx('socialGain',1)*0.2*pen();
+  G.stats.english=clamp(G.stats.english+e,1,12);
+  G.stats.social=clamp(G.stats.social+s,1,12);
+  G.results.reputation=clamp(G.results.reputation+2*mulFx('socialGain',1),0,100);
+  return ["good",`开口说英语，英语 +${e.toFixed(2)}、社交 +${s.toFixed(2)}、声望 +2。`];
+}
+function doRead(){
+  const e=mulFx('englishGain',1)*0.25*pen();
+  G.stats.english=clamp(G.stats.english+e,1,12);
+  G.stats.creativity=clamp(G.stats.creativity+0.15*pen(),1,12);
+  G.results.essayQuality=clamp(G.results.essayQuality+0.15*mulFx('craftGain',1),0,10);
+  return ["good",`啃外刊，英语 +${e.toFixed(2)}，语感也进了文书里。`];
+}
+function doWrite(){
+  const e=0.15*mulFx('englishGain',1)*pen();
+  G.stats.english=clamp(G.stats.english+e,1,12);
+  G.results.essayQuality=clamp(G.results.essayQuality+0.8*mulFx('craftGain',1),0,10);
+  return ["good",`文书改到第 N 版，文书质量 ${G.results.essayQuality.toFixed(1)}/10。`];
+}
+/* —— 标化：SAT 与托福分开，SAT 10 分一档 —— */
+function doSAT(){
+  const e=G.stats.english,lk=G.stats.luck;
+  const penalty=G.stress>=70?60:0;
+  const base=1090+40*e;
+  const noise=gauss(0,55)*(1-0.04*lk);
+  let sat=Math.round(clamp(base+noise+(lk-6)*5-penalty,400,1560)/10)*10;
+  if(sat>=1560 && Math.random()<0.03) sat=1600;   // 满分极罕见：仅顶级发挥 + 极小概率
+  const prev=G.results.satBest;
+  if(sat>prev) G.results.satBest=sat;
+  const expected=Math.round(base);
+  let msg,cls;
+  if(sat>=expected+80){msg=`SAT ${sat}，超常发挥。`;cls="good";}
+  else if(sat<expected-80){msg=`SAT ${sat}，翻车了，下回合还能再刷。`;cls="bad";}
+  else {msg=`SAT ${sat}，中规中矩。`;cls="warn";}
+  if(sat<=prev) msg+=`（未超过最佳 ${prev}）`;
+  if(G.stress>=70) msg+="（高压扣分）";
+  if(sat===1600) msg+=" 满分！凤毛麟角。";
+  return [cls,msg];
+}
+function doTOEFL(){
+  const e=G.stats.english,lk=G.stats.luck;
+  const penalty=G.stress>=70?6:0;
+  const base=52+5.6*e;
+  const noise=gauss(0,5)*(1-0.04*lk);
+  let toefl=Math.round(clamp(base+noise+(lk-6)*1.2-penalty,40,118));
+  if(toefl>=118 && Math.random()<0.03) toefl=120;   // 满分极罕见：仅顶级发挥 + 极小概率
+  const prev=G.results.toeflBest;
+  if(toefl>prev) G.results.toeflBest=toefl;
+  let msg=toefl>prev?`托福 ${toefl}，刷新最佳。`:`托福 ${toefl}（未超过最佳 ${prev}）。`;
+  if(G.stress>=70) msg+="（高压扣分）";
+  if(toefl===120) msg+=" 满分！凤毛麟角。";
+  return [toefl>=100?"good":toefl>=85?"warn":"bad",msg];
+}
+/* —— 学术 & 其他 —— */
+function doStudy(){
+  const g=0.7*pen()*mulFx('academicGain',1);
+  G.stats.academic=clamp(G.stats.academic+g,1,12);
+  return ["good",`死磕课业，学术 +${g.toFixed(2)}（现 ${G.stats.academic.toFixed(1)}）。`];
+}
+function doLibrary(){
+  const g=0.5*pen()*mulFx('academicGain',1);
+  G.stats.academic=clamp(G.stats.academic+g,1,12);
+  G.stats.creativity=clamp(G.stats.creativity+0.1,1,12);
+  return ["good",`图书馆一日游，学术 +${g.toFixed(2)}。`];
+}
+function doResearch(){
+  const g=0.6*pen()*mulFx('academicGain',1);
+  G.stats.academic=clamp(G.stats.academic+g,1,12);
+  G.results.recQuality=clamp(G.results.recQuality+0.4*mulFx('craftGain',1),0,10);
+  G.results.ecs.push("科研");
+  if(Math.random()<0.2+0.03*G.stats.academic){G.results.awards++;return ["good",`科研出成果还拿了奖，学术 +、奖项 +1。`];}
+  return ["good",`泡实验室，学术 +${g.toFixed(2)}、推荐信潜力 +。`];
+}
+function doContest(){
+  G.stats.creativity=clamp(G.stats.creativity+0.3*pen(),1,12);
+  G.results.reputation=clamp(G.results.reputation+2,0,100);
+  G.results.ecs.push("竞赛");
+  const p=0.35+0.05*G.stats.creativity+0.02*G.stats.luck - (G.stress/100)*0.2;
+  if(Math.random()<p){G.results.awards++;return ["good",`竞赛拿奖！国家级奖项 +1（共 ${G.results.awards} 个）。`];}
+  return ["warn",`竞赛陪跑，但声望 +2、创造力 +。`];
+}
+function doClub(){
+  const s=mulFx('socialGain',1)*0.4*pen();
+  G.stats.social=clamp(G.stats.social+s,1,12);
+  G.stats.creativity=clamp(G.stats.creativity+0.2*pen(),1,12);
+  G.results.ecs.push(pick(["社团","志愿","运动队","乐队","科创"]));
+  G.results.reputation=clamp(G.results.reputation+3*mulFx('socialGain',1),0,100);
+  return ["good",`社团活动，社交 +${s.toFixed(2)}、声望 +3、履历 +1 项。`];
+}
+function doTalent(){
+  const g=0.6*pen();
+  G.stats.creativity=clamp(G.stats.creativity+g,1,12);
+  G.results.essayQuality=clamp(G.results.essayQuality+0.2*mulFx('craftGain',1),0,10);
+  if(Math.random()<0.25+0.05*G.stats.creativity){G.results.awards++;return ["good",`特长精进还顺手拿奖，荣誉 +1！`];}
+  return ["good",`死磕特长，创造力 +${g.toFixed(2)}。`];
+}
+function doNetwork(){
+  const s=mulFx('socialGain',1)*0.5*pen();
+  G.stats.social=clamp(G.stats.social+s,1,12);
+  G.results.recQuality=clamp(G.results.recQuality+0.6*mulFx('craftGain',1),0,10);
+  G.results.reputation=clamp(G.results.reputation+2*mulFx('socialGain',1),0,100);
+  return ["good",`经营人脉，社交 +${s.toFixed(2)}、推荐信 ${G.results.recQuality.toFixed(1)}/10、声望 +2。`];
+}
+function doRest(){
+  // 精力/压力由 doAction 依据行动元数据（energy:-45, stress:-25）统一结算，这里不再重复施加
+  return ["good","睡了个好觉，精力回血、压力 −25。"];
+}
+function doCode(){
+  const g=mulFx('academicGain',1)*0.4*pen();
+  G.stats.academic=clamp(G.stats.academic+g,1,12);
+  G.results.ecs.push("编程项目");
+  G.results.reputation=clamp(G.results.reputation+2,0,100);
+  return ["good",`写了个能跑的项目，学术 +${g.toFixed(2)}、履历 +1、声望 +2。`];
+}
+function doBiz(){
+  const s=mulFx('socialGain',1)*0.3*pen();
+  G.stats.social=clamp(G.stats.social+s,1,12);
+  G.results.ecs.push("商赛/创业");
+  G.results.reputation=clamp(G.results.reputation+2,0,100);
+  return ["good",`带队打商赛，社交 +${s.toFixed(2)}、履历 +1、声望 +2。`];
+}
+function doLab(){
+  const g=mulFx('academicGain',1)*0.5*pen();
+  G.stats.academic=clamp(G.stats.academic+g,1,12);
+  G.results.ecs.push("实验室科研");
+  G.results.recQuality=clamp(G.results.recQuality+0.3*mulFx('craftGain',1),0,10);
+  return ["good",`进实验室搬砖，学术 +${g.toFixed(2)}、推荐信潜力 +。`];
+}
+function doDebate(){
+  const s=mulFx('socialGain',1)*0.3*pen();
+  G.stats.social=clamp(G.stats.social+s,1,12);
+  G.results.essayQuality=clamp(G.results.essayQuality+0.3*mulFx('craftGain',1),0,10);
+  G.results.ecs.push("社科调研");
+  return ["good",`做社会调研写报告，社交 +${s.toFixed(2)}、文书 +、履历 +。`];
+}
+function doArt(){
+  const g=0.5*pen();
+  G.stats.creativity=clamp(G.stats.creativity+g,1,12);
+  G.results.essayQuality=clamp(G.results.essayQuality+0.2*mulFx('craftGain',1),0,10);
+  G.results.ecs.push("艺术作品集");
+  return ["good",`打磨作品集，创造力 +${g.toFixed(2)}、文书 +、履历 +。`];
+}
+function doMed(){
+  const g=0.4*pen();
+  G.stats.academic=clamp(G.stats.academic+g,1,12);
+  G.stats.social=clamp(G.stats.social+0.2*pen(),1,12);
+  G.results.ecs.push("医疗志愿");
+  G.results.reputation=clamp(G.results.reputation+2,0,100);
+  return ["good",`医院志愿服务，学术 +${g.toFixed(2)}、社交 +、声望 +2、履历 +。`];
+}
+function doZk(){
+  const g=0.6*pen()*mulFx('academicGain',1);
+  G.stats.academic=clamp(G.stats.academic+g,1,12);
+  G.results.ecs.push("中考备战");
+  return ["good",`中考刷题，学术 +${g.toFixed(2)}、履历 +1。`];
+}
+function pen(){ return G.stress>=70?0.5:1; }
+
+/* ---------- GPA：每学期成绩单 ---------- */
+function genSemesterCourses(){
+  const plan=RIGOR[G.rigor].mix, courses=[];
+  const eRatio=G.energy/maxEnergy();
+  for(const [lvl,n] of plan){
+    for(let i=0;i<n;i++){
+      let raw=2.6+0.117*G.stats.academic;
+      raw+=(eRatio-0.5)*0.45;
+      raw-=G.stress/100*0.30;
+      raw+=(G.stats.luck-6)*0.03;
+      raw-=LEVEL_DIFF[lvl];
+      raw+=gauss(0,0.22);
+      raw=clamp(raw,0,4.0);
+      const gr=snapGrade(raw);
+      courses.push({lvl,p:gr[1],g:gr[0],credit:1.0,wp:Math.min(5,gr[1]+LEVEL_BONUS[lvl])});
+    }
+  }
+  return courses;
+}
+function closeSemester(){
+  const courses=genSemesterCourses();
+  const credits=courses.reduce((a,c)=>a+c.credit,0);
+  const qpU=courses.reduce((a,c)=>a+c.p*c.credit,0);
+  const qpW=courses.reduce((a,c)=>a+c.wp*c.credit,0);
+  const sem={i:G.round,courses,gpaU:qpU/credits,gpaW:qpW/credits,credits};
+  G.results.semesters.push(sem);
+  const avgU=courses.reduce((a,c)=>a+c.p,0)/courses.length;
+  pushLog(avgU>=3.7?"good":avgU>=3.0?"warn":"bad",
+    `【第 ${G.round+1} 学期成绩单】${courses.map(c=>c.g).join(" ")} · 学期 GPA ${sem.gpaU.toFixed(2)}（加权 ${sem.gpaW.toFixed(2)}）`);
+  return sem;
+}
+
+/* ---------- game flow ---------- */
+function startGame(){
+  const stats=Object.assign({},editStats);
+  // 特质静态加成
+  editTraits.forEach(t=>{
+    if(t.fx.luck) stats.luck=clamp(stats.luck+t.fx.luck,1,12);
+    if(t.fx.creativity) stats.creativity=clamp(stats.creativity+t.fx.creativity,1,12);
+    if(t.fx.english) stats.english=clamp(stats.english+t.fx.english,1,12);
+  });
+  G=freshState(stats,editTraits,editRigor,editMajor);
+  $("setup").classList.remove("on");
+  $("endgame").classList.remove("on");
+  $("pick").classList.remove("on");
+  $("game").classList.add("on");
+  pushLog("info",`旅程开始。特质：${editTraits.map(t=>t.name).join("、")}｜课程难度：${RIGOR[editRigor].name}`);
+  dealActions();
+  enterEvent();
+}
+function enterEvent(){
+  G.phase="event";
+  const e=drawEvent();
+  G._curEvent=e;
+  const card=$("eventCard");
+  const hasChoice=e.choices&&e.choices.length;
+  const ct=catOf(e.id);
+  let html=`<div class="ev-cat">${ic(CAT_ICON[ct])}<span>${CAT_NAME[ct]}</span></div>
+    <div class="ev-stage">${STAGES[G.round].yr}${STAGES[G.round].sem} · ${STAGES[G.round].theme}</div><h3>${e.title}</h3><p>${e.text}</p>`;
+  if(hasChoice){
+    html+=`<div class="choices">`+e.choices.map((c,i)=>`<button class="btn" data-ci="${i}">${c.label}<br><small style="opacity:.8;font-weight:400">${c.hint}</small></button>`).join("")+`</div>`;
+  }else{
+    html+=`<div class="choices"><button class="btn" id="evCont">继续</button></div>`;
+  }
+  card.innerHTML=html;
+  if(hasChoice){
+    card.querySelectorAll("button[data-ci]").forEach(b=>{
+      b.onclick=()=>{const r=e.choices[+b.dataset.ci].apply(G);afterEvent(r);};
+    });
+  }else{
+    $("evCont").onclick=()=>{const r=e.effect(G);afterEvent(r);};
+  }
+  // 事件未结算时：清空行动区、禁用结束回合，防止旧按钮被误点
+  $("acts").innerHTML='<div class="small">先处理上方事件，再进行行动。</div>';
+  $("endRoundBtn").disabled=true;
+  renderStatus();
+}
+function afterEvent(r){
+  pushLog(r[0],`【事件】${r[1]}`);
+  G.phase="action";
+  $("eventCard").innerHTML=`<div class="ev-cat">${ic("pencil")}<span>已结算</span></div><h3>事件结算完毕</h3><p>下面是行动时间。</p>`;
+  $("endRoundBtn").disabled=false;
+  renderStatus();renderActions();
+}
+function doAction(a){
+  if(G.phase!=="action"||G.ap<=0) return;
+  const amt=Math.abs(a.energy);
+  if(a.energy>0){
+    const cost=amt*mulFx('energyCostMul',1);
+    if(G.energy<cost) return;
+    G.energy=clamp(G.energy-cost,0,maxEnergy());
+  }else{
+    G.energy=clamp(G.energy+amt,0,maxEnergy());
+  }
+  G.ap--;
+  // 压力：只有「增加」时吃压力倍率；休息等「减压」不被倍率削弱
+  const ds=a.stress>0?a.stress*mulFx('stressMul',1):a.stress;
+  G.stress=clamp(G.stress+ds,0,100);
+  G.results.stressMax=Math.max(G.results.stressMax,G.stress);
+  let r=a.run();
+  const mg=majorGainFrom(a);
+  if(mg){ bumpFit(mg); r[1]+=`（契合专业，契合度 +${mg}）`; }
+  pushLog(r[0],`【${a.name}】${r[1]}`);
+  renderStatus();renderActions();
+  if(G.ap<=0) $("roundHint").textContent="行动点已用完。";
+}
+function endRound(){
+  if(G.phase!=="action") return;
+  closeSemester();
+  G.round++;
+  G.results.stressMax=Math.max(G.results.stressMax,G.stress);
+  if(G.round>=TOTAL_ROUNDS){ goPick(); return; }
+  G.ap=AP_PER_ROUND+sumFx('apDelta',0);
+  dealActions();
+  G.energy=clamp(G.energy+10+sumFx('energyRegen',0),0,maxEnergy());
+  G.stress=clamp(G.stress-3,0,100);
+  $("roundHint").textContent="";
+  const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][G.round];
+  const sem=G.round%2===0?"上":"下";
+  pushLog("info",`—— ${yr}${sem}学期 开始 ——`);
+  enterEvent();
+}
+function pushLog(cls,txt){
+  G.log.push({cls,txt});
+  const el=$("log");
+  const d=document.createElement("div"); d.className="e "+cls; d.textContent=txt;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+function renderStatus(){
+  const ap=Array.from({length:AP_PER_ROUND+sumFx('apDelta',0)},(_,i)=>`<span class="apdot ${i<G.ap?'on':''}"></span>`).join("");
+  const ePct=G.energy/maxEnergy()*100;
+  const eCol=ePct>50?"var(--good)":ePct>25?"var(--warn)":"var(--bad)";
+  const sCol=G.stress>70?"var(--bad)":G.stress>40?"var(--warn)":"var(--good)";
+  const r=G.results;
+  const yr=["初三上","初三下","高一上","高一下","高二上","高二下","高三上","高三下"][G.round];
+  const st=Object.keys(STAT_NAMES).map(k=>`<span class="st">${ic(STAT_ICON[k])}${STAT_NAMES[k]} <b>${G.stats[k].toFixed(1)}</b></span>`).join("");
+  const hasGPA=r.semesters.length>0;
+  $("status").innerHTML=`
+    <div class="srow">
+      <span class="k">学期</span><span class="v">${yr}</span><span class="sep">·</span>
+      <span class="k">进度</span><span class="v">${G.round+1}/${TOTAL_ROUNDS}</span><span class="sep">·</span>
+      <span class="k">行动</span><span class="apdots">${ap}</span><span class="sep">·</span>
+      <span class="k">难度</span><span class="v">${RIGOR[G.rigor].name}</span>
+    </div>
+    <div class="meters">
+      <div class="meter"><span class="k">精力</span><div class="bar"><i style="width:${ePct}%;background:${eCol}"></i></div><span class="v">${Math.round(G.energy)}/${maxEnergy()}</span></div>
+      <div class="meter"><span class="k">压力</span><div class="bar"><i style="width:${G.stress}%;background:${sCol}"></i></div><span class="v">${Math.round(G.stress)}%</span></div>
+      <div class="meter"><span class="k">声望</span><div class="bar"><i style="width:${r.reputation}%;background:var(--ink)"></i></div><span class="v">${Math.round(r.reputation)}/100</span></div>
+    </div>
+    <div class="stats">${st}</div>
+    <div class="scores">
+      <span>GPA ${hasGPA?cumGPA("U").toFixed(2):"—"}（加权 ${hasGPA?cumGPA("W").toFixed(2):"—"}）</span>
+      <span>SAT ${r.satBest||"—"}</span><span>托福 ${r.toeflBest||"—"}</span>
+      <span>奖项 ${r.awards}</span><span>文书 ${r.essayQuality.toFixed(1)}/10</span><span>推荐信 ${r.recQuality.toFixed(1)}/10</span>
+      <span>专业 ${MAJOR_BYID[G.major].name}${G.major!=="und"?(" · 契合 "+Math.round(G.majorFit)):""}</span>
+    </div>`;
+}
+function renderActions(){
+  const wrap=$("acts"); wrap.innerHTML="";
+  if(!G.dealtBasic) dealActions();
+  const mk=a=>{
+    const amt=Math.abs(a.energy);
+    const cost=a.energy>0?amt*mulFx('energyCostMul',1):amt;
+    const dis=G.phase!=="action"||G.ap<=0 || (a.energy>0 && G.energy<cost);
+    const b=document.createElement("button"); b.className="act"; b.disabled=dis;
+    if(a.energy<0) b.dataset.rest="1";
+    const costTxt=a.energy<0?`回精力 ${Math.round(amt)}`:`耗精力 ${Math.round(cost)}`;
+    b.innerHTML=`<div class="top">${ic(a.icon,'dk')}<b>${a.name}</b></div><small>${costTxt} · 压力${a.stress>=0?'+':''}${a.stress}</small>`;
+    b.onclick=()=>doAction(a);
+    return b;
+  };
+  const basic=document.createElement("div"); basic.className="act-section";
+  const lblBasic=document.createElement("div"); lblBasic.className="acts-label"; lblBasic.textContent="基础行动（每回合固定）";
+  basic.appendChild(lblBasic);
+  const gBasic=document.createElement("div"); gBasic.className="act-grid basic";
+  G.dealtBasic.forEach(a=>gBasic.appendChild(mk(a)));
+  gBasic.appendChild(mk(REST));
+  basic.appendChild(gBasic);
+  wrap.appendChild(basic);
+  const rand=document.createElement("div"); rand.className="act-section";
+  const lblRand=document.createElement("div"); lblRand.className="acts-label"; lblRand.textContent=`随机行动（本回合随机 ${DEALT} 个）`;
+  rand.appendChild(lblRand);
+  const gRand=document.createElement("div"); gRand.className="act-grid";
+  G.dealtRand.forEach(a=>gRand.appendChild(mk(a)));
+  rand.appendChild(gRand);
+  wrap.appendChild(rand);
+}
+
+/* ---------- 选校 / 申请 ---------- */
+let PICK={p:null,bands:{},cand:{},off:{},edSel:null,rdSel:[]};
+function bandOf(P){ return P<0.10?"reach":(P<0.55?"match":"safety"); }
+function buildBands(p){
+  const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc)}));
+  const bands={reach:[],match:[],safety:[]};
+  all.forEach(x=>bands[bandOf(x.P)].push(x));
+  // 每档按录取概率降序；冲刺档末尾即最难的「梦校」（P 最低），选校时固定放入
+  Object.keys(bands).forEach(k=>bands[k].sort((a,b)=>b.P-a.P));
+  return bands;
+}
+function goPick(){
+  $("game").classList.remove("on"); $("pick").classList.add("on");
+  PICK.p=buildProfile();
+  PICK.bands=buildBands(PICK.p);
+  PICK.cand={}; PICK.off={reach:0,match:0,safety:0};
+  ["reach","match","safety"].forEach(k=>PICK.cand[k]=takeBand(k));
+  const edSchools=SCHOOLS.filter(s=>s.region==="US"&&s.ed);
+  $("edList").innerHTML=edSchools.map(s=>`<option value="${s.nameZh}">#${s.rank} ${s.nameZh} ${s.nameEn}</option>`).join("");
+  PICK.edSel=null; PICK.rdSel=[];
+  renderPick();
+}
+function takeBand(k){
+  const pool=PICK.bands[k], n=pool.length;
+  const cap=k==="reach"?REACH_MAX:RD_PER_BAND;
+  const want=Math.min(cap,n);
+  if(k==="reach" && n>cap){
+    // 冲刺档固定包含 1–2 所录取率极低的「梦校」（池尾 P 最低），总数只给 5 所
+    const dream=pool.slice(-2);
+    const rest=pool.slice(0,n-2);
+    const off=rest.length?PICK.off[k]%rest.length:0, out=[];
+    for(let i=0;i<Math.max(0,cap-2);i++) out.push(rest[(off+i)%rest.length]);
+    out.push(...dream);
+    return out;
+  }
+  const off=n?PICK.off[k]%n:0, out=[];
+  for(let i=0;i<want;i++) out.push(pool[(off+i)%n]);
+  return out;
+}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const tagOf=sc=>sc.region==="US"?("#"+sc.rank):sc.region;
+function renderPick(){
+  ["reach","match","safety"].forEach(k=>{
+    const box=$("cand"+cap(k)); box.innerHTML="";
+    PICK.cand[k].forEach(x=>{
+      const sel=PICK.rdSel.some(o=>o.nameEn===x.sc.nameEn);
+      const b=document.createElement("button"); b.className="cand"+(sel?" sel":"");
+      b.innerHTML=`<div class="rk">${tagOf(x.sc)}</div><div class="nm">${x.sc.nameZh}</div><div class="pp">${(x.P*100).toFixed(1)}%</div>`;
+      b.onclick=()=>toggleRD(k,x); box.appendChild(b);
+    });
+  });
+  const n=PICK.rdSel.length;
+  $("rdCount").textContent=n;
+  const cnt={reach:0,match:0,safety:0}; PICK.rdSel.forEach(o=>cnt[o.band]++);
+  $("cntReach").textContent=cnt.reach; $("cntMatch").textContent=cnt.match; $("cntSafety").textContent=cnt.safety;
+  $("confirmPickBtn").disabled = n<10 || n>RD_MAX;
+  $("pickHint").textContent = n<10?`还需选 ${10-n} 所（至少 10）`:(n>RD_MAX?`超过上限 ${RD_MAX}`:"已选 "+n+" 所");
+}
+function toggleRD(k,x){
+  const i=PICK.rdSel.findIndex(o=>o.nameEn===x.sc.nameEn);
+  if(i>=0) PICK.rdSel.splice(i,1);
+  else {
+    if(PICK.rdSel.length>=RD_MAX){ $("pickHint").textContent=`已达上限 ${RD_MAX} 所。`; return; }
+    const P=admitProb(PICK.p,x.sc);
+    PICK.rdSel.push({nameEn:x.sc.nameEn,band:bandOf(P),P});
+  }
+  renderPick();
+}
+function edPick(){
+  const q=$("edSearch").value.trim();
+  if(!q){ $("edHint").textContent="请输入校名。"; return; }
+  const sc=SCHOOLS.find(s=>s.region==="US"&&s.ed&&(s.nameZh.includes(q)||s.nameEn.toLowerCase().includes(q.toLowerCase())));
+  if(!sc){ $("edHint").textContent="未找到 ED 校（仅美国提供 ED 的校可选）。"; return; }
+  PICK.edSel=sc;
+  const Ped=admitProb(PICK.p,sc,true), Prd=admitProb(PICK.p,sc);
+  $("edCard").innerHTML=`<div class="env open" style="cursor:default"><div class="rank">#${sc.rank} · ED</div><div class="nm">${sc.nameZh}</div><div class="pp">ED 概率 <b>${(Ped*100).toFixed(1)}%</b> ｜ RD 仅 ${(Prd*100).toFixed(1)}%</div></div>`;
+  $("edHint").textContent="已选 ED 校，提交后先拆这封。";
+}
+
+/* ---------- 结局 ---------- */
+function buildProfile(){
+  const s=G.stats,r=G.results;
+  return {
+    gpa:cumGPA("U"), gpaW:cumGPA("W"),
+    sat:r.satBest||0, toefl:r.toeflBest||0,
+    ecCount:r.ecs.length,
+    leadRoles:Math.round(s.social/2),
+    founded:s.creativity>=7,
+    natlAwards:r.awards,
+    creativity:s.creativity, social:s.social, english:s.english, academic:s.academic,
+    essay:clamp(r.essayQuality*0.7+s.creativity*0.3,1,10),
+    rec:clamp(r.recQuality*0.7+s.social*0.25+r.reputation/100*1.5,1,10),
+    luck:s.luck, stamina:s.stamina, reputation:r.reputation,
+    rigor:G.rigor,
+    major:G.major,
+    majorFit:G.major==="und"?0.5:G.majorFit/100,
+    isIntl:true, needAid:false, round:"RD", majorDiff:"mid"
+  };
+}
+function admitProb(p,sc,ed){
+  let baseRate=(p.isIntl&&sc.acceptRateIntl!=null)?sc.acceptRateIntl:sc.acceptRate;
+  if(ed){
+    if(sc.ed && sc.edAcceptRate!=null) baseRate=sc.edAcceptRate;
+    else if(sc.ed) baseRate=clamp(sc.acceptRate*2.4,0.5,42);
+  }
+  const base=clamp(baseRate,0.5,95)/100;
+  const logit=Math.log(base/(1-base));
+  const rigorPts=(p.rigor==="heavy"?0.42:p.rigor==="mixed"?0.20:0);
+  const gpaEff=p.gpa+rigorPts*clamp((p.gpa-2.4)/1.4,0,1);
+  const zA=sc.gpaAvg!=null?(gpaEff-sc.gpaAvg)/0.35:0;
+  let zT=0;
+  if(sc.sat25!=null&&p.sat>0){const mid=(sc.sat25+sc.sat75)/2; zT=(p.sat-mid)/130;}
+  const ecScore=p.ecCount*0.5+p.leadRoles*0.7+(p.founded?1:0)+p.natlAwards*1.1+p.creativity*0.15;
+  const zE=ecScore/6-0.5;
+  const er=(clamp(p.essay,0,10)+clamp(p.rec,0,10))/20;
+  const zR=er-0.5;
+  let S=0.30*zA+0.30*zT+0.25*zE+0.15*zR;
+  S+=(p.luck-5)*0.03;
+  S+=(p.reputation/100-0.4)*0.12;
+  const mw=(sc.admitByMajor==="major"||sc.admitByMajor==="major-strict"||sc.region==="UK"||sc.region==="HK")?0.5:0.18;
+  S+=(p.majorFit-0.5)*mw;
+  let P=1/(1+Math.exp(-(logit+2.4*S)));
+  if(p.isIntl){ if(sc.aidIntl==="none")P*=0.55; else if(sc.aidIntl==="need-aware")P*=0.82; }
+  if(p.toefl===0) P*=0.75;
+  else if(sc.toeflMin!=null&&p.toefl<sc.toeflMin) P*=0.6;
+  if(p.sat===0) P*=0.7;   // 与托福一致：未考标化同样明显惩罚（顶尖校基本都要求）
+  return clamp(P,0.002,0.995);
+}
+function personality(){
+  const s=G.stats,r=G.results,tags=[];
+  if(s.academic>=8&&s.social<5)tags.push("书呆子学霸");
+  if(s.social>=7&&s.creativity>=6)tags.push("斜杠青年");
+  if(r.stressMax>=70||s.stamina<3)tags.push("倦怠战士");
+  if(s.luck>=8)tags.push("天选之子");
+  if(s.creativity>=8)tags.push("才艺咖");
+  if(s.english>=9)tags.push("语言怪物");
+  if(s.academic<4&&r.ecs.length<2)tags.push("佛系青年");
+  const vals=[s.academic,s.english,s.stamina,s.creativity,s.social];
+  if(tags.length===0&&vals.every(v=>v>=5&&v<=8))tags.push("全能均衡型");
+  if(tags.length===0)tags.push("潜力股");
+  return tags;
+}
+function narrative(tags){
+  const s=G.stats,r=G.results;
+  const eng=r.satBest?`SAT ${r.satBest}`:`英语 ${s.english.toFixed(1)}（未考）`;
+  return `你是 <b>${tags.join(" / ")}</b>。GPA ${cumGPA("U").toFixed(2)}（加权 ${cumGPA("W").toFixed(2)}）、${eng}、托福 ${r.toeflBest||"—"}，${r.ecs.length} 段经历、${r.awards} 个奖项，声望 ${Math.round(r.reputation)}、压力峰值 ${Math.round(r.stressMax)}%。${s.luck>=8?'运气格外眷顾你。':s.stamina<3?'身体常常亮红灯。':'一路有惊无险。'}`;
+}
+function renderTranscript(){
+  const ss=G.results.semesters;
+  let rows=ss.map((s,i)=>{
+    const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][i];
+    const sm=i%2===0?"上":"下";
+    return `<tr><td>${yr}${sm}</td><td>${s.courses.map(c=>`<span class="gpill">${c.g}</span>`).join("")}</td>
+      <td>${s.gpaU.toFixed(2)}</td><td>${s.gpaW.toFixed(2)}</td></tr>`;
+  }).join("");
+  $("transcript").innerHTML=`
+    <table class="trans"><tr><th>学期</th><th>各科等级</th><th>学期 GPA</th><th>加权</th></tr>${rows}</table>
+    <div class="scores" style="margin-top:10px">
+      <span>累计 GPA <b>${cumGPA("U").toFixed(2)}</b></span>
+      <span>累计加权 <b>${cumGPA("W").toFixed(2)}</b></span>
+      <span>课程难度 ${RIGOR[G.rigor].name}</span>
+    </div>`;
+}
+function renderAch(){
+  const r=G.results,s=G.stats;
+  $("achList").innerHTML=ACHIEVEMENTS.map(a=>{
+    const got=a.test(r,s);
+    return `<div class="ach ${got?'got':''}"><span class="dot"></span>${a.name}</div>`;
+  }).join("");
+}
+function goEnd(){
+  $("pick").classList.remove("on"); $("endgame").classList.add("on");
+  const p=PICK.p||buildProfile();
+  const tags=personality();
+  $("persTags").innerHTML=tags.map(t=>`<span class="tag">${t}</span>`).join("");
+  $("persNarr").innerHTML=narrative(tags);
+  const fc=$("finalChips"); fc.innerHTML="";
+  Object.keys(STAT_NAMES).forEach(k=>{
+    const d=document.createElement("span"); d.className="st";
+    d.innerHTML=`${ic(STAT_ICON[k])}${STAT_NAMES[k]} <b>${G.stats[k].toFixed(1)}</b>`;
+    fc.appendChild(d);
+  });
+  renderTranscript(); renderAch();
+  const byName={}; SCHOOLS.forEach(s=>byName[s.nameEn]=s);
+  const edBox=$("edResult");
+  let edAdmitted=false;
+  if(PICK.edSel){
+    const sc=PICK.edSel, Ped=admitProb(p,sc,true), admit=Math.random()<Ped;
+    edAdmitted=admit;
+    edBox.innerHTML=`<div class="env open" style="cursor:default"><div class="rank">#${sc.rank} · ED（早决定）</div><div class="nm">${sc.nameZh}</div><div class="result ${admit?'ad':'rej'}">${admit?'录取 · 绑定入学':'未录取'}</div><div class="pp">ED 概率 ${(Ped*100).toFixed(1)}%${admit?'。按 ED 绑定规则，你已撤回全部 RD 申请，尘埃落定！':'。转入 RD 常规轮。'}</div></div>`;
+  } else edBox.innerHTML=`<div class="small">未选 ED，全部走 RD。</div>`;
+  const rdBox=$("rdTable");
+  if(edAdmitted){
+    rdBox.innerHTML=`<div class="small" style="padding:10px 0">ED 已录取（绑定入学）。按真实规则你已撤回全部 <b>${PICK.rdSel.length}</b> 所 RD 申请，<b>无 RD 最终录取信息</b>。</div>`;
+  } else {
+    let rows=PICK.rdSel.map(o=>{const sc=byName[o.nameEn];const P=admitProb(p,sc);const admit=Math.random()<P;return {sc,P,admit};});
+    rows.sort((a,b)=>b.P-a.P);
+    const got=rows.filter(r=>r.admit).length;
+    let html=`<table class="mini"><tr><th>校</th><th>档</th><th>概率</th><th>结果</th></tr>`;
+    rows.forEach(r=>{ html+=`<tr><td>${tagOf(r.sc)} ${r.sc.nameZh}</td><td>${bandOf(r.P)==="reach"?"冲刺":bandOf(r.P)==="match"?"匹配":"保底"}</td><td>${(r.P*100).toFixed(1)}%</td><td style="color:${r.admit?'var(--good)':'var(--bad)'}">${r.admit?'录取':'拒绝'}</td></tr>`; });
+    html+=`</table><div class="small" style="margin-top:6px">常规 RD 录取 <b>${got}</b> / ${rows.length} 所。</div>`;
+    rdBox.innerHTML=html;
+  }
+  const asc=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc)})).sort((a,b)=>b.P-a.P);
+  $("allTable").innerHTML=`<table class="mini"><tr><th>排名</th><th>中文</th><th>英文</th><th>RD 概率</th></tr>${asc.slice().reverse().map(x=>`<tr><td>${tagOf(x.sc)}</td><td>${x.sc.nameZh}</td><td>${x.sc.nameEn}</td><td>${(x.P*100).toFixed(1)}%</td></tr>`).join("")}</table>`;
+}
+
+/* ---------- 说明 ---------- */
+const HELP=`
+<div class="help-sec"><h3>这游戏在玩什么</h3>
+<p>从初三上到高三下共 <b>8 个学期</b>。每学期：先抽一张<b>随机事件</b>（有些需要你二选一），再用 <b>4 个行动点</b>行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）+ 休息，再从其余行动里<b>随机抽 6 个</b>给你选。学期结束时按你的状态生成<b>成绩单</b>。8 个学期后先选 1 所 ED 早申校（可选），再在 RD 勾选 10–25 所，逐封拆开 offer。</p></div>
+
+<div class="help-sec"><h3>六维能力</h3>
+<ul>
+<li><b>学术</b>：决定每门课能拿什么等级，是 GPA 的主因。</li>
+<li><b>英语</b>：决定 SAT 与托福的期望分。<b>可以提升</b>——背单词、口语角、读外刊、打磨文书都会涨，部分事件也会。</li>
+<li><b>精力上限</b>：精力池上限。精力低会拉低成绩。</li>
+<li><b>创造力</b>：影响竞赛获奖率、文书质量与特长。</li>
+<li><b>社交</b>：影响声望、推荐信与履历。</li>
+<li><b>运气</b>：缩小考试波动、提升竞赛获奖率。</li>
+</ul></div>
+
+<div class="help-sec"><h3>专业方向（规划核心）</h3>
+<p>开局选一个<b>专业方向</b>（也可选「未定」，录取上不偏不倚）。它会带来两类实打实的收益：</p>
+<ul>
+<li><b>专属行动</b>：写代码 / 搞商赛 / 进实验室 / 社科调研 / 艺术创作 / 医疗志愿——做<b>与专业相关</b>的行动，以及部分相关事件，会积累<b>专业契合度</b>（0–100，开局 30）。</li>
+<li><b>录取加成</b>：契合度越高，对相关校（英国 / 香港校、以及按专业录取的美国校）的录取概率加成越明显；对综合评估校也有小幅加成。所以<b>提前定方向、持续做相关活动</b>，能靠规划把录取概率堆上去。</li>
+</ul></div>
+
+<div class="help-sec"><h3>GPA：真实成绩单制</h3>
+<p>每学期修 <b>5 门课</b>，课程组合由开局选的<b>课程难度</b>决定。每门课按下面公式算出一个连续分，再<b>就近映射</b>到字母等级：</p>
+<p><code>基础 2.6 + 0.117×学术 + (精力占比−0.5)×0.45 − 压力/100×0.30 + (运气−6)×0.03 − 难度惩罚 + 随机波动</code></p>
+<ul>
+<li>难度惩罚：AP −0.20，Honors −0.10，常规 0。<b>选 AP 更难拿 A，但加权更高</b>。</li>
+<li>等级对应绩点：A 4.0 / A− 3.7 / B+ 3.3 / B 3.0 / B− 2.7 / C+ 2.3 / C 2.0 / C− 1.7 / D+ 1.3 / D 1.0 / F 0。</li>
+<li>加权绩点：AP +1.0，Honors +0.5，常规 +0，上限 5.0。</li>
+<li>学期 GPA = 各科绩点按学分加权平均；<b>累计 GPA = 各学期质量点总和 ÷ 总学分</b>（不是简单平均，但学分相同时结果一致）。</li>
+</ul></div>
+
+<div class="help-sec"><h3>SAT 与托福</h3>
+<ul>
+<li>两者是<b>独立行动</b>，可以分开刷，各自只保留<b>历史最高分</b>。</li>
+<li><b>SAT 以 10 分为最小单位</b>（真实 SAT 就是这样）。期望分 ≈ <code>1090 + 40×英语</code>，运气越高波动越小。<b>1600 满分极罕见</b>——只在高英语 + 高运气且极小概率下才出现。</li>
+<li>托福满分 120，期望分 ≈ <code>52 + 5.6×英语</code>。<b>120 满分同样极罕见</b>。</li>
+<li>压力 ≥70% 时考试会扣分（高压状态）。没考过托福的国际生申请会打折。</li>
+</ul></div>
+
+<div class="help-sec"><h3>精力、压力与声望</h3>
+<ul>
+<li><b>精力</b>：行动消耗，低精力会直接拉低当学期成绩。<b>休息</b>常驻在行动里，永远能回血。</li>
+<li><b>压力</b>：行动会加压力，压力 ≥70% 时行动收益减半、考试扣分。休息可降 25。</li>
+<li><b>声望</b>：社团、人脉、竞赛累积，影响推荐信质量与录取模型（最高 +0.12 的加分）。</li>
+</ul></div>
+
+<div class="help-sec"><h3>行动池</h3>
+<p>行动分成两类：<b>基础行动</b>随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书），外加<b>休息</b>，保证你永远能回血、永远有标化可刷；其余行动每回合<b>随机抽 6 个</b>给你挑。所以标化选项不会抽不到，同时每回合都有新鲜选择。</p></div>
+
+<div class="help-sec"><h3>天性特质</h3>
+<p>开局随机抽 <b>2 个</b>特质，会持续影响整局（如早起鸟每回合回精力、书虫学术收益 +35%、拖延症耗精力更多但英语起步更高）。可以重抽。</p></div>
+
+<div class="help-sec"><h3>选校与录取</h3>
+<ul>
+<li>按你的最终画像算出全部 57 所学校的录取概率，分成<b>冲刺（&lt;10%）、匹配（10–55%）、保底（≥55%）</b>三档。</li>
+<li><b>ED（早决定）</b>：从美国提供 ED 的校中选 1 所绑定提交；部分校 ED 录取率明显高于 RD。<b>一旦 ED 录取即绑定入学，须撤回全部 RD 申请</b>——此时结局页不再显示任何 RD 录取信息，符合真实规则。</li>
+<li><b>RD（常规）</b>：<b>冲刺 5 所</b>（录取率 &lt;10%，固定包含 1–2 所梦校）、<b>匹配 10 所</b>、<b>保底 10 所</b>（某档学校不足时如实减少，绝不串档）。可勾选 <b>10–25 所</b>提交，最后按概率逐封拆开。</li>
+<li>录取模型基于 <b>美国 US News 2026 Top 40 的 Common Data Set 真实数据 + 英国/香港名校国际生录取率估算</b>（录取率、SAT 区间、GPA、国际生政策等），在你的 GPA、标化、活动、文书、推荐信、课程难度、声望上做校正。</li>
+</ul></div>
+
+<div class="help-sec"><h3>成就</h3>
+<p>结局页会结算 12 项成就，作为重复游玩的目标。</p></div>
+`;
+
+/* ---------- wire up ---------- */
+$("startBtn").onclick=startGame;
+$("randBtn").onclick=()=>{Object.keys(editStats).forEach(k=>editStats[k]=ri(1,10));normalizeTo24();renderSetup();};
+$("rerollTraitBtn").onclick=rollTraits;
+$("endRoundBtn").onclick=endRound;
+$("restartBtn").onclick=()=>{location.reload();};
+$("allBtn").onclick=()=>{$("allTable").classList.toggle("collapsed");};
+$("confirmPickBtn").onclick=goEnd;
+$("helpBody").innerHTML=HELP;
+let helpFrom="setup";
+function openHelp(from){ helpFrom=from;
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  $("help").classList.add("on"); }
+$("helpBtn1").onclick=()=>openHelp("setup");
+$("helpBtn2").onclick=()=>openHelp("game");
+$("helpBtn3").onclick=()=>openHelp("pick");
+$("helpBackBtn").onclick=()=>{
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  $(helpFrom).classList.add("on");
+};
+$("edPickBtn").onclick=edPick;
+rollTraits();
+renderSetup();
+</script>
+</body>
+</html>
