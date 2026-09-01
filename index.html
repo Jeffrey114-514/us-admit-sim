@@ -219,7 +219,7 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
 <body>
 <div class="wrap">
   <h1>申请人生</h1>
-  <p class="kicker">初三到高三 · 4 个学年 · 57 所大学</p>
+  <p class="kicker">初三到高三 · 8 个学期 · 57 所大学</p>
   <hr class="rule">
 
   <section id="setup" class="screen on">
@@ -383,7 +383,7 @@ const ICON={
 const ic=(n,cls)=>'<span class="ico'+(cls?' '+cls:'')+'">'+(ICON[n]||ICON.star)+'</span>';
 
 /* ---------- config ---------- */
-const TOTAL_ROUNDS=4, AP_PER_ROUND=8, START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=25;
+const TOTAL_ROUNDS=8, AP_PER_ROUND=4, START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=25;
 const STAT_NAMES={academic:"学术",english:"英语",stamina:"精力上限",creativity:"创造力",social:"社交",luck:"运气"};
 const STAT_ICON={academic:"book",english:"globe",stamina:"bolt",creativity:"bulb",social:"people",luck:"star"};
 const TPL_DESC={"卷王":"学术拉满","快乐青年":"样样平均","斜杠":"活动与创意","躺平":"交给运气"};
@@ -436,11 +436,11 @@ const ACHIEVEMENTS=[
   {id:"gpa39",   name:"GPA 3.9+（未加权）",test:(r,s)=>cumGPA("U")>=3.9},
   {id:"wgp45",   name:"加权 GPA 4.5+",     test:(r,s)=>cumGPA("W")>=4.5},
   {id:"awards3", name:"3 个以上国家级奖项",  test:(r,s)=>r.awards>=3},
-  {id:"perfect", name:"单学年满绩 4.0",     test:(r,s)=>r.semesters.some(x=>x.gpaU>=3.98)},
+  {id:"perfect", name:"单学期满绩 4.0",     test:(r,s)=>r.semesters.some(x=>x.gpaU>=3.98)},
   {id:"zen",     name:"零压力毕业（峰值<30）",test:(r,s)=>r.stressMax<30},
   {id:"rep80",   name:"声望 80+",           test:(r,s)=>r.reputation>=80},
   {id:"craft9",  name:"文书与推荐信双 9+",   test:(r,s)=>r.essayQuality>=9&&r.recQuality>=9},
-  {id:"noC",     name:"全学年无 C 及以下",   test:(r,s)=>r.semesters.every(x=>x.courses.every(c=>c.p>=3.0))},
+  {id:"noC",     name:"全学期无 C 及以下",   test:(r,s)=>r.semesters.every(x=>x.courses.every(c=>c.p>=3.0))},
   {id:"balanced",name:"六维全部 6+",         test:(r,s)=>Object.values(s).every(v=>v>=6)}
 ];
 
@@ -538,296 +538,300 @@ function normalizeTo24(){
 }
 
 const STAGES=[
- {yr:"初三",sem:"",theme:"中考备考 · 兴趣萌芽"},
- {yr:"高一",sem:"",theme:"适应高中 · 社团探索"},
- {yr:"高二",sem:"",theme:"标化首考 · 竞赛科研"},
- {yr:"高三",sem:"",theme:"文书早申 · 提交申请"}
+ {yr:"初三",sem:"上",theme:"中考备考 · 兴趣萌芽"},
+ {yr:"初三",sem:"下",theme:"中考冲刺"},
+ {yr:"高一",sem:"上",theme:"适应高中"},
+ {yr:"高一",sem:"下",theme:"社团与探索"},
+ {yr:"高二",sem:"上",theme:"标化首考 · 竞赛"},
+ {yr:"高二",sem:"下",theme:"深度学习 · 成长期"},
+ {yr:"高三",sem:"上",theme:"文书与早申"},
+ {yr:"高三",sem:"下",theme:"提交申请"}
 ];
 const yrLabel=r=>STAGES[r].yr+STAGES[r].sem;
 
 /* ---------- events ---------- */
 const EVENTS=[
   {
-id:"flu",icon:"烧",cat:"health",stage:[0,1,2,3],title:"模考当天发烧",text:"喉咙像吞了砂纸，今天状态全无，考试直接请假。",
+id:"flu",icon:"烧",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"模考当天发烧",text:"喉咙像吞了砂纸，今天状态全无，考试直接请假。",
    effect:g=>{g.stress=clamp(g.stress+12,0,100);g.energy=clamp(g.energy-10,0,maxEnergy());return ["bad","发烧退赛，压力 +12、精力 −10。"];}
   },
   {
-id:"pet",icon:"猫",cat:"health",stage:[0,1,2,3],title:"撸猫治愈",text:"邻居的猫主动蹭过来，紧绷的神经一下松了。",
+id:"pet",icon:"猫",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"撸猫治愈",text:"邻居的猫主动蹭过来，紧绷的神经一下松了。",
    effect:g=>{g.stress=clamp(g.stress-15,0,100);g.energy=clamp(g.energy+5,0,maxEnergy());return ["good","猫猫治愈，压力 −15、精力 +5。"];}
   },
   {
-id:"carepkg",icon:"箱",cat:"family",stage:[0,1,2,3],title:"爸妈空投补给",text:"一箱零食加现金寄到，家的味道最治愈。",
+id:"carepkg",icon:"箱",cat:"family",stage:[0,1,2,3,4,5,6,7],title:"爸妈空投补给",text:"一箱零食加现金寄到，家的味道最治愈。",
    effect:g=>{g.energy=clamp(g.energy+12,0,maxEnergy());g.stress=clamp(g.stress-8,0,100);return ["good","家庭补给，精力 +12、压力 −8。"];}
   },
   {
-id:"gacha",icon:"金",cat:"chance",stage:[0,1,2,3],title:"抽卡出金",text:"游戏里一发入魂，今天运气玄学在线。",
+id:"gacha",icon:"金",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"抽卡出金",text:"游戏里一发入魂，今天运气玄学在线。",
    effect:g=>{g.stats.luck=clamp(g.stats.luck+1,1,12);return ["good","欧气转移，运气 +1。"];}
   },
   {
-id:"lucky",icon:"鲤",cat:"chance",stage:[0,1,2,3],title:"锦鲤附体",text:"干啥都顺，连抽卡都出金。",
+id:"lucky",icon:"鲤",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"锦鲤附体",text:"干啥都顺，连抽卡都出金。",
    effect:g=>{g.stats.luck=clamp(g.stats.luck+1,1,12);return ["good","欧气满满，运气 +1。"];}
   },
   {
-id:"burnout",icon:"崩",cat:"health",stage:[0,1,2,3],title:"倦怠预警",text:"连续高强度，身体亮红灯。",
+id:"burnout",icon:"崩",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"倦怠预警",text:"连续高强度，身体亮红灯。",
    effect:g=>{g.energy=clamp(g.energy-15,0,maxEnergy());g.stress=clamp(g.stress+12,0,100);return ["bad","倦怠预警，精力 −15、压力 +12。快去休息！"];}
   },
   {
-id:"shorts",icon:"短",cat:"health",stage:[0,1,2,3],title:"短视频上头",text:"刷了一晚短视频，啥也没干。",
+id:"shorts",icon:"短",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"短视频上头",text:"刷了一晚短视频，啥也没干。",
    effect:g=>{g.energy=clamp(g.energy-8,0,maxEnergy());g.stress=clamp(g.stress-5,0,100);return ["warn","时间黑洞，精力 −8、压力 −5。"];}
   },
   {
-id:"proc",icon:"瘫",cat:"health",stage:[0,1,2,3],title:"沙发封印一整天",text:"意志力被封印，啥也没干。",
+id:"proc",icon:"瘫",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"沙发封印一整天",text:"意志力被封印，啥也没干。",
    effect:g=>{g.stress=clamp(g.stress-8,0,100);return ["warn","摆烂一天，压力 −8，但进度为零。"];}
   },
   {
-id:"scholar",icon:"光",cat:"chance",stage:[0,1,2,3],title:"天降奖学金情报",text:"刷到一条小众项目，正好对口你的特长。",
+id:"scholar",icon:"光",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"天降奖学金情报",text:"刷到一条小众项目，正好对口你的特长。",
    effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);return ["good","情报到手，创造力 +1。"];}
   },
   {
-id:"glitch",icon:"崩",cat:"chance",stage:[3],title:"申请系统崩了",text:"申请系统抽风，全网哀嚎，纯属倒霉。",
+id:"glitch",icon:"崩",cat:"chance",stage:[6,7],title:"申请系统崩了",text:"申请系统抽风，全网哀嚎，纯属倒霉。",
    effect:g=>{g.stats.luck=clamp(g.stats.luck-1,1,12);return ["bad","系统背刺，运气 −1。"];}
   },
   {
-id:"talent",icon:"弹",cat:"creative",stage:[0,1,2,3],title:"才艺夜惊艳",text:"学校才艺夜你弹唱封神，成了校园红人。",
+id:"talent",icon:"弹",cat:"creative",stage:[0,1,2,3,4,5,6,7],title:"才艺夜惊艳",text:"学校才艺夜你弹唱封神，成了校园红人。",
    effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.stats.social=clamp(g.stats.social+1,1,12);return ["good","才艺出圈，创造力 +1、社交 +1。"];}
   },
   {
-id:"book",icon:"书",cat:"creative",stage:[0,1,2,3],title:"读到神书",text:"一本传记点燃斗志，全属性微涨。",
+id:"book",icon:"书",cat:"creative",stage:[0,1,2,3,4,5,6,7],title:"读到神书",text:"一本传记点燃斗志，全属性微涨。",
    effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);return ["good","被激励到，学术 +1、创造力 +1。"];}
   },
   {
-id:"meme",icon:"梗",cat:"creative",stage:[1,2,3],title:"校园梗图主",text:"你做的梗图在校内疯传，成了隐形 KOL。",
+id:"meme",icon:"梗",cat:"creative",stage:[2,3,4,5,6,7],title:"校园梗图主",text:"你做的梗图在校内疯传，成了隐形 KOL。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);return ["good","梗图出圈，社交 +1、创造力 +1。"];}
   },
   {
-id:"alumni",icon:"脉",cat:"social",stage:[0,1,2,3],title:"校友讲座",text:"听了一场校友分享，拿到内推实习线索。",
+id:"alumni",icon:"脉",cat:"social",stage:[0,1,2,3,4,5,6,7],title:"校友讲座",text:"听了一场校友分享，拿到内推实习线索。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);return ["good","人脉+灵感，社交 +1、创造力 +1。"];}
   },
   {
-id:"exchange",icon:"飞",cat:"social",stage:[1,2,3],title:"交流项目名额",text:"学校放出海外交流，简历镀金好机会。",
+id:"exchange",icon:"飞",cat:"social",stage:[2,3,4,5,6,7],title:"交流项目名额",text:"学校放出海外交流，简历镀金好机会。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("海外交流");return ["good","拿下交流名额，社交 +1、履历 +。"];}
   },
   {
-id:"fit",icon:"跑",cat:"health",stage:[0,1,2,3],title:"健身打卡",text:"坚持晨跑一个月，体能和精神都好了。",
+id:"fit",icon:"跑",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"健身打卡",text:"坚持晨跑一个月，体能和精神都好了。",
    effect:g=>{g.stats.stamina=clamp(g.stats.stamina+1,1,12);g.stress=clamp(g.stress-6,0,100);return ["good","健身回血，精力上限 +1、压力 −6。"];}
   },
   {
-id:"roommate",icon:"室",cat:"academic",stage:[1,2,3],title:"室友是卷王",text:"室友天天打卡图书馆，你被卷进去了。",
+id:"roommate",icon:"室",cat:"academic",stage:[2,3,4,5,6,7],title:"室友是卷王",text:"室友天天打卡图书馆，你被卷进去了。",
    effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","被室友带飞，学术 +1、压力 +6。"];}
   },
   {
-id:"farewell",icon:"别",cat:"social",stage:[1,2,3],title:"好友转学",text:"最好的朋友去了别的城市，有点失落。",
+id:"farewell",icon:"别",cat:"social",stage:[2,3,4,5,6,7],title:"好友转学",text:"最好的朋友去了别的城市，有点失落。",
    effect:g=>{g.stats.social=clamp(g.stats.social-1,1,12);g.stress=clamp(g.stress+6,0,100);return ["bad","离别情绪，社交 −1、压力 +6。"];}
   },
   {
-id:"fomo",icon:"焦",cat:"social",stage:[3],title:"朋友圈焦虑",text:"看别人晒 offer 预热，开始自我怀疑。",
+id:"fomo",icon:"焦",cat:"social",stage:[6,7],title:"朋友圈焦虑",text:"看别人晒 offer 预热，开始自我怀疑。",
    effect:g=>{g.stress=clamp(g.stress+9,0,100);return ["bad","同辈压力，压力 +9。"];}
   },
   {
-id:"family",icon:"家",cat:"family",stage:[1,2,3],title:"家里出了点事",text:"家里临时有变故，你不得不分担。",
+id:"family",icon:"家",cat:"family",stage:[2,3,4,5,6,7],title:"家里出了点事",text:"家里临时有变故，你不得不分担。",
    choices:[
      {label:"自己扛下来",hint:"社交+1 压力+6",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","顶住压力，社交 +1、压力 +6。"];}},
      {label:"找老师求助",hint:"压力-4 精力-5",apply:g=>{g.stress=clamp(g.stress-4,0,100);g.energy=clamp(g.energy-5,0,maxEnergy());return ["good","及时求助，压力 −4、精力 −5。"];}}
    ]
   },
   {
-id:"family_trip",icon:"家",cat:"family",stage:[0,1,2,3],title:"全家短途旅行",text:"爸妈强行把你拖去周边游，强制断电两天。",
+id:"family_trip",icon:"家",cat:"family",stage:[0,1,2,3,4,5,6,7],title:"全家短途旅行",text:"爸妈强行把你拖去周边游，强制断电两天。",
    effect:g=>{g.stress=clamp(g.stress-12,0,100);g.energy=clamp(g.energy+10,0,maxEnergy());return ["good","旅行回血，压力 −12、精力 +10。"];}
   },
   {
-id:"zk_mock",icon:"测",cat:"academic",stage:[0],fit:4,title:"中考一模出炉",text:"成绩不理想，但暴露了薄弱知识点。",
+id:"zk_mock",icon:"测",cat:"academic",stage:[0,1],fit:4,title:"中考一模出炉",text:"成绩不理想，但暴露了薄弱知识点。",
    choices:[
      {label:"分析错题复盘",hint:"学术+1 压力-3",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","查漏补缺，学术 +1、压力 −3。"];}},
      {label:"先摆烂两天",hint:"压力-6",apply:g=>{g.stress=clamp(g.stress-6,0,100);return ["warn","缓口气，压力 −6，但没涨分。"];}}
    ]
   },
   {
-id:"zk_sports",icon:"跑",cat:"health",stage:[0],title:"中考体育集训",text:"每天放学后狂练跑步，体能肉眼可见地上来了。",
+id:"zk_sports",icon:"跑",cat:"health",stage:[0,1],title:"中考体育集训",text:"每天放学后狂练跑步，体能肉眼可见地上来了。",
    effect:g=>{g.stats.stamina=clamp(g.stats.stamina+1,1,12);g.energy=clamp(g.energy-8,0,maxEnergy());g.stress=clamp(g.stress+3,0,100);return ["good","体能提升，精力上限 +1、精力 −8。"];}
   },
   {
-id:"zk_club",icon:"戏",cat:"social",stage:[0],title:"初中社团招新",text:"你挑了一个感兴趣的社团，认识了同好。",
+id:"zk_club",icon:"戏",cat:"social",stage:[0,1],title:"初中社团招新",text:"你挑了一个感兴趣的社团，认识了同好。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("初中社团");return ["good","社团初体验，社交 +1、履历 +。"];}
   },
   {
-id:"zk_interest",icon:"灵",cat:"creative",stage:[0],fit:4,title:"兴趣萌芽",text:"你迷上了某样东西，眼睛一下亮了。",
+id:"zk_interest",icon:"灵",cat:"creative",stage:[0,1],fit:4,title:"兴趣萌芽",text:"你迷上了某样东西，眼睛一下亮了。",
    choices:[
      {label:"深究下去",hint:"创造力+1.5 压力-3",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+1.5,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","天赋被点燃，创造力 +1.5、压力 −3。"];}},
      {label:"浅尝辄止",hint:"创造力+0.5",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+0.5,1,12);return ["good","体验一下，创造力 +0.5。"];}}
    ]
   },
   {
-id:"zk_parent",icon:"压",cat:"family",stage:[0],title:"家长会后施压",text:"“别人家孩子都签约重点了！”压力暴增。",
+id:"zk_parent",icon:"压",cat:"family",stage:[0,1],title:"家长会后施压",text:"“别人家孩子都签约重点了！”压力暴增。",
    effect:g=>{g.stress=clamp(g.stress+14,0,100);return ["bad","家长施压，压力 +14。记得找时间休息。"];}
   },
   {
-id:"zk_burnout",icon:"熬",cat:"health",stage:[0],title:"刷题到吐",text:"中考题海战术，人麻了。",
+id:"zk_burnout",icon:"熬",cat:"health",stage:[0,1],title:"刷题到吐",text:"中考题海战术，人麻了。",
    effect:g=>{g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+10,0,100);return ["bad","连轴转，精力 −12、压力 +10。"];}
   },
   {
-id:"zk_friend",icon:"友",cat:"social",stage:[0],title:"初中死党",text:"和死党约好以后要同校。",
+id:"zk_friend",icon:"友",cat:"social",stage:[0,1],title:"初中死党",text:"和死党约好以后要同校。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);return ["good","友谊万岁，社交 +1。"];}
   },
   {
-id:"hs_adapt",icon:"书",cat:"academic",stage:[1],title:"高中第一课",text:"节奏和初中完全不同，你有点懵。",
+id:"hs_adapt",icon:"书",cat:"academic",stage:[2,3],title:"高中第一课",text:"节奏和初中完全不同，你有点懵。",
    choices:[
      {label:"调整节奏",hint:"学术+1 压力-3",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","找到节奏，学术 +1、压力 −3。"];}},
      {label:"硬扛",hint:"学术+0 压力+6",apply:g=>{g.stress=clamp(g.stress+6,0,100);return ["warn","硬撑着，压力 +6。"];}}
    ]
   },
   {
-id:"hs_clubfair",icon:"选",cat:"social",stage:[1],title:"百团大战",text:"社团招新，你挑花了眼。",
+id:"hs_clubfair",icon:"选",cat:"social",stage:[2,3],title:"百团大战",text:"社团招新，你挑花了眼。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("社团");return ["good","加入社团，社交 +1、履历 +。"];}
   },
   {
-id:"hs_teacher",icon:"导",cat:"academic",stage:[1],title:"遇上好老师",text:"一位老师看中你，课后开小灶。",
+id:"hs_teacher",icon:"导",cat:"academic",stage:[2,3],title:"遇上好老师",text:"一位老师看中你，课后开小灶。",
    effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);return ["good","名师指点，学术 +1。"];}
   },
   {
-id:"hs_fail",icon:"砸",cat:"academic",stage:[1],title:"第一次月考翻车",text:"高中第一次大考，措手不及。",
+id:"hs_fail",icon:"砸",cat:"academic",stage:[2,3],title:"第一次月考翻车",text:"高中第一次大考，措手不及。",
    effect:g=>{g.stress=clamp(g.stress+6,0,100);return ["bad","小测翻车，压力 +6。"];}
   },
   {
-id:"hs_explore",icon:"探",cat:"creative",stage:[1],title:"社团初体验",text:"你在社团里找到归属感。",
+id:"hs_explore",icon:"探",cat:"creative",stage:[2,3],title:"社团初体验",text:"你在社团里找到归属感。",
    effect:g=>{g.stats.creativity=clamp(g.stats.creativity+0.5,1,12);g.stats.social=clamp(g.stats.social+0.5,1,12);return ["good","探索自我，创造力 +0.5、社交 +0.5。"];}
   },
   {
-id:"sat_prep",icon:"测",cat:"academic",stage:[2],fit:4,title:"SAT 首考倒计时",text:"标化首考临近，你开始紧张。",
+id:"sat_prep",icon:"测",cat:"academic",stage:[4,5],fit:4,title:"SAT 首考倒计时",text:"标化首考临近，你开始紧张。",
    choices:[
      {label:"全力冲刺",hint:"英语+1 精力-12 压力+6",apply:g=>{g.stats.english=clamp(g.stats.english+1,1,12);g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+6,0,100);return ["warn","冲刺提分，英语 +1、精力 −12、压力 +6。"];}},
      {label:"平常心",hint:"压力-3",apply:g=>{g.stress=clamp(g.stress-3,0,100);return ["good","稳住心态，压力 −3。"];}}
    ]
   },
   {
-id:"contest_season",icon:"奥",cat:"award",stage:[2],fit:4,title:"竞赛季来临",text:"各类学科竞赛扎堆，你挑了主攻方向。",
+id:"contest_season",icon:"奥",cat:"award",stage:[4,5],fit:4,title:"竞赛季来临",text:"各类学科竞赛扎堆，你挑了主攻方向。",
    choices:[
      {label:"全力冲奖",hint:"奖项+2 精力-15",apply:g=>{g.results.awards+=2;g.energy=clamp(g.energy-15,0,maxEnergy());return ["good","竞赛发力，奖项 +2，精力 −15。"];}},
      {label:"浅尝辄止",hint:"压力-5",apply:g=>{g.stress=clamp(g.stress-5,0,100);return ["warn","体验一下，压力 −5，没拿奖。"];}}
    ]
   },
   {
-id:"research_start",icon:"研",cat:"academic",stage:[2],fit:4,title:"进实验室搬砖",text:"教授招本科生助研，你被选上了。",
+id:"research_start",icon:"研",cat:"academic",stage:[4,5],fit:4,title:"进实验室搬砖",text:"教授招本科生助研，你被选上了。",
    effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.energy=clamp(g.energy-10,0,maxEnergy());return ["good","助研入门，学术 +1、精力 −10。"];}
   },
   {
-id:"ap_exam",icon:"考",cat:"academic",stage:[2],title:"AP 大考周",text:"一周五门 AP，脑子快要炸了。",
+id:"ap_exam",icon:"考",cat:"academic",stage:[4,5],title:"AP 大考周",text:"一周五门 AP，脑子快要炸了。",
    effect:g=>{g.energy=clamp(g.energy-10,0,maxEnergy());g.stress=clamp(g.stress+8,0,100);return ["warn","AP 周，精力 −10、压力 +8。"];}
   },
   {
-id:"summer_program",icon:"夏",cat:"chance",stage:[2],title:"夏校放榜",text:"梦校夏校结果下来了。",
+id:"summer_program",icon:"夏",cat:"chance",stage:[4,5],title:"夏校放榜",text:"梦校夏校结果下来了。",
    choices:[
      {label:"录取！",hint:"社交+1 履历+",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("夏校");return ["good","夏校录取，社交 +1、履历 +。"];}},
      {label:"被拒",hint:"学术+1 压力+6",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","被拒但更拼了，学术 +1、压力 +6。"];}}
    ]
   },
   {
-id:"club_lead",icon:"社",cat:"social",stage:[2],fit:3,title:"社团上位",text:"换届选举你当选了社长。",
+id:"club_lead",icon:"社",cat:"social",stage:[4,5],fit:3,title:"社团上位",text:"换届选举你当选了社长。",
    effect:g=>{g.stats.social=clamp(g.stats.social+2,1,12);g.results.ecs.push("社团社长");return ["good","从零带社，社交 +2、履历 +。"];}
   },
   {
-id:"hack_season",icon:"黑",cat:"creative",stage:[2],title:"科创节",text:"学校科创节，你做了个项目。",
+id:"hack_season",icon:"黑",cat:"creative",stage:[4,5],title:"科创节",text:"学校科创节，你做了个项目。",
    effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("科创");return ["good","科创出手，创造力 +1、声望 +2、履历 +。"];}
   },
   {
-id:"essay_block",icon:"灵",cat:"creative",stage:[3],fit:5,title:"文书卡壳",text:"主文书改了八版还是不对味。",
+id:"essay_block",icon:"灵",cat:"creative",stage:[6,7],fit:5,title:"文书卡壳",text:"主文书改了八版还是不对味。",
    choices:[
      {label:"推倒重写",hint:"文书+1 压力+5",apply:g=>{g.results.essayQuality=clamp(g.results.essayQuality+1,0,10);g.stress=clamp(g.stress+5,0,100);return ["good","灵感来了，文书质量 +1、压力 +5。"];}},
      {label:"先放着",hint:"压力-3",apply:g=>{g.stress=clamp(g.stress-3,0,100);return ["warn","缓一缓，压力 −3。"];}}
    ]
   },
   {
-id:"rec_ask",icon:"导",cat:"award",stage:[3],fit:5,title:"找推荐人",text:"你鼓起勇气找老师写推荐信。",
+id:"rec_ask",icon:"导",cat:"award",stage:[6,7],fit:5,title:"找推荐人",text:"你鼓起勇气找老师写推荐信。",
    effect:g=>{g.results.recQuality=clamp(g.results.recQuality+1,0,10);return ["good","拿到承诺，推荐信质量 +1。"];}
   },
   {
-id:"early_night",icon:"夜",cat:"chance",stage:[3],title:"早申提交夜",text:"ED 截止前最后一晚，心跳加速。",
+id:"early_night",icon:"夜",cat:"chance",stage:[6,7],title:"早申提交夜",text:"ED 截止前最后一晚，心跳加速。",
    effect:g=>{g.stress=clamp(g.stress+6,0,100);g.energy=clamp(g.energy-5,0,maxEnergy());return ["warn","截止夜，压力 +6、精力 −5。"];}
   },
   {
-id:"waitlist_dread",icon:"焦",cat:"social",stage:[3],title:"早申放榜日",text:"同学早申陆续上岸，你五味杂陈。",
+id:"waitlist_dread",icon:"焦",cat:"social",stage:[6,7],title:"早申放榜日",text:"同学早申陆续上岸，你五味杂陈。",
    choices:[
      {label:"替他人开心",hint:"社交+1",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);return ["good","大方祝福，社交 +1。"];}},
      {label:"自我怀疑",hint:"压力+8",apply:g=>{g.stress=clamp(g.stress+8,0,100);return ["bad","陷入内耗，压力 +8。"];}}
    ]
   },
   {
-id:"final_rush",icon:"考",cat:"academic",stage:[3],title:"申请季冲刺",text:"RD 截止前最后两周，连轴转。",
+id:"final_rush",icon:"考",cat:"academic",stage:[6,7],title:"申请季冲刺",text:"RD 截止前最后两周，连轴转。",
    effect:g=>{g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+10,0,100);return ["bad","冲刺期，精力 −12、压力 +10。"];}
   },
   {
-id:"interview",icon:"谈",cat:"social",stage:[3],title:"校友面试",text:"和校友面试官聊得投机。",
+id:"interview",icon:"谈",cat:"social",stage:[6,7],title:"校友面试",text:"和校友面试官聊得投机。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.recQuality=clamp(g.results.recQuality+0.5,0,10);return ["good","面试顺利，社交 +1、推荐信 +。"];}
   },
   {
-id:"submit_relief",icon:"舒",cat:"health",stage:[3],title:"提交完毕",text:"最后一所提交，如释重负。",
+id:"submit_relief",icon:"舒",cat:"health",stage:[6,7],title:"提交完毕",text:"最后一所提交，如释重负。",
    effect:g=>{g.stress=clamp(g.stress-15,0,100);g.energy=clamp(g.energy+8,0,maxEnergy());return ["good","尘埃落定，压力 −15、精力 +8。"];}
   },
   {
-id:"power_rec",icon:"导",cat:"award",stage:[1,2,3],power:true,title:"业界大牛亲笔推荐",text:"你帮过的教授主动要给你写强推，分量极重。",
+id:"power_rec",icon:"导",cat:"award",stage:[2,3,4,5,6,7],power:true,title:"业界大牛亲笔推荐",text:"你帮过的教授主动要给你写强推，分量极重。",
    effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.recQuality=clamp(g.results.recQuality+3,0,10);g.results.reputation=clamp(g.results.reputation+8,0,100);return ["good","神级推荐信！推荐信 +3、声望 +8、顶尖校“信号弹”+1。"];}
   },
   {
-id:"power_intl_award",icon:"奖",cat:"award",stage:[1,2,3],power:true,title:"国际大赛折桂",text:"你站上了国际领奖台，惊艳众人。",
+id:"power_intl_award",icon:"奖",cat:"award",stage:[2,3,4,5,6,7],power:true,title:"国际大赛折桂",text:"你站上了国际领奖台，惊艳众人。",
    effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.awards+=3;g.results.reputation=clamp(g.results.reputation+10,0,100);g.stats.academic=clamp(g.stats.academic+1,1,12);return ["good","国际大奖！奖项 +3、声望 +10、学术 +1、顶尖校“信号弹”+1。"];}
   },
   {
-id:"power_paper",icon:"光",cat:"academic",stage:[1,2,3],power:true,title:"一作论文发表",text:"你的研究被顶会接收，署名第一作者。",
+id:"power_paper",icon:"光",cat:"academic",stage:[2,3,4,5,6,7],power:true,title:"一作论文发表",text:"你的研究被顶会接收，署名第一作者。",
    effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+10,0,100);g.results.ecs.push("一作论文");return ["good","论文发表！学术 +1、声望 +10、履历 +1、顶尖校“信号弹”+1。"];}
   },
   {
-id:"power_patron",icon:"脉",cat:"chance",stage:[1,2,3],power:true,title:"贵人引路",text:"一位校友长辈愿意内推并长期指导你。",
+id:"power_patron",icon:"脉",cat:"chance",stage:[2,3,4,5,6,7],power:true,title:"贵人引路",text:"一位校友长辈愿意内推并长期指导你。",
    effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.reputation=clamp(g.results.reputation+10,0,100);g.results.recQuality=clamp(g.results.recQuality+2,0,10);return ["good","贵人相助，声望 +10、推荐信 +2、顶尖校“信号弹”+1。"];}
   },
   {
-id:"power_tip",icon:"灵",cat:"chance",stage:[3],power:true,title:"招生官点拨",text:"线上活动里招生官私下给了关键建议。",
+id:"power_tip",icon:"灵",cat:"chance",stage:[6,7],power:true,title:"招生官点拨",text:"线上活动里招生官私下给了关键建议。",
    effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.essayQuality=clamp(g.results.essayQuality+2,0,10);g.results.recQuality=clamp(g.results.recQuality+1,0,10);return ["good","内部点拨，文书 +2、推荐信 +1、顶尖校“信号弹”+1。"];}
   },
   {
-id:"cs_opensource",icon:"黑",cat:"creative",stage:[2],majors:["cs"],fit:8,title:"开源项目爆火",text:"你写的库被很多人用，star 疯涨。",
+id:"cs_opensource",icon:"黑",cat:"creative",stage:[4,5],majors:["cs"],fit:8,title:"开源项目爆火",text:"你写的库被很多人用，star 疯涨。",
    effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("开源项目");return ["good","项目出圈，创造力 +1、声望 +3、履历 +。"];}
   },
   {
-id:"cs_ctf",icon:"黑",cat:"award",stage:[2],majors:["cs"],fit:8,title:"CTF 全国冠军",text:"你和队友一路过关拿下全国第一。",
+id:"cs_ctf",icon:"黑",cat:"award",stage:[4,5],majors:["cs"],fit:8,title:"CTF 全国冠军",text:"你和队友一路过关拿下全国第一。",
    effect:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+5,0,100);g.results.ecs.push("CTF 冠军");return ["good","CTF 夺冠，奖项 +1、创造力 +1、声望 +5。"];}
   },
   {
-id:"biz_angel",icon:"旗",cat:"social",stage:[2],majors:["biz"],fit:8,title:"创业拿天使",text:"你的项目拿到第一笔投资。",
+id:"biz_angel",icon:"旗",cat:"social",stage:[4,5],majors:["biz"],fit:8,title:"创业拿天使",text:"你的项目拿到第一笔投资。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("创业");return ["good","拿到天使轮，社交 +1、声望 +3、履历 +。"];}
   },
   {
-id:"biz_final",icon:"旗",cat:"award",stage:[2],majors:["biz"],fit:8,title:"商赛全国总决",text:"带队杀进全国总决赛。",
+id:"biz_final",icon:"旗",cat:"award",stage:[4,5],majors:["biz"],fit:8,title:"商赛全国总决",text:"带队杀进全国总决赛。",
    effect:g=>{g.results.awards++;g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("商赛总决赛");return ["good","商赛折桂，奖项 +1、社交 +1、声望 +3。"];}
   },
   {
-id:"sci_isef",icon:"奥",cat:"award",stage:[2],majors:["sci"],fit:8,title:"工程大赛入围",text:"你的课题入围国际科学与工程大赛。",
+id:"sci_isef",icon:"奥",cat:"award",stage:[4,5],majors:["sci"],fit:8,title:"工程大赛入围",text:"你的课题入围国际科学与工程大赛。",
    effect:g=>{g.results.awards++;g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("科研大赛");return ["good","大赛入围，奖项 +1、学术 +1、声望 +3。"];}
   },
   {
-id:"sci_lab",icon:"研",cat:"academic",stage:[2],majors:["sci"],fit:8,title:"独立课题",text:"你有了自己的研究课题。",
+id:"sci_lab",icon:"研",cat:"academic",stage:[4,5],majors:["sci"],fit:8,title:"独立课题",text:"你有了自己的研究课题。",
    effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("独立课题");return ["good","独立科研，学术 +1、声望 +2、履历 +。"];}
   },
   {
-id:"soc_mun",icon:"辩",cat:"award",stage:[2],majors:["soc"],fit:8,title:"模拟联合国获奖",text:"你在模联拿下最佳代表。",
+id:"soc_mun",icon:"辩",cat:"award",stage:[4,5],majors:["soc"],fit:8,title:"模拟联合国获奖",text:"你在模联拿下最佳代表。",
    effect:g=>{g.results.awards++;g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("模联");return ["good","模联获奖，奖项 +1、社交 +1、声望 +2。"];}
   },
   {
-id:"soc_media",icon:"脉",cat:"social",stage:[2],majors:["soc"],fit:8,title:"调研被转载",text:"你的社会调研被媒体转载。",
+id:"soc_media",icon:"脉",cat:"social",stage:[4,5],majors:["soc"],fit:8,title:"调研被转载",text:"你的社会调研被媒体转载。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("调研发表");return ["good","调研出圈，社交 +1、创造力 +1、声望 +2。"];}
   },
   {
-id:"art_gallery",icon:"弹",cat:"creative",stage:[2],majors:["art"],fit:8,title:"作品集被收藏",text:"你的作品被画廊收藏。",
+id:"art_gallery",icon:"弹",cat:"creative",stage:[4,5],majors:["art"],fit:8,title:"作品集被收藏",text:"你的作品被画廊收藏。",
    effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("作品集");return ["good","作品被收藏，创造力 +1、声望 +3、履历 +。"];}
   },
   {
-id:"art_award",icon:"弹",cat:"award",stage:[2],majors:["art"],fit:8,title:"设计大赛金奖",text:"你拿下了设计金奖。",
+id:"art_award",icon:"弹",cat:"award",stage:[4,5],majors:["art"],fit:8,title:"设计大赛金奖",text:"你拿下了设计金奖。",
    effect:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("设计金奖");return ["good","设计金奖，奖项 +1、创造力 +1、声望 +3。"];}
   },
   {
-id:"med_shadow",icon:"研",cat:"academic",stage:[2],majors:["med"],fit:8,title:"名医见习",text:"你跟随医生临床见习。",
+id:"med_shadow",icon:"研",cat:"academic",stage:[4,5],majors:["med"],fit:8,title:"名医见习",text:"你跟随医生临床见习。",
    effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stats.social=clamp(g.stats.social+0.5,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("临床见习");return ["good","临床见习，学术 +1、社交 +、声望 +2、履历 +。"];}
   },
   {
-id:"med_olympiad",icon:"奥",cat:"award",stage:[2],majors:["med"],fit:8,title:"医学竞赛获奖",text:"你拿了生物奥赛奖。",
+id:"med_olympiad",icon:"奥",cat:"award",stage:[4,5],majors:["med"],fit:8,title:"医学竞赛获奖",text:"你拿了生物奥赛奖。",
    effect:g=>{g.results.awards++;g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("生物奥赛");return ["good","奥赛获奖，奖项 +1、学术 +1、声望 +2。"];}
   }
 ];
@@ -877,7 +881,7 @@ const ACTIONS=[
   {id:"club",    name:"搞社团",   icon:"flag",  energy:20, stress:8,  run:doClub},
   {id:"talent",  name:"发展特长", icon:"bulb",  energy:20, stress:6,  run:doTalent},
   {id:"network", name:"经营人脉", icon:"people",energy:15, stress:5,  run:doNetwork},
-  {id:"zk",      name:"中考复习", icon:"book",  energy:18, stress:8,  run:doZk, stage:[0]},
+  {id:"zk",      name:"中考复习", icon:"book",  energy:18, stress:8,  run:doZk, stage:[0,1]},
   {id:"code",    name:"写代码做项目", icon:"bolt",  energy:26, stress:10, major:"cs",  run:doCode},
   {id:"biz",     name:"搞商赛/创业", icon:"flag",  energy:24, stress:9,  major:"biz", run:doBiz},
   {id:"lab",     name:"进实验室", icon:"book", energy:26, stress:10, major:"sci", run:doLab},
@@ -889,10 +893,10 @@ const REST={id:"rest",name:"休息",icon:"moon",energy:-45,stress:-25,run:doRest
 function dealActions(){
   const r=G.round;
   let basicIds=["vocab","study"];
-  if(r>=1) basicIds.push("toefl");
-  if(r>=2) basicIds.push("sat");
-  if(r>=3) basicIds.push("write");
-  if(r<=0) basicIds.push("zk");
+  if(r>=2) basicIds.push("toefl");
+  if(r>=4) basicIds.push("sat");
+  if(r>=6) basicIds.push("write");
+  if(r<=1) basicIds.push("zk");
   G.dealtBasic=ACTIONS.filter(a=>basicIds.includes(a.id));
   let pool=shuffle(ACTIONS.filter(a=>!basicIds.includes(a.id) && (!a.stage || a.stage.includes(r))));
   if(G.major!=="und"){
@@ -1070,7 +1074,7 @@ function doZk(){
 }
 function pen(){ return G.stress>=70?0.5:1; }
 
-/* ---------- GPA：每学年成绩单 ---------- */
+/* ---------- GPA：每学期成绩单 ---------- */
 function genSemesterCourses(){
   const plan=RIGOR[G.rigor].mix, courses=[];
   const eRatio=G.energy/maxEnergy();
@@ -1098,7 +1102,7 @@ function closeSemester(){
   G.results.semesters.push(sem);
   const avgU=courses.reduce((a,c)=>a+c.p,0)/courses.length;
   pushLog(avgU>=3.7?"good":avgU>=3.0?"warn":"bad",
-    `【第 ${G.round+1} 学年成绩单】${courses.map(c=>c.g).join(" ")} · 学年 GPA ${sem.gpaU.toFixed(2)}（加权 ${sem.gpaW.toFixed(2)}）`);
+    `【第 ${G.round+1} 学期成绩单】${courses.map(c=>c.g).join(" ")} · 学期 GPA ${sem.gpaU.toFixed(2)}（加权 ${sem.gpaW.toFixed(2)}）`);
   return sem;
 }
 
@@ -1181,15 +1185,16 @@ function endRound(){
   closeSemester();
   G.round++;
   G.results.stressMax=Math.max(G.results.stressMax,G.stress);
-  if(G.round===3 && !G.summerDone){ goSummer(); return; } // 高二 -> 高三：夏校申请季
+  if(G.round===6 && !G.summerDone){ goSummer(); return; } // 高二下 -> 高三上：夏校申请季
   if(G.round>=TOTAL_ROUNDS){ goPick(); return; }
   G.ap=AP_PER_ROUND+sumFx('apDelta',0);
   dealActions();
   G.energy=clamp(G.energy+10+sumFx('energyRegen',0),0,maxEnergy());
   G.stress=clamp(G.stress-3,0,100);
   $("roundHint").textContent="";
-  const yr=["初三","高一","高二","高三"][G.round];
-  pushLog("info",`—— ${yr}学年 开始 ——`);
+  const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][G.round];
+  const sem=G.round%2===0?"上":"下";
+  pushLog("info",`—— ${yr}${sem}学期 开始 ——`);
   enterEvent();
 }
 function pushLog(cls,txt){
@@ -1204,12 +1209,12 @@ function renderStatus(){
   const eCol=ePct>50?"var(--good)":ePct>25?"var(--warn)":"var(--bad)";
   const sCol=G.stress>70?"var(--bad)":G.stress>40?"var(--warn)":"var(--good)";
   const r=G.results;
-  const yr=["初三","高一","高二","高三"][G.round];
+  const yr=["初三上","初三下","高一上","高一下","高二上","高二下","高三上","高三下"][G.round];
   const st=Object.keys(STAT_NAMES).map(k=>`<span class="st">${ic(STAT_ICON[k])}${STAT_NAMES[k]} <b>${G.stats[k].toFixed(1)}</b></span>`).join("");
   const hasGPA=r.semesters.length>0;
   $("status").innerHTML=`
     <div class="srow">
-      <span class="k">学年</span><span class="v">${yr}</span><span class="sep">·</span>
+      <span class="k">学期</span><span class="v">${yr}</span><span class="sep">·</span>
       <span class="k">进度</span><span class="v">${G.round+1}/${TOTAL_ROUNDS}</span><span class="sep">·</span>
       <span class="k">行动</span><span class="apdots">${ap}</span><span class="sep">·</span>
       <span class="k">难度</span><span class="v">${RIGOR[G.rigor].name}</span>
@@ -1457,9 +1462,10 @@ function summerApply(){
   dealActions();
   G.energy=clamp(G.energy+10+sumFx('energyRegen',0),0,maxEnergy());
   G.stress=clamp(G.stress-3,0,100);
-  const yr=["初三","高一","高二","高三"][G.round];
+  const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][G.round];
+  const sem=G.round%2===0?"上":"下";
   pushLog("info",`—— 高二升高三 · 夏校申请季 结束 —— ${got.length?("录取："+got.join("、")+"（顶尖校录取加成已计入）"):"均未录取，但这段经历本身也是申请素材。"}`);
-  pushLog("info",`—— ${yr}学年 开始 ——`);
+  pushLog("info",`—— ${yr}${sem}学期 开始 ——`);
   document.querySelectorAll(".screen").forEach(x=>x.classList.remove("on"));
   $("game").classList.add("on");
   enterEvent();
@@ -1547,12 +1553,13 @@ function narrative(tags){
 function renderTranscript(){
   const ss=G.results.semesters;
   let rows=ss.map((s,i)=>{
-    const yr=["初三","高一","高二","高三"][i];
-    return `<tr><td>${yr}</td><td>${s.courses.map(c=>`<span class="gpill">${c.g}</span>`).join("")}</td>
+    const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][i];
+    const sm=i%2===0?"上":"下";
+    return `<tr><td>${yr}${sm}</td><td>${s.courses.map(c=>`<span class="gpill">${c.g}</span>`).join("")}</td>
       <td>${s.gpaU.toFixed(2)}</td><td>${s.gpaW.toFixed(2)}</td></tr>`;
   }).join("");
   $("transcript").innerHTML=`
-    <table class="trans"><tr><th>学年</th><th>各科等级</th><th>学年 GPA</th><th>加权</th></tr>${rows}</table>
+    <table class="trans"><tr><th>学期</th><th>各科等级</th><th>学期 GPA</th><th>加权</th></tr>${rows}</table>
     <div class="scores" style="margin-top:10px">
       <span>累计 GPA <b>${cumGPA("U").toFixed(2)}</b></span>
       <span>累计加权 <b>${cumGPA("W").toFixed(2)}</b></span>
@@ -1606,7 +1613,7 @@ function goEnd(){
 /* ---------- 说明 ---------- */
 const HELP=`
 <div class="help-sec"><h3>这游戏在玩什么</h3>
-<p>从初三到高三共 <b>4 个学年</b>。每学年：先抽一张<b>随机事件</b>（有些需要你二选一），再用 <b>8 个行动点</b>行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高一起加托福、高二加 SAT、高三加打磨文书）+ 休息，再从其余行动里<b>随机抽 6 个</b>给你选。学年结束时按你的状态生成<b>成绩单</b>。4 个学年后、高二升高三之间还有<b>夏校申请季</b>，先选 1 所 ED 早申校（可选），再在 RD 勾选 10–25 所，逐封拆开 offer。</p></div>
+<p>从初三上到高三下共 <b>8 个学期</b>。每学期：先抽一张<b>随机事件</b>（有些需要你二选一），再用 <b>4 个行动点</b>行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）+ 休息，再从其余行动里<b>随机抽 6 个</b>给你选。学期结束时按你的状态生成<b>成绩单</b>。8 个学期后先选 1 所 ED 早申校（可选），再在 RD 勾选 10–25 所，逐封拆开 offer。</p></div>
 
 <div class="help-sec"><h3>六维能力</h3>
 <ul>
@@ -1626,13 +1633,13 @@ const HELP=`
 </ul></div>
 
 <div class="help-sec"><h3>GPA：真实成绩单制</h3>
-<p>每学年修 <b>5 门课</b>，课程组合由开局选的<b>课程难度</b>决定。每门课按下面公式算出一个连续分，再<b>就近映射</b>到字母等级：</p>
+<p>每学期修 <b>5 门课</b>，课程组合由开局选的<b>课程难度</b>决定。每门课按下面公式算出一个连续分，再<b>就近映射</b>到字母等级：</p>
 <p><code>基础 2.6 + 0.117×学术 + (精力占比−0.5)×0.45 − 压力/100×0.30 + (运气−6)×0.03 − 难度惩罚 + 随机波动</code></p>
 <ul>
 <li>难度惩罚：AP −0.20，Honors −0.10，常规 0。<b>选 AP 更难拿 A，但加权更高</b>。</li>
 <li>等级对应绩点：A 4.0 / A− 3.7 / B+ 3.3 / B 3.0 / B− 2.7 / C+ 2.3 / C 2.0 / C− 1.7 / D+ 1.3 / D 1.0 / F 0。</li>
 <li>加权绩点：AP +1.0，Honors +0.5，常规 +0，上限 5.0。</li>
-<li>学年 GPA = 各科绩点按学分加权平均；<b>累计 GPA = 各学年质量点总和 ÷ 总学分</b>（不是简单平均，但学分相同时结果一致）。</li>
+<li>学期 GPA = 各科绩点按学分加权平均；<b>累计 GPA = 各学期质量点总和 ÷ 总学分</b>（不是简单平均，但学分相同时结果一致）。</li>
 </ul></div>
 
 <div class="help-sec"><h3>SAT 与托福</h3>
@@ -1645,7 +1652,7 @@ const HELP=`
 
 <div class="help-sec"><h3>精力、压力与声望</h3>
 <ul>
-<li><b>精力</b>：行动消耗，低精力会直接拉低当学年成绩。<b>休息</b>常驻在行动里，永远能回血。</li>
+<li><b>精力</b>：行动消耗，低精力会直接拉低当学期成绩。<b>休息</b>常驻在行动里，永远能回血。</li>
 <li><b>压力</b>：行动会加压力，压力 ≥70% 时行动收益减半、考试扣分。休息可降 25。</li>
 <li><b>声望</b>：社团、人脉、竞赛累积，影响推荐信质量与录取模型（最高 +0.12 的加分）。</li>
 </ul></div>
