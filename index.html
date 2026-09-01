@@ -131,6 +131,21 @@ h1{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;
 .cand .rk{font-size:11px;color:var(--mut)}
 .cand .nm{font-size:13.5px;font-weight:600;margin:2px 0}
 .cand .pp{font-size:11.5px;color:var(--mut)}
+.warn-banner{background:#fdf3e7;border:1px solid #e8c98f;color:#8a5a13;font-size:13px;line-height:1.5;padding:10px 12px;margin-bottom:10px;border-radius:4px}
+.warn-banner b{color:#7a4a08}
+.summer-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 4px}
+.summer-card{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:11px;transition:border-color .15s}
+.summer-card:hover{border-color:var(--ink)}
+.summer-card.sel{border-color:var(--ink);background:#f2ece2}
+.summer-card.disabled{opacity:.5;cursor:not-allowed}
+.summer-card .sc-top{display:flex;align-items:baseline;gap:8px}
+.summer-card .sc-top b{font-size:14px}
+.summer-card .sc-sel{margin-left:auto;font-size:11px;color:var(--mut)}
+.summer-card .sc-desc{font-size:12px;color:var(--mut);margin:4px 0 6px;line-height:1.4}
+.summer-card .sc-reqs{display:flex;flex-wrap:wrap;gap:5px}
+.summer-card .req{font-size:11px;padding:2px 6px;border-radius:3px;background:#eee6d8}
+.summer-card .req.met{background:#e3efe3;color:#2f6b2f}
+.summer-card .req.unmet{background:#f3e0e0;color:#9b3b3b}
 .searchbar{display:flex;gap:8px;margin:14px 0 4px}
 .searchbar input{flex:1;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line2);background:var(--card);color:var(--ink)}
 .searchbar input:focus{outline:none;border-color:var(--ink)}
@@ -268,7 +283,8 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
     </div>
     <div class="card">
       <p class="label">常规 RD（勾选 10–25 所）</p>
-      <div class="narr" style="font-size:13.5px;margin-bottom:8px">RD 可海投。冲刺 5 所 · 匹配 10 所 · 保底 10 所，按档勾选，已选 <b id="rdCount">0</b> / 25（至少 10 所方可提交）。</div>
+      <div id="bandWarn" class="warn-banner" style="display:none"></div>
+      <div class="narr" id="rdDesc" style="font-size:13.5px;margin-bottom:8px"></div>
       <div class="band">
         <div class="bandhead"><span class="t">冲刺</span><span class="cnt" id="cntReach">0</span></div>
         <div class="cands" id="candReach"></div>
@@ -285,6 +301,18 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
         <button class="btn" id="confirmPickBtn" disabled>提交申请，看结果</button>
         <span class="small" id="pickHint" style="flex:1"></span>
         <button class="link" id="helpBtn3">玩法说明</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="summer" class="screen">
+    <div class="card">
+      <p class="label">高二升高三 · 夏校申请季</p>
+      <div class="narr" style="font-size:13.5px;margin-bottom:10px">顶尖夏校（如 RSI / SSP / MITES，录取率仅 3–10%）是冲顶尖校的“信号弹”——招生官看重的不是名校光环，而是你的 <b>GPA、标化、学术/英语实力与声望</b>。挑 1–2 个你达标的提交申请，结果按达标程度摇号；录上越好，顶尖校录取加成越高。</div>
+      <div id="summerList" class="summer-list"></div>
+      <div class="foot">
+        <button class="btn" id="summerApplyBtn">提交申请</button>
+        <span class="small" id="summerHint" style="flex:1"></span>
       </div>
     </div>
   </section>
@@ -426,7 +454,9 @@ function freshState(stats,traits,rigor,major){
     traits:traits||[], rigor:rigor||"mixed", major:major||"und",
     majorFit:30,
     results:{satBest:0,toeflBest:0,semesters:[],awards:0,ecs:[],
-             reputation:0,recQuality:3,essayQuality:3,stressMax:0},
+             reputation:0,recQuality:3,essayQuality:3,stressMax:0,
+             spike:0, summerPts:0},
+    summerDone:false,
     log:[], usedEvents:[], phase:'event', dealtBasic:null, dealtRand:[]
   };
 }
@@ -738,23 +768,23 @@ id:"submit_relief",icon:"舒",cat:"health",stage:[6,7],title:"提交完毕",text
   },
   {
 id:"power_rec",icon:"导",cat:"award",stage:[2,3,4,5,6,7],power:true,title:"业界大牛亲笔推荐",text:"你帮过的教授主动要给你写强推，分量极重。",
-   effect:g=>{g.results.recQuality=clamp(g.results.recQuality+3,0,10);g.results.reputation=clamp(g.results.reputation+8,0,100);return ["good","神级推荐信！推荐信 +3、声望 +8。"];}
+   effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.recQuality=clamp(g.results.recQuality+3,0,10);g.results.reputation=clamp(g.results.reputation+8,0,100);return ["good","神级推荐信！推荐信 +3、声望 +8、顶尖校“信号弹”+1。"];}
   },
   {
 id:"power_intl_award",icon:"奖",cat:"award",stage:[2,3,4,5,6,7],power:true,title:"国际大赛折桂",text:"你站上了国际领奖台，惊艳众人。",
-   effect:g=>{g.results.awards+=3;g.results.reputation=clamp(g.results.reputation+10,0,100);g.stats.academic=clamp(g.stats.academic+1,1,12);return ["good","国际大奖！奖项 +3、声望 +10、学术 +1。"];}
+   effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.awards+=3;g.results.reputation=clamp(g.results.reputation+10,0,100);g.stats.academic=clamp(g.stats.academic+1,1,12);return ["good","国际大奖！奖项 +3、声望 +10、学术 +1、顶尖校“信号弹”+1。"];}
   },
   {
 id:"power_paper",icon:"光",cat:"academic",stage:[2,3,4,5,6,7],power:true,title:"一作论文发表",text:"你的研究被顶会接收，署名第一作者。",
-   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+10,0,100);g.results.ecs.push("一作论文");return ["good","论文发表！学术 +1、声望 +10、履历 +1。"];}
+   effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+10,0,100);g.results.ecs.push("一作论文");return ["good","论文发表！学术 +1、声望 +10、履历 +1、顶尖校“信号弹”+1。"];}
   },
   {
 id:"power_patron",icon:"脉",cat:"chance",stage:[2,3,4,5,6,7],power:true,title:"贵人引路",text:"一位校友长辈愿意内推并长期指导你。",
-   effect:g=>{g.results.reputation=clamp(g.results.reputation+10,0,100);g.results.recQuality=clamp(g.results.recQuality+2,0,10);return ["good","贵人相助，声望 +10、推荐信 +2。"];}
+   effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.reputation=clamp(g.results.reputation+10,0,100);g.results.recQuality=clamp(g.results.recQuality+2,0,10);return ["good","贵人相助，声望 +10、推荐信 +2、顶尖校“信号弹”+1。"];}
   },
   {
 id:"power_tip",icon:"灵",cat:"chance",stage:[6,7],power:true,title:"招生官点拨",text:"线上活动里招生官私下给了关键建议。",
-   effect:g=>{g.results.essayQuality=clamp(g.results.essayQuality+2,0,10);g.results.recQuality=clamp(g.results.recQuality+1,0,10);return ["good","内部点拨，文书 +2、推荐信 +1。"];}
+   effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.essayQuality=clamp(g.results.essayQuality+2,0,10);g.results.recQuality=clamp(g.results.recQuality+1,0,10);return ["good","内部点拨，文书 +2、推荐信 +1、顶尖校“信号弹”+1。"];}
   },
   {
 id:"cs_opensource",icon:"黑",cat:"creative",stage:[4,5],majors:["cs"],fit:8,title:"开源项目爆火",text:"你写的库被很多人用，star 疯涨。",
@@ -813,7 +843,7 @@ function drawEvent(){
   if(!pool.length) pool=EVENTS.filter(e=>majorOk(e)&&!G.usedEvents.includes(e.id));
   if(!pool.length) pool=EVENTS;
   const powers=pool.filter(e=>e.power);
-  if(powers.length && Math.random()<0.13){
+  if(powers.length && Math.random()<0.20){
     const e=pick(powers); G.usedEvents.push(e.id); if(G.usedEvents.length>20)G.usedEvents.shift(); return e;
   }
   const norm=pool.filter(e=>!e.power);
@@ -1155,6 +1185,7 @@ function endRound(){
   closeSemester();
   G.round++;
   G.results.stressMax=Math.max(G.results.stressMax,G.stress);
+  if(G.round===6 && !G.summerDone){ goSummer(); return; } // 高二下 -> 高三上：夏校申请季
   if(G.round>=TOTAL_ROUNDS){ goPick(); return; }
   G.ap=AP_PER_ROUND+sumFx('apDelta',0);
   dealActions();
@@ -1235,21 +1266,60 @@ function renderActions(){
 /* ---------- 选校 / 申请 ---------- */
 let PICK={p:null,bands:{},cand:{},off:{},edSel:null,rdSel:[]};
 function bandOf(P){ return P<0.10?"reach":(P<0.55?"match":"safety"); }
+function dedupeB(a){const s=new Set(),o=[];a.forEach(x=>{if(!s.has(x.sc.nameEn)){s.add(x.sc.nameEn);o.push(x);}});return o;}
+function stridedPick(arr,k){
+  // 间隔抽样：把 arr 均匀切成 k 段，各取一个，保证结果分散、不“挨在一起”
+  if(arr.length<=k) return arr.slice();
+  const step=arr.length/k, off=Math.floor(Math.random()*step);
+  const out=[];
+  for(let i=0;i<k;i++){let idx=Math.min(arr.length-1,Math.max(0,Math.round(off+i*step)));if(!out.includes(arr[idx]))out.push(arr[idx]);}
+  if(out.length<k){for(const x of arr){if(!out.includes(x)){out.push(x);if(out.length>=k)break;}}}
+  return out;
+}
 function buildBands(p){
-  // 按录取概率降序（最难在前），再按数量分档：
-  // 冲刺 = 最难 5 所（多数申请人情况下录取率<10%）；匹配 = 次难 10 所；保底 = 最易 10 所（你最有可能录取的 10 所）
-  const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc),band:null})).filter(x=>x.P>0.001);
-  all.sort((a,b)=>a.P-b.P); // 升序：index 0 = 录取率最低（最难），末位 = 最易
-  const bands={reach:[],match:[],safety:[]};
-  all.slice(0,REACH_MAX).forEach(x=>{x.band="reach";bands.reach.push(x);});
-  all.slice(REACH_MAX,REACH_MAX+MATCH_MAX).forEach(x=>{x.band="match";bands.match.push(x);});
-  all.slice(REACH_MAX+MATCH_MAX,REACH_MAX+MATCH_MAX+SAFETY_MAX).forEach(x=>{x.band="safety";bands.safety.push(x);});
-  return bands;
+  // 全部学校按录取概率升序（index 0 = 最难/录取率最低，末位 = 最易）
+  const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc),band:null})).filter(x=>x.P>0.001)
+                    .sort((a,b)=>a.P-b.P);
+  const n=all.length;
+  const lo=all.filter(x=>x.P<0.10);   // <10% 池（冲刺候选）
+  const hi=all.filter(x=>x.P>=0.10);  // ≥10% 池（可匹配）
+
+  // —— 冲刺：5 所最难里随机 2 所 + 随机 3 所 <10% 的校 ——
+  let reach=[];
+  const bottom5=all.slice(0,Math.min(5,n));
+  if(bottom5.length) reach=reach.concat(shuffle(bottom5).slice(0,Math.min(2,bottom5.length)));
+  const extraLo=lo.filter(x=>!reach.some(r=>r.sc.nameEn===x.sc.nameEn));
+  if(extraLo.length) reach=reach.concat(shuffle(extraLo).slice(0,Math.min(3,extraLo.length)));
+  reach=dedupeB(reach).slice(0,REACH_MAX);
+  reach.forEach(x=>x.band="reach");
+
+  // —— 全是 <10%：啥都匹配不了 ——
+  if(hi.length===0){
+    return {reach, match:[], safety:[], noMatch:true, noSafety:true, easiestP:0};
+  }
+
+  // —— 保底：录取率最高的 10 所（对你最易） ——
+  const safety=all.slice(Math.max(0,n-10)).filter(x=>x.band===null);
+  safety.forEach(x=>x.band="safety");
+
+  // —— 匹配：可匹配且非保底的池里，按录取率间隔抽样，保证分散、不挨在一起 ——
+  const matchPool=hi.filter(x=>x.band===null);
+  const match=stridedPick(matchPool, MATCH_MAX);
+  match.forEach(x=>x.band="match");
+
+  // —— 无真正保底：连最容易的校命中率都偏低 ——
+  const easiestP = safety.length?Math.max(...safety.map(x=>x.P)):0;
+  const noSafety = easiestP < 0.35;
+
+  return {reach, match, safety, noMatch:false, noSafety, easiestP};
 }
 function goPick(){
   $("game").classList.remove("on"); $("pick").classList.add("on");
   PICK.p=buildProfile();
   PICK.bands=buildBands(PICK.p);
+  PICK.noMatch=!!PICK.bands.noMatch;
+  PICK.noSafety=!!PICK.bands.noSafety;
+  PICK.easiestP=PICK.bands.easiestP||0;
   PICK.cand={}; PICK.off={reach:0,match:0,safety:0};
   ["reach","match","safety"].forEach(k=>PICK.cand[k]=takeBand(k));
   const edSchools=SCHOOLS.filter(s=>s.region==="US"&&s.ed);
@@ -1268,6 +1338,18 @@ function takeBand(k){
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const tagOf=sc=>sc.region==="US"?("#"+sc.rank):sc.region;
 function renderPick(){
+  // 档位提示横幅：匹配不到 / 无法保底
+  const warn=$("bandWarn"); let wm="";
+  if(PICK.noMatch){
+    wm=`⚠️ 你目前的录取率<b>全部低于 10%</b>——匹配不到任何学校，只能冲一把冲刺校。建议现实一点，或重开一局补强标化与活动。`;
+  }else if(PICK.noSafety){
+    wm=`⚠️ 你目前<b>没有真正的保底校</b>：连最容易录取的学校命中率也仅 ${(PICK.easiestP*100).toFixed(0)}%。你的水平还无法“保底”，匹配校已是你的上限。`;
+  }
+  if(wm){ warn.style.display="block"; warn.innerHTML=wm; } else { warn.style.display="none"; }
+  // 动态档位数量说明
+  const rc=PICK.cand.reach.length, mc=PICK.cand.match.length, sc=PICK.cand.safety.length;
+  $("rdDesc").innerHTML=`RD 可海投。冲刺 <b>${rc}</b> 所（录取率最低，含 &lt;10% 的校）· 匹配 <b>${mc}</b> 所（录取率 10%+，分散取样）· 保底 <b>${sc}</b> 所（对你最易）。按档勾选，已选 <b id="rdCount">0</b> / 25。`;
+
   ["reach","match","safety"].forEach(k=>{
     const box=$("cand"+cap(k)); box.innerHTML="";
     PICK.cand[k].forEach(x=>{
@@ -1281,8 +1363,10 @@ function renderPick(){
   $("rdCount").textContent=n;
   const cnt={reach:0,match:0,safety:0}; PICK.rdSel.forEach(o=>cnt[o.band]++);
   $("cntReach").textContent=cnt.reach; $("cntMatch").textContent=cnt.match; $("cntSafety").textContent=cnt.safety;
-  $("confirmPickBtn").disabled = n<10 || n>RD_MAX;
-  $("pickHint").textContent = n<10?`还需选 ${10-n} 所（至少 10）`:(n>RD_MAX?`超过上限 ${RD_MAX}`:"已选 "+n+" 所");
+  const total=rc+mc+sc;
+  const minN=Math.min(10,total);
+  $("confirmPickBtn").disabled = n<minN || n>RD_MAX;
+  $("pickHint").textContent = n<minN?`还需选 ${minN-n} 所（本局最少 ${minN} 所）`:(n>RD_MAX?`超过上限 ${RD_MAX}`:"已选 "+n+" 所");
 }
 function toggleRD(k,x){
   const i=PICK.rdSel.findIndex(o=>o.nameEn===x.sc.nameEn);
@@ -1305,6 +1389,88 @@ function edPick(){
   $("edHint").textContent="已选 ED 校，提交后先拆这封。";
 }
 
+/* ---------- 夏校申请季（高二升高三） ---------- */
+const SUMMER_PROGRAMS=[
+  {name:"RSI 研究夏校",   sel:"≈3% 录取",  need:{gpa:3.8,sat:1500,academic:8,rep:45}, boost:0.9,  desc:"MIT 旗下全免费研究型，全球最难进的夏校之一。"},
+  {name:"SSP 科学夏校",   sel:"≈7% 录取",  need:{gpa:3.7,sat:1470,academic:8,rep:35}, boost:0.8,  desc:"天体物理/生化真实科研，校友多进 Caltech/MIT。"},
+  {name:"MITES 工程夏校", sel:"≈5% 录取",  need:{gpa:3.7,sat:1480,academic:8,rep:30}, boost:0.75, desc:"MIT 全免费工程/科学项目，极难。"},
+  {name:"斯坦福 SUMaC",   sel:"≈10% 录取", need:{gpa:3.7,sat:1450,english:8,rep:30},  boost:0.7,  desc:"纯数学 immersion，冲刺顶尖理工。"},
+  {name:"CMU SAMS 计算",  sel:"≈12% 录取", need:{gpa:3.6,sat:1440,academic:8,rep:25}, boost:0.6,  desc:"卡耐基梅隆计算/领导力项目。"},
+  {name:"耶鲁全球青年学者",sel:"≈10% 录取", need:{gpa:3.6,english:8,social:7,rep:30},  boost:0.6,  desc:"人文社科向，耶鲁主办。"},
+  {name:"Garcia 材料科研", sel:"≈12% 录取", need:{gpa:3.5,sat:1420,academic:7,rep:20}, boost:0.55, desc:"石溪大学材料科学真实科研。"},
+  {name:"JHU CTY 天才营", sel:"中高",       need:{gpa:3.4,sat:1380,academic:6,rep:15}, boost:0.4,  desc:"老牌天才营，宽度大于深度。"},
+  {name:"本地大学科研助理",sel:"中等",       need:{gpa:3.3,academic:6,rep:10},          boost:0.3,  desc:"冷邮件争取的校内 lab 助理，性价比高。"},
+  {name:"品牌大学付费预科",sel:"易",         need:{},                                 boost:0.15, desc:"名校办的付费暑校，含金量有限但聊胜于无。"}
+];
+let SUMMER={list:[],sel:[]};
+function summerQualify(pp){
+  const need=pp.need; if(!need) return {ok:true,score:1};
+  const r=G.results,s=G.stats,gpa=cumGPA("U");
+  const map={gpa, sat:r.satBest, academic:s.academic, english:s.english, social:s.social, rep:r.reputation};
+  let ok=true,score=0,cnt=0;
+  for(const k in need){ cnt++; if((map[k]||0)>=need[k]) score++; else ok=false; }
+  return {ok, score: cnt?score/cnt:1};
+}
+function goSummer(){
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("on"));
+  $("summer").classList.add("on");
+  G.phase="summer";
+  SUMMER.list=shuffle(SUMMER_PROGRAMS).slice(0,4).map(pp=>({pp, q:summerQualify(pp)}));
+  SUMMER.sel=[];
+  renderSummer();
+}
+function renderSummer(){
+  const box=$("summerList"); box.innerHTML="";
+  SUMMER.list.forEach((it,i)=>{
+    const pp=it.pp, q=it.q;
+    const reqs=pp.need?Object.keys(pp.need).map(k=>{
+      const label={gpa:"GPA",sat:"SAT",academic:"学术",english:"英语",social:"社交",rep:"声望"}[k];
+      const got={gpa:cumGPA("U").toFixed(2),sat:G.results.satBest,academic:G.stats.academic,english:G.stats.english,social:G.stats.social,rep:Math.round(G.results.reputation)}[k];
+      const met=(got||0)>=pp.need[k];
+      return `<span class="req ${met?'met':'unmet'}">${label} ${got} / ${pp.need[k]}${met?' ✓':' ✗'}</span>`;
+    }).join(""):`<span class="req met">无门槛</span>`;
+    const sel=SUMMER.sel.includes(i);
+    const b=document.createElement("div");
+    b.className="summer-card"+(sel?" sel":"")+(q.ok?"":" disabled");
+    b.innerHTML=`<div class="sc-top"><b>${pp.name}</b><span class="sc-sel">${pp.sel}</span></div>
+      <div class="sc-desc">${pp.desc}</div><div class="sc-reqs">${reqs}</div>`;
+    if(q.ok){
+      b.onclick=()=>{
+        const idx=SUMMER.sel.indexOf(i);
+        if(idx>=0) SUMMER.sel.splice(idx,1);
+        else { if(SUMMER.sel.length>=2){ $("summerHint").textContent="最多申请 2 个。"; return; } SUMMER.sel.push(i); }
+        renderSummer();
+      };
+    } else { b.title="未达标，无法申请"; }
+    box.appendChild(b);
+  });
+  $("summerHint").textContent=SUMMER.sel.length?`已选 ${SUMMER.sel.length} / 2，点“提交申请”摇号。`:"选 1–2 个你达标的夏校提交申请（结果按达标程度摇号）。";
+}
+function summerApply(){
+  if(SUMMER.sel.length===0){ $("summerHint").textContent="先选至少 1 个要申请的夏校。"; return; }
+  let got=[];
+  SUMMER.sel.forEach(i=>{
+    const {pp,q}=SUMMER.list[i];
+    const pr=clamp(0.12+0.55*q.score+(G.stats.luck-5)*0.02, 0.04, 0.85);
+    if(Math.random()<pr){
+      G.results.summerPts=clamp((G.results.summerPts||0)+pp.boost,0,1.2);
+      got.push(pp.name);
+    }
+  });
+  G.summerDone=true;
+  G.ap=AP_PER_ROUND+sumFx('apDelta',0);
+  dealActions();
+  G.energy=clamp(G.energy+10+sumFx('energyRegen',0),0,maxEnergy());
+  G.stress=clamp(G.stress-3,0,100);
+  const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][G.round];
+  const sem=G.round%2===0?"上":"下";
+  pushLog("info",`—— 高二升高三 · 夏校申请季 结束 —— ${got.length?("录取："+got.join("、")+"（顶尖校录取加成已计入）"):"均未录取，但这段经历本身也是申请素材。"}`);
+  pushLog("info",`—— ${yr}${sem}学期 开始 ——`);
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("on"));
+  $("game").classList.add("on");
+  enterEvent();
+}
+
 /* ---------- 结局 ---------- */
 function buildProfile(){
   const s=G.stats,r=G.results;
@@ -1318,10 +1484,12 @@ function buildProfile(){
     creativity:s.creativity, social:s.social, english:s.english, academic:s.academic,
     essay:clamp(r.essayQuality*0.7+s.creativity*0.3,1,10),
     rec:clamp(r.recQuality*0.7+s.social*0.25+r.reputation/100*1.5,1,10),
-    luck:s.luck, stamina:s.stamina, reputation:r.reputation,
+    luck:s.luck, stamina:s.stamina,     reputation:r.reputation,
     rigor:G.rigor,
     major:G.major,
     majorFit:G.major==="und"?0.5:G.majorFit/100,
+    spike:r.spike||0,
+    summer:clamp(r.summerPts||0,0,1.2),
     isIntl:true, needAid:false, round:"RD", majorDiff:"mid"
   };
 }
@@ -1352,6 +1520,15 @@ function admitProb(p,sc,ed){
   if(p.toefl===0) P*=0.75;
   else if(sc.toeflMin!=null&&p.toefl<sc.toeflMin) P*=0.6;
   if(p.sat===0) P*=0.7;   // 与托福一致：未考标化同样明显惩罚（顶尖校基本都要求）
+  // 顶尖校“信号弹”：强推/国际大奖/一作论文(spike) 与 顶尖夏校(summer) 主要抬升最难（录取率最低）的校，
+  // 且按选择性加权（越挑的校加成越大），但加成有上限——普通保底校几乎不受影响，避免“人人都能保底名校”。
+  const dist=(p.spike||0)*0.4 + (p.summer||0)*0.3;
+  if(dist>0){
+    const sel=clamp(-Math.log(base/(1-base))/3.0, 0, 1.1); // 选择性权重：顶尖校 ~1.1，普通校 ~0
+    const add=dist*sel;                                      // 直接作为 logit 增量（有界，不会爆炸）
+    let P2=1/(1+Math.exp(-(logit+3.0*S+add)));
+    P=Math.max(P,P2);
+  }
   return clamp(P,0.002,0.995);
 }
 function personality(){
@@ -1488,11 +1665,19 @@ const HELP=`
 
 <div class="help-sec"><h3>选校与录取</h3>
 <ul>
-<li>按你的最终画像算出全部 57 所学校的录取概率，按难度排序分成三档：<b>冲刺（最难 5 所，多数情况录取率&lt;10%）、匹配（次难 10 所）、保底（最易 10 所，你最有可能录取的 10 所）</b>。</li>
+<li>按你的最终画像算出全部学校的录取概率，由<b>难到易</b>排序后分成三档：
+  <b>冲刺</b> = 录取率最低的 5 所里随机 2 所 + 随机 3 所录取率&lt;10% 的校；
+  <b>匹配</b> = 录取率≥10% 且非保底的校里，按录取率<b>间隔取样</b>（保证分散、不扎堆）挑约 10 所；
+  <b>保底</b> = 录取率最高的 10 所（对你最易）。</li>
+<li>两种极端会明确提示：<b>全部校录取率都&lt;10%</b> → 你匹配不到任何学校，只能冲冲刺校；<b>连最容易的校命中率都偏低</b> → 你目前没有真正的保底校，匹配校已是你的上限。</li>
 <li><b>ED（早决定）</b>：从美国提供 ED 的校中选 1 所绑定提交；部分校 ED 录取率明显高于 RD。<b>一旦 ED 录取即绑定入学，须撤回全部 RD 申请</b>——此时结局页不再显示任何 RD 录取信息，符合真实规则。</li>
-<li><b>RD（常规）</b>：<b>冲刺 5 所</b>（录取率最低的 5 所，多数情况 &lt;10%）、<b>匹配 10 所</b>、<b>保底 10 所</b>（按难度从难到易排列，保底为你最有可能录取的 10 所）。可勾选 <b>10–25 所</b>提交，最后按概率逐封拆开。</li>
-<li>录取模型基于 <b>美国 US News 2026 Top 40 的 Common Data Set 真实数据 + 英国/香港名校国际生录取率估算</b>（录取率、SAT 区间、GPA、国际生政策等），在你的 GPA、标化、活动、文书、推荐信、课程难度、声望上做校正。</li>
+<li><b>RD（常规）</b>：按上面三档勾选（冲刺 / 匹配 / 保底），可勾选 <b>10–25 所</b>提交（若候选不足则按实际最少数量），最后按概率逐封拆开。</li>
+<li><b>顶尖校“信号弹”</b>：强推、国际大奖、一作论文等强力事件会累积 <b>顶尖校信号</b>，以及<b>顶尖夏校</b>录取，都能<b>显著抬升最难（录取率最低）那批校</b>的命中率（对普通保底校几乎无影响）——这是冲顶尖校的关键，且都带一定概率。</li>
+<li>录取模型基于 <b>美国 US News 2026 Top 40 的 Common Data Set 真实数据 + 英国/香港名校国际生录取率估算</b>（录取率、SAT 区间、GPA、国际生政策等），在你的 GPA、标化、活动、文书、推荐信、课程难度、声望、顶尖校信号上做校正。</li>
 </ul></div>
+
+<div class="help-sec"><h3>夏校申请季（高二升高三）</h3>
+<p>高二下结束后会插入一个<b>夏校申请季</b>：系统给出 4 个随机夏校（难度从 RSI/SSP/MITES 这类 3–10% 录取的研究型，到付费预科）。能否申请取决于你的 <b>GPA、SAT、学术/英语、声望</b> 是否达标；提交后按达标程度<b>摇号</b>录取。录上越好（boost 越高），后续顶尖校录取加成越大——这是冲名校的一条真实路径。</p></div>
 
 <div class="help-sec"><h3>成就</h3>
 <p>结局页会结算 12 项成就，作为重复游玩的目标。</p></div>
@@ -1519,6 +1704,7 @@ $("helpBackBtn").onclick=()=>{
   $(helpFrom).classList.add("on");
 };
 $("edPickBtn").onclick=edPick;
+$("summerApplyBtn").onclick=summerApply;
 rollTraits();
 renderSetup();
 </script>
