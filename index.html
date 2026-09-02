@@ -1937,6 +1937,7 @@ function goEnd(){
   const asc=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc)})).sort((a,b)=>b.P-a.P);
   $("allTable").innerHTML=`<div class="small" style="margin-bottom:6px">表中为<b>模型期望录取率（未含本季共同冲击 ε）</b>；实际摇号概率已含 ε，故会与表中数值略有偏差。</div><table class="mini"><tr><th>排名</th><th>中文</th><th>英文</th><th>RD 概率</th></tr>${asc.slice().reverse().map(x=>`<tr><td>${tagOf(x.sc)}</td><td>${x.sc.nameZh}</td><td>${x.sc.nameEn}</td><td>${(x.P*100).toFixed(1)}%</td></tr>`).join("")}</table>`;
   renderLeaderboard();
+  if(lbHasUploaded()) hideUploadUI(rdBox);
 }
 
 /* ---------- 排行榜（评级拆 offer 后上传 / 共享榜）---------- */
@@ -1972,6 +1973,16 @@ async function lbClient(){
 }
 function lbLocalGet(){ try{ return JSON.parse(localStorage.getItem("usadmit_lb")||"[]"); }catch(e){ return []; } }
 function lbLocalSet(a){ try{ localStorage.setItem("usadmit_lb", JSON.stringify(a.slice(0,200))); }catch(e){} }
+// 本机是否已完成上传：完成后排行榜上传入口彻底隐藏（防止改名重复上传刷榜）
+function lbHasUploaded(){ try{ return localStorage.getItem("usadmit_lb_uploaded")==="1"; }catch(e){ return false; } }
+function lbMarkUploaded(){ try{ localStorage.setItem("usadmit_lb_uploaded","1"); }catch(e){} }
+function lbClearUploaded(){ try{ localStorage.removeItem("usadmit_lb_uploaded"); }catch(e){} }
+// 隐藏所有上传入口（按钮 + 表单），仅保留排行榜
+function hideUploadUI(rdBox){
+  if(!rdBox) return;
+  const bar=rdBox.querySelector('#uploadBtn'); if(bar){ const p=bar.closest('.rdbar'); if(p) p.remove(); }
+  const f=rdBox.querySelector('#uploadForm'); if(f) f.remove();
+}
 function lbEntry(e){ return {id:e.id, school:e.school, band:e.band, grade:e.grade, score:e.score, gpa:Math.round(e.gpa*100)/100, sat:e.sat||0, ts:e.ts}; }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 // 名校声望分：rank 越小越牛 → 分数越高；再叠加评级加成。0~1060 区间，足够排序且不至于差距过大。
@@ -2005,14 +2016,16 @@ async function lbSubmit(entry){
 }
 async function lbFetch(){
   const cli=await lbClient();
+  let cloud=[];
   if(cli && LEADERBOARD.mode==="supabase"){
     try{
       const {data,error}=await cli.from(LEADERBOARD.table).select("*").order("score",{ascending:false}).limit(50);
       if(error) throw error;
-      return data&&data.length?data:[];
+      cloud=data&&data.length?data:[];
     }catch(err){ console.warn("排行榜拉取失败，回退本地", err); }
   }
-  return lbLocalGet().sort((a,b)=>b.score-a.score).slice(0,50);
+  // 合并云端 + 本机：同名取最佳（lbDedupe 已处理），保证既看到他人云端成绩也看到自己的本机成绩
+  return lbDedupe(cloud.concat(lbLocalGet())).slice(0,50);
 }
 // 按玩家名去重，同一名字只保留最佳成绩（兼容历史上可能的重复数据）
 function lbDedupe(rows){
@@ -2024,9 +2037,24 @@ async function renderLeaderboard(){
   const el=document.getElementById("lbPanel"); if(!el) return;
   const rows=lbDedupe(await lbFetch());
   if(!rows.length){ el.innerHTML=`<div class="small">还没有人上传成绩。拆开 offer 后，点「上传到排行榜」留下你的名字吧！</div>`; return; }
+  const uploaded=lbHasUploaded();
+  const note = uploaded
+    ? `<div class="small" style="margin-top:6px">本机已留名 · <a href="#" id="lbReset" style="color:var(--good)">重新上传</a></div>`
+    : (LEADERBOARD.mode==="supabase"?`<div class="small" style="margin-top:6px">共享榜（Supabase）· 实时</div>`:`<div class="small" style="margin-top:6px">本地榜（本机）· 在 LEADERBOARD 配置里填好 Supabase 即可升级为跨玩家共享榜</div>`);
   el.innerHTML=`<table class="mini"><tr><th>#</th><th>玩家</th><th>最佳录取</th><th>评级</th><th>分数</th></tr>`+
-    rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.school)}（${escapeHtml(r.band)}）</td><td>${escapeHtml(r.grade)}</td><td><b>${r.score}</b></td></tr>`).join("")+`</table>`+
-    (LEADERBOARD.mode==="supabase"?`<div class="small" style="margin-top:6px">共享榜（Supabase）· 实时</div>`:`<div class="small" style="margin-top:6px">本地榜（本机）· 在 LEADERBOARD 配置里填好 Supabase 即可升级为跨玩家共享榜</div>`);
+    rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.school)}（${escapeHtml(r.band)}）</td><td>${escapeHtml(r.grade)}</td><td><b>${r.score}</b></td></tr>`).join("")+`</table>`+note;
+  const reset=el.querySelector('#lbReset');
+  if(reset) reset.onclick=(e)=>{ e.preventDefault(); lbClearUploaded();
+    const rb=$("rdTable");
+    if(rb && !rb.querySelector('#uploadBtn')){
+      const bar=document.createElement('div'); bar.className='rdbar';
+      bar.innerHTML=`<button class="btn" id="uploadBtn">🏆 上传到排行榜</button><span class="small">重新上传你的最佳战绩</span>`;
+      rb.appendChild(bar);
+      const form=document.createElement('div'); form.id='uploadForm'; form.className='collapsed'; rb.appendChild(form);
+      bar.querySelector('#uploadBtn').onclick=()=>openUploadForm(rb);
+    }
+    renderLeaderboard();
+  };
 }
 function openUploadForm(rdBox){
   const box=rdBox.querySelector('#uploadForm'); if(!box || !LAST_RESULT) return;
@@ -2045,7 +2073,8 @@ async function submitUpload(rdBox){
   const res=await lbSubmit(Object.assign({}, LAST_RESULT, {id}));
   if(res.ok){
     msg.textContent="已上传 ✓"; msg.style.color="var(--good)";
-    const c=box.querySelector('#lbConfirm'); if(c) c.disabled=true; idEl.disabled=true;
+    lbMarkUploaded();
+    hideUploadUI(rdBox);
     renderLeaderboard();
   }else{
     msg.textContent="上传失败"; msg.style.color="var(--bad)";
