@@ -309,7 +309,7 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
   <section id="summer" class="screen">
     <div class="card">
       <p class="label">高二升高三 · 夏校申请季</p>
-      <div class="narr" style="font-size:13.5px;margin-bottom:10px">顶尖夏校（如 RSI / SSP / MITES，录取率仅 3–10%）是冲顶尖校的“信号弹”——招生官看重的不是名校光环，而是你的 <b>GPA、标化、学术/英语实力与声望</b>。挑 1–2 个你达标的提交申请，结果按达标程度摇号；录上越好，顶尖校录取加成越高。<b>若一个都够不到（或想补强标化），可选最下方「跳过申请 · 苦心冲标化」——英语 +1 并多考一次 SAT。</b></div>
+      <div class="narr" style="font-size:13.5px;margin-bottom:10px">顶尖夏校（如 RSI / SSP / MITES，录取率仅 3–10%）是冲顶尖校的“信号弹”——招生官看重的不是名校光环，而是你的 <b>加权 GPA、学术/英语实力与声望</b>（只有 RSI 额外要求 SAT）。挑 1–2 个你达标的提交申请，结果按达标程度摇号；录上越好，顶尖校录取加成越高。<b>若一个都够不到（或想补强标化），可选最下方「跳过申请 · 苦心冲标化」——英语 +1 并多考一次 SAT。</b></div>
       <div id="summerList" class="summer-list"></div>
       <div class="foot">
         <button class="btn" id="summerApplyBtn">确认</button>
@@ -1391,20 +1391,23 @@ function edPick(){
 }
 
 /* ---------- 夏校申请季（高二升高三） ---------- */
+// 门槛按「夏校时刻各属性实测分位数」标定：GPA 改用加权（未加权三档雷同≈2.9 无法区分，
+// 加权 2.89/3.48/3.87 能体现课程难度选择）；SAT 只留给最顶尖 3 个（仅约 27% 的局考过 SAT）；
+// 声望降到实际可达区间（p50≈10、p90≈20，原 ≥45 根本不可能）。
 const SUMMER_PROGRAMS=[
-  {name:"RSI 研究夏校",   sel:"≈3% 录取",  need:{gpa:3.8,sat:1500,academic:8,rep:45}, boost:0.9,  desc:"MIT 旗下全免费研究型，全球最难进的夏校之一。"},
-  {name:"SSP 科学夏校",   sel:"≈7% 录取",  need:{gpa:3.7,sat:1470,academic:8,rep:35}, boost:0.8,  desc:"天体物理/生化真实科研，校友多进 Caltech/MIT。"},
-  {name:"MITES 工程夏校", sel:"≈5% 录取",  need:{gpa:3.7,sat:1480,academic:8,rep:30}, boost:0.75, desc:"MIT 全免费工程/科学项目，极难。"},
-  {name:"斯坦福 SUMaC",   sel:"≈10% 录取", need:{gpa:3.7,sat:1450,english:8,rep:30},  boost:0.7,  desc:"纯数学 immersion，冲刺顶尖理工。"},
-  {name:"CMU SAMS 计算",  sel:"≈12% 录取", need:{gpa:3.6,sat:1440,academic:8,rep:25}, boost:0.6,  desc:"卡耐基梅隆计算/领导力项目。"},
-  {name:"耶鲁全球青年学者",sel:"≈10% 录取", need:{gpa:3.6,english:8,social:7,rep:30},  boost:0.6,  desc:"人文社科向，耶鲁主办。"},
-  {name:"Garcia 材料科研", sel:"≈12% 录取", need:{gpa:3.5,sat:1420,academic:7,rep:20}, boost:0.55, desc:"石溪大学材料科学真实科研。"},
-  {name:"本地大学科研助理",sel:"中等",       need:{gpa:3.3,academic:6,rep:10},          boost:0.3,  desc:"冷邮件争取的校内 lab 助理，门槛低、性价比高。"}
+  {name:"RSI 研究夏校",   sel:"≈3% 录取",  need:{gpa:3.85,sat:1150,academic:8.5,rep:10}, boost:0.9,  desc:"MIT 旗下全免费研究型，全球最难进的夏校之一（唯一要求 SAT）。"},
+  {name:"SSP 科学夏校",   sel:"≈7% 录取",  need:{gpa:3.75,academic:8,english:6.5,rep:8},  boost:0.8,  desc:"天体物理/生化真实科研，校友多进 Caltech/MIT。"},
+  {name:"MITES 工程夏校", sel:"≈5% 录取",  need:{gpa:3.70,academic:8,rep:8},              boost:0.75, desc:"MIT 全免费工程/科学项目，极难。"},
+  {name:"斯坦福 SUMaC",   sel:"≈10% 录取", need:{gpa:3.55,academic:8,english:6,rep:8},    boost:0.7,  desc:"纯数学 immersion，冲刺顶尖理工。"},
+  {name:"CMU SAMS 计算",  sel:"≈12% 录取", need:{gpa:3.40,academic:7.5,english:6,rep:6},  boost:0.6,  desc:"卡耐基梅隆计算/领导力项目。"},
+  {name:"耶鲁全球青年学者",sel:"≈10% 录取", need:{english:6,social:4,rep:8},               boost:0.6,  desc:"人文社科向，耶鲁主办，看重表达与社交（不看 GPA）。"},
+  {name:"Garcia 材料科研", sel:"≈12% 录取", need:{gpa:3.20,academic:7,rep:6},              boost:0.55, desc:"石溪大学材料科学真实科研。"},
+  {name:"本地大学科研助理",sel:"中等",       need:{academic:6},                              boost:0.3,  desc:"冷邮件争取的校内 lab 助理，只看学术、无 GPA/SAT/声望门槛（加成也最低）。"}
 ];
 let SUMMER={list:[],sel:[],grind:false};
 function summerQualify(pp){
   const need=pp.need; if(!need) return {ok:true,score:1};
-  const r=G.results,s=G.stats,gpa=cumGPA("U");
+  const r=G.results,s=G.stats,gpa=cumGPA("W");   // 加权 GPA：能体现课程难度选择（未加权三档雷同）
   const map={gpa, sat:r.satBest, academic:s.academic, english:s.english, social:s.social, rep:r.reputation};
   let ok=true,score=0,cnt=0;
   for(const k in need){ cnt++; if((map[k]||0)>=need[k]) score++; else ok=false; }
@@ -1423,8 +1426,8 @@ function renderSummer(){
   SUMMER.list.forEach((it,i)=>{
     const pp=it.pp, q=it.q;
     const reqs=pp.need?Object.keys(pp.need).map(k=>{
-      const label={gpa:"GPA",sat:"SAT",academic:"学术",english:"英语",social:"社交",rep:"声望"}[k];
-      const got={gpa:cumGPA("U").toFixed(2),sat:G.results.satBest,academic:G.stats.academic,english:G.stats.english,social:G.stats.social,rep:Math.round(G.results.reputation)}[k];
+      const label={gpa:"加权GPA",sat:"SAT",academic:"学术",english:"英语",social:"社交",rep:"声望"}[k];
+      const got={gpa:cumGPA("W").toFixed(2),sat:G.results.satBest,academic:G.stats.academic,english:G.stats.english,social:G.stats.social,rep:Math.round(G.results.reputation)}[k];
       const met=(got||0)>=pp.need[k];
       return `<span class="req ${met?'met':'unmet'}">${label} ${got} / ${pp.need[k]}${met?' ✓':' ✗'}</span>`;
     }).join(""):`<span class="req met">无门槛</span>`;
@@ -1707,7 +1710,7 @@ const HELP=`
 </ul></div>
 
 <div class="help-sec"><h3>夏校申请季（高二升高三）</h3>
-<p>高二下结束后会插入一个<b>夏校申请季</b>：系统从 8 个夏校里随机给出 4 个（难度从 RSI/SSP/MITES 这类 3–10% 录取的研究型，到本地大学科研助理）。能否申请取决于你的 <b>GPA、SAT、学术/英语、声望</b> 是否达标；提交后按达标程度<b>摇号</b>录取。录上越好（boost 越高），后续顶尖校录取加成越大——这是冲名校的一条真实路径。</p>
+<p>高二下结束后会插入一个<b>夏校申请季</b>：系统从 8 个夏校里随机给出 4 个（难度从 RSI/SSP/MITES 这类 3–10% 录取的研究型，到本地大学科研助理）。能否申请取决于你的 <b>加权 GPA、学术/英语、声望</b> 是否达标（门槛按实测平衡标定；只有最顶尖的 RSI 额外要求 SAT，因为 SAT 要花 35 精力、并非每局都考）；提交后按达标程度<b>摇号</b>录取。录上越好（boost 越高），后续顶尖校录取加成越大——这是冲名校的一条真实路径。</p>
 <p><b>一个都够不到？</b>最下方还有一栏<b>永远可选</b>的<b>「跳过申请 · 苦心冲标化」</b>：不申夏校，把暑假全用来刷标化，立即获得 <b>英语 +1</b> 并<b>额外多考一次 SAT</b>（可能刷新最佳分数）。它与申请夏校<b>二选一</b>，确保你在夏校季永远有得选、不会空手而归。</p></div>
 
 <div class="help-sec"><h3>成就</h3>
