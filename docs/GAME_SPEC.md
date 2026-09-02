@@ -1,6 +1,8 @@
 # 美国大学申请模拟器（us-admit-sim）· 完整技术规格文档
 
-> 用途：供其他 AI / 分析者完整理解本游戏的数值、公式与机制。单文件 HTML 游戏（`index.html`），无后端、无依赖（云端共享榜为可选 Supabase 外接）。本文档对应代码状态：截至 2026-09-02（含压力系统①②③、评级拆 offer 后才显示、本地+Supabase 双路排行榜、上传后入口消失彻底防刷榜；已 commit/push）。
+> 用途：供其他 AI / 分析者完整理解本游戏的数值、公式与机制。单文件 HTML 游戏（`index.html`），无后端、无依赖（云端共享榜为可选 Supabase 外接）。
+> 本项目已开源（MIT 协议），欢迎贡献——见 [CONTRIBUTING.md](../CONTRIBUTING.md)。
+> 本文档对应代码状态：截至 2026-09-02（含压力系统①②③、评级拆 offer 后才显示、排行榜**默认本地且按域名判定**是否启用云端共享榜、上传后入口消失彻底防刷榜；已 commit/push）。
 
 ---
 
@@ -299,8 +301,10 @@ return {reach, match, safety, noMatch, noSafety, easiestP}
   - 评分 `score = round((1-(rank-1)/(N-1))*1000) + {S:60, A:30, B:10, —:0}`（`N=57`），用于排行榜。
 - **排行榜（上传可选）**：拆开 offer 后、评级旁出现「🏆 上传到排行榜」→ 输入**玩家名（≤10 字，中英文皆可）** → 入榜。同一玩家名多次上传只保留最佳成绩（本地去重 + 云端 `upsert` 保留最佳），不会刷屏。
   - **彻底防刷榜**：上传成功后上传按钮与输入框立即消失，本机记录「已留名」（`usadmit_lb_uploaded`），重新进入结果页也不再显示上传入口，仅排行榜可见；榜底有极简「重新上传」入口（需手动点击，非自动，便于自测）。
-  - 默认 **本地模式**（localStorage，键 `usadmit_lb`），开箱即玩、单机可见。
-  - 跨玩家共享榜：把 `LEADERBOARD.mode` 改为 `"supabase"` 并填 `url/anonKey/table`（见 `index.html` 底部建表 SQL + RLS 策略）；`lbFetch` 合并「云端 + 本机」并列展示，`lbSubmit` 优先写云端、保留最佳；CDN 不可用或填错自动回退本地，不会卡死。
+  - **模式按域名自动判定（默认本地）**：`LEADERBOARD.mode` 由 `LB_CLOUD_HOSTS` 正则匹配 `location.hostname` 得出——命中官方域名 `/^us-admit-sim(-.+)?\.vercel\.app$/`（含 Vercel 分支预览部署）才启用 `"supabase"` 共享榜；其余情况（本地开发、fork 自建、GitHub Pages 等）一律 `"local"`。**目的**：fork 的测试数据不会污染正式榜单，而官方线上站点仍是实时多人榜。无 `location` 的环境（如测试沙箱）回退 `local` 且不抛错。
+  - 本地模式存 localStorage（键 `usadmit_lb`），开箱即玩、单机可见。
+  - 跨玩家共享榜：`lbFetch` 合并「云端 + 本机」并列展示，`lbSubmit` 优先写云端、同名 `upsert` 保留最佳；CDN 不可用或配置有误自动回退本地，不会卡死。建表 SQL 与 RLS 策略见 `index.html` 底部注释。
+  - ⚠️ **RLS 只授予 anon `select` / `insert` / `update`（带 `WITH CHECK` 长度与分值约束），不授予 `delete`**。仓库已公开、anonKey 人人都可读取，若保留 delete 权限任何人都能清空整张榜单。改动权限策略时务必维持这条底线。
 - 底部附**全部 57 校按录取率排序**的总表，便于复盘。
 - 另展示人格标签、完整成绩单、成就（12 项，如 SAT1500+、GPA3.9+、零压力毕业、声望 10+、文书与推荐信双 5+、六维全 6+ 等）。
 

@@ -1941,11 +1941,14 @@ function goEnd(){
 }
 
 /* ---------- 排行榜（评级拆 offer 后上传 / 共享榜）---------- */
-// 默认本地模式（localStorage）：无需后端即可游玩与排行（仅本机可见）。
-// 想做「跨玩家真实共享榜」：把 LEADERBOARD.mode 改为 "supabase"，并填好 url / anonKey / table。
-//   - 建表 SQL 见本文件底部注释；开启 RLS：允许 anon 执行 select 与 insert。
-//   - 若 CDN 不可用或填写有误，会自动回退到本地排行榜，不会卡死。
-const LEADERBOARD={ mode:"supabase", url:"https://wthjoefsodksrwlqgreb.supabase.co", anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aGpvZWZzb2Rrc3J3bHFncmViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDcwMTksImV4cCI6MjEwMzkyMzAxOX0.nt1BvmwrlpjUK_lY5J-y8ecZE2U5umY4Tq81TclJdoI", table:"leaderboard" };
+// 默认本地榜（localStorage，仅本机可见，开箱即用）。
+// 只有在【官方域名】下才自动切到 supabase 共享榜——这样 fork 自建 / 本地开发的测试数据
+// 不会灌进正式榜单，而官方线上站点依然是实时多人榜。
+//   - 想让你自己的部署也用共享榜：把你的域名加进下面的 LB_CLOUD_HOSTS 正则即可。
+//   - 建表 SQL 见本文件底部注释；若 CDN 不可用或配置有误，会自动回退本地榜，不会卡死。
+const _lbHost=(typeof location!=="undefined"&&location.hostname)||"";   // 兼容无 location 的测试环境
+const LB_CLOUD_HOSTS=[/^us-admit-sim(-.+)?\.vercel\.app$/];             // 官方站点（含 Vercel 分支预览部署）
+const LEADERBOARD={ mode: LB_CLOUD_HOSTS.some(re=>re.test(_lbHost))?"supabase":"local", url:"https://wthjoefsodksrwlqgreb.supabase.co", anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aGpvZWZzb2Rrc3J3bHFncmViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDcwMTksImV4cCI6MjEwMzkyMzAxOX0.nt1BvmwrlpjUK_lY5J-y8ecZE2U5umY4Tq81TclJdoI", table:"leaderboard" };
 let LAST_RESULT=null;          // 本局最佳战绩，供上传使用
 let _lbClient=null;            // Supabase 客户端缓存（未配置/未加载则为 false）
 // 按需异步加载 Supabase 客户端：仅当 mode="supabase" 且填好 url/anonKey 时才动态注入 CDN 脚本，绝不在页面加载期阻塞。
