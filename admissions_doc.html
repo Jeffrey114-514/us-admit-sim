@@ -1,0 +1,882 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>录取模型 · 逐校参数与权重核对</title>
+<style>
+ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;max-width:1200px;margin:0 auto;padding:24px;color:#1a2233;background:#f7f8fa;line-height:1.55;}
+ h1{font-size:22px;margin:0 0 4px;} h2{font-size:17px;margin:28px 0 10px;border-left:4px solid #3a6df0;padding-left:10px;}
+ .sub{color:#667;font-size:13px;margin-bottom:18px;}
+ table{border-collapse:collapse;width:100%;font-size:12.5px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+ th,td{border:1px solid #e3e7ee;padding:6px 8px;text-align:left;vertical-align:top;}
+ th{background:#2d3650;color:#fff;position:sticky;top:0;font-weight:600;}
+ tr:nth-child(even){background:#fafbfc;}
+ td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+ td.en{color:#889;font-size:11px;}
+ .tag{font-size:10px;padding:1px 5px;border-radius:8px;margin-left:4px;vertical-align:middle;}
+ .tag.est{background:#fff3d6;color:#9a6b00;} .tag.real{background:#dcf5e3;color:#1c7a3a;}
+ b.req{color:#c23;}
+ .card{background:#fff;border:1px solid #e3e7ee;border-radius:10px;padding:14px 18px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+ code{background:#eef1f6;padding:1px 5px;border-radius:4px;font-size:12px;}
+ .w{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#1e2433;color:#e6edf6;padding:12px 14px;border-radius:8px;display:block;white-space:pre-wrap;margin:8px 0;}
+ .legend span{margin-right:14px;font-size:12px;}
+</style></head><body>
+<h1>美国大学申请模拟器 · 录取模型逐校核对文档</h1>
+<div class="sub">生成自 <code>index.html</code> 当前 <code>SCHOOLS</code> 数据与 <code>admitProb</code> 权重 · 共 57 所 · 国际生视角</div>
+
+<h2>一、录取概率公式（全局权重）</h2>
+<div class="card">
+每所校先取<b>基础录取率</b> <code>baseRate</code>（国际生用 <code>acceptRateIntl</code>，缺失则按国内率×0.6 保守估计），转成 logit：<br>
+<code class="w">logit = ln( baseRate / (1 - baseRate) )
+S = 0.30·zGPA + 0.30·zSAT + 0.25·z活动 + 0.15·z文书/推荐
+   + (运气-5)·0.03 + (声望/100-0.4)·0.12 + (专业对口-0.5)·mw
+P = sigmoid( logit + 3.0·S )</code>
+各项说明：
+<ul>
+ <li><b>zGPA</b> = (你的GPA + 课程强度加成 − 该校平均GPA) / 0.35。现在 <b>全部 57 所都已填平均GPA</b>（标"估算"者为按档位估计的近似值），低 GPA 会被真实惩罚。</li>
+ <li><b>zSAT</b> = (你的SAT − 该校SAT中段) / 130，仅当该校有 SAT 数据且你考了 SAT 时计入（test-optional / 英港校 SAT 字段为空 → 不计入，符合现实）。</li>
+ <li><b>z活动</b> = (活动分/6 − 0.5)，活动分 = 活动数×0.5 + 领导角色×0.7 + 创办×1 + 国家级奖项×1.1 + 创造力×0.15。</li>
+ <li><b>z文书/推荐</b> = (文书+推荐)/20 − 0.5。</li>
+ <li><b>专业对口 mw</b>：综合评审校 0.18，按专业/英港校 0.5。</li>
+</ul>
+</div>
+
+<h2>二、乘法惩罚与硬门槛（本次修复 B/C/D）</h2>
+<div class="card">
+<ul>
+ <li><b>国际生助学金</b>：<code>aidIntl="none" → ×0.62</code>，<code>"need-aware" → ×0.88</code>，<code>"need-blind" → 不扣</code>。</li>
+ <li><b>托福</b>：没考 <code>×0.75</code>；有校线但低于线 <code>×0.6</code>；<b>硬门槛</b>：该校设了托福线却 <code>toefl===0 → P 封顶 1.5%</code>（国际生几乎都要英语证明）。</li>
+ <li><b>SAT</b>：没考 <code>×0.7</code>；<b>硬门槛</b>：该校 <code>testReq=true</code> 且 <code>sat===0 → P 封顶 1.2%</code>（仅对仍强制 SAT 的 7 所生效，test-optional 美校与英港校豁免）。</li>
+ <li><b>顶尖校"信号弹"(spike/夏校)</b>：原为单向 <code>max(P, P2)</code> 易掩盖短板；现改为<b>加成减半 + 只取一半幅度</b>（<code>add×0.5</code>，<code>P += (P2−P)×0.5</code>），对越挑的校加权越大，但不再无限抬升。</li>
+ <li><b>国际生率兜底(D)</b>：<code>acceptRateIntl</code> 缺失时不再退化到更宽松的国内率，改用 <code>国内率×0.6</code>（下限 0.8%）估计，已为 30 所美校补入该字段。</li>
+</ul>
+</div>
+
+<h2>三、效果对比（vm 实测，国际生）</h2>
+<div class="card">
+<table>
+<tr><th>画像</th><th>哈佛</th><th>耶鲁</th><th>MIT</th><th>斯坦福</th><th>NYU</th><th>UC Davis</th><th>佛罗里达</th></tr>
+<tr><td>低GPA2.4/零标化(含幸运+spike)</td><td>0.2%</td><td>0.2%</td><td>0.2%</td><td>0.2%</td><td>0.3%</td><td>1.5%</td><td>0.5%</td></tr>
+<tr><td>中档GPA3.4/有托福无SAT</td><td>1.4%</td><td>1.6%</td><td>1.0%</td><td>1.1%</td><td>3.2%</td><td>25.1%</td><td>1.2%</td></tr>
+<tr><td>全满(有SAT)</td><td>34%</td><td>35%</td><td>23%</td><td>26%</td><td>52%</td><td>76%</td><td>64%</td></tr>
+<tr><td>全满但无SAT(test-optional精英)</td><td>25%</td><td>28%</td><td><b>1.2%*</b></td><td>23%</td><td>41%</td><td>68%</td><td><b>1.2%*</b></td></tr>
+</table>
+* MIT 与佛罗里达为 test-required，无 SAT 被硬门槛压到 1.2%；其余 test-optional 精英校无 SAT 仍按真实概率录取。
+</div>
+
+<h2>四、逐校参数表（57 所）</h2>
+<div class="legend">
+ <span><span class="tag real">实测</span> 原始数据即有</span>
+ <span><span class="tag est">估算</span> 本次按档位/声誉估计补全</span>
+ <span><b class="req">是</b> = 该校 testReq（强制 SAT，无 SAT 触发硬门槛）</span>
+</div>
+<div style="overflow-x:auto">
+<table>
+<tr><th>排名</th><th>校名(中)</th><th>校名(英)</th><th>地区</th><th>类型</th><th>国内率%</th><th>国际率%</th><th>平均GPA</th><th>SAT(25–75)</th><th>托福线</th><th>助学金政策</th><th>强制SAT</th><th>评审方式</th></tr>
+<tr>
+    <td>1</td>
+    <td>普林斯顿大学</td>
+    <td class="en">Princeton University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">4.4</td>
+    <td class="num">2.29<span class="tag est">估算</span></td>
+    <td class="num">3.96<span class="tag real">实测</span></td>
+    <td class="num">1490–1560</td>
+    <td class="num">—</td>
+    <td>need-blind(助学金不影响录取)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>1</td>
+    <td>牛津大学</td>
+    <td class="en">University of Oxford</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">16</td>
+    <td class="num">9<span class="tag real">实测</span></td>
+    <td class="num">3.95<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>2</td>
+    <td>麻省理工学院</td>
+    <td class="en">Massachusetts Institute of Technology</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">4.56</td>
+    <td class="num">1.96<span class="tag real">实测</span></td>
+    <td class="num">3.96<span class="tag est">估算</span></td>
+    <td class="num">1520–1580</td>
+    <td class="num">90</td>
+    <td>need-blind(助学金不影响录取)</td>
+    <td><b class="req">是</b></td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>2</td>
+    <td>剑桥大学</td>
+    <td class="en">University of Cambridge</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">21</td>
+    <td class="num">13<span class="tag real">实测</span></td>
+    <td class="num">3.95<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>3</td>
+    <td>哈佛大学</td>
+    <td class="en">Harvard University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">4.18</td>
+    <td class="num">2.51<span class="tag real">实测</span></td>
+    <td class="num">3.95<span class="tag est">估算</span></td>
+    <td class="num">1450–1560</td>
+    <td class="num">—</td>
+    <td>need-blind(助学金不影响录取)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>3</td>
+    <td>帝国理工学院</td>
+    <td class="en">Imperial College London</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">14</td>
+    <td class="num">11<span class="tag real">实测</span></td>
+    <td class="num">3.9<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>4</td>
+    <td>斯坦福大学</td>
+    <td class="en">Stanford University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">3.8</td>
+    <td class="num">2.28<span class="tag real">实测</span></td>
+    <td class="num">3.94<span class="tag real">实测</span></td>
+    <td class="num">1520–1570</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>4</td>
+    <td>耶鲁大学</td>
+    <td class="en">Yale University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">4.8</td>
+    <td class="num">2.88<span class="tag real">实测</span></td>
+    <td class="num">3.94<span class="tag est">估算</span></td>
+    <td class="num">1480–1560</td>
+    <td class="num">100</td>
+    <td>need-blind(助学金不影响录取)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>4</td>
+    <td>伦敦大学学院</td>
+    <td class="en">University College London</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">30</td>
+    <td class="num">13<span class="tag real">实测</span></td>
+    <td class="num">3.88<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>5</td>
+    <td>伦敦政治经济学院</td>
+    <td class="en">London School of Economics and Political Science</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">16</td>
+    <td class="num">9<span class="tag real">实测</span></td>
+    <td class="num">3.9<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>6</td>
+    <td>芝加哥大学</td>
+    <td class="en">University of Chicago</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">4.48</td>
+    <td class="num">2.69<span class="tag real">实测</span></td>
+    <td class="num">3.93<span class="tag est">估算</span></td>
+    <td class="num">1500–1560</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>6</td>
+    <td>爱丁堡大学</td>
+    <td class="en">University of Edinburgh</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">47</td>
+    <td class="num">20<span class="tag real">实测</span></td>
+    <td class="num">3.82<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>7</td>
+    <td>杜克大学</td>
+    <td class="en">Duke University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">5.2</td>
+    <td class="num">3.12<span class="tag real">实测</span></td>
+    <td class="num">3.93<span class="tag est">估算</span></td>
+    <td class="num">1520–1570</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>7</td>
+    <td>约翰斯·霍普金斯大学</td>
+    <td class="en">Johns Hopkins University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">5.14</td>
+    <td class="num">3.08<span class="tag real">实测</span></td>
+    <td class="num">3.95<span class="tag real">实测</span></td>
+    <td class="num">1530–1570</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>7</td>
+    <td>西北大学</td>
+    <td class="en">Northwestern University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">7</td>
+    <td class="num">4.2<span class="tag real">实测</span></td>
+    <td class="num">3.92<span class="tag est">估算</span></td>
+    <td class="num">1510–1560</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>7</td>
+    <td>宾夕法尼亚大学</td>
+    <td class="en">University of Pennsylvania</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">4.9</td>
+    <td class="num">2.94<span class="tag real">实测</span></td>
+    <td class="num">3.92<span class="tag est">估算</span></td>
+    <td class="num">1510–1560</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>7</td>
+    <td>伦敦国王学院</td>
+    <td class="en">King's College London</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">40</td>
+    <td class="num">15<span class="tag real">实测</span></td>
+    <td class="num">3.83<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>8</td>
+    <td>曼彻斯特大学</td>
+    <td class="en">University of Manchester</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">56</td>
+    <td class="num">25<span class="tag real">实测</span></td>
+    <td class="num">3.8<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>9</td>
+    <td>华威大学</td>
+    <td class="en">University of Warwick</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">50</td>
+    <td class="num">18<span class="tag real">实测</span></td>
+    <td class="num">3.83<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>10</td>
+    <td>布里斯托大学</td>
+    <td class="en">University of Bristol</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">68</td>
+    <td class="num">22<span class="tag real">实测</span></td>
+    <td class="num">3.8<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>11</td>
+    <td>加州理工学院</td>
+    <td class="en">California Institute of Technology</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">3.78</td>
+    <td class="num">2.27<span class="tag real">实测</span></td>
+    <td class="num">3.95<span class="tag est">估算</span></td>
+    <td class="num">1550–1580</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>11</td>
+    <td>格拉斯哥大学</td>
+    <td class="en">University of Glasgow</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">70</td>
+    <td class="num">25<span class="tag real">实测</span></td>
+    <td class="num">3.78<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>12</td>
+    <td>康奈尔大学</td>
+    <td class="en">Cornell University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">8.38</td>
+    <td class="num">5.03<span class="tag real">实测</span></td>
+    <td class="num">3.9<span class="tag est">估算</span></td>
+    <td class="num">1490–1550</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>12</td>
+    <td>南安普顿大学</td>
+    <td class="en">University of Southampton</td>
+    <td>UK</td>
+    <td>public</td>
+    <td class="num">80</td>
+    <td class="num">30<span class="tag real">实测</span></td>
+    <td class="num">3.75<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>13</td>
+    <td>布朗大学</td>
+    <td class="en">Brown University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">5.65</td>
+    <td class="num">3.39<span class="tag real">实测</span></td>
+    <td class="num">3.93<span class="tag est">估算</span></td>
+    <td class="num">1480–1560</td>
+    <td class="num">100</td>
+    <td>need-blind(助学金不影响录取)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>13</td>
+    <td>达特茅斯学院</td>
+    <td class="en">Dartmouth College</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">6.02</td>
+    <td class="num">3.61<span class="tag real">实测</span></td>
+    <td class="num">3.93<span class="tag est">估算</span></td>
+    <td class="num">1440–1550</td>
+    <td class="num">—</td>
+    <td>need-blind(助学金不影响录取)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>13</td>
+    <td>香港大学</td>
+    <td class="en">University of Hong Kong</td>
+    <td>HK</td>
+    <td>public</td>
+    <td class="num">40</td>
+    <td class="num">12<span class="tag real">实测</span></td>
+    <td class="num">3.8<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>14</td>
+    <td>香港中文大学</td>
+    <td class="en">Chinese University of Hong Kong</td>
+    <td>HK</td>
+    <td>public</td>
+    <td class="num">40</td>
+    <td class="num">15<span class="tag real">实测</span></td>
+    <td class="num">3.78<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>15</td>
+    <td>哥伦比亚大学</td>
+    <td class="en">Columbia University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">4.94</td>
+    <td class="num">2.96<span class="tag real">实测</span></td>
+    <td class="num">3.93<span class="tag est">估算</span></td>
+    <td class="num">1510–1560</td>
+    <td class="num">105</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>15</td>
+    <td>加州大学伯克利分校</td>
+    <td class="en">University of California, Berkeley</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">11.4</td>
+    <td class="num">5.8<span class="tag est">估算</span></td>
+    <td class="num">3.9<span class="tag real">实测</span></td>
+    <td class="num">—</td>
+    <td class="num">80</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>按专业(硬门槛)</td>
+  </tr><tr>
+    <td>15</td>
+    <td>香港科技大学</td>
+    <td class="en">Hong Kong University of Science and Technology</td>
+    <td>HK</td>
+    <td>public</td>
+    <td class="num">40</td>
+    <td class="num">15<span class="tag real">实测</span></td>
+    <td class="num">3.82<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>16</td>
+    <td>香港城市大学</td>
+    <td class="en">City University of Hong Kong</td>
+    <td>HK</td>
+    <td>public</td>
+    <td class="num">45</td>
+    <td class="num">20<span class="tag real">实测</span></td>
+    <td class="num">3.62<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>17</td>
+    <td>莱斯大学</td>
+    <td class="en">Rice University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">8.01</td>
+    <td class="num">4.81<span class="tag real">实测</span></td>
+    <td class="num">3.93<span class="tag est">估算</span></td>
+    <td class="num">1510–1560</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>17</td>
+    <td>加州大学洛杉矶分校</td>
+    <td class="en">University of California, Los Angeles</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">9.4</td>
+    <td class="num">6.3<span class="tag real">实测</span></td>
+    <td class="num">3.92<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">87</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>按专业(硬门槛)</td>
+  </tr><tr>
+    <td>17</td>
+    <td>范德堡大学</td>
+    <td class="en">Vanderbilt University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">4.7</td>
+    <td class="num">2.82<span class="tag real">实测</span></td>
+    <td class="num">3.9<span class="tag est">估算</span></td>
+    <td class="num">1510–1560</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>17</td>
+    <td>香港理工大学</td>
+    <td class="en">Hong Kong Polytechnic University</td>
+    <td>HK</td>
+    <td>public</td>
+    <td class="num">50</td>
+    <td class="num">25<span class="tag real">实测</span></td>
+    <td class="num">3.6<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>20</td>
+    <td>卡内基梅隆大学</td>
+    <td class="en">Carnegie Mellon University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">11.1</td>
+    <td class="num">6.66<span class="tag real">实测</span></td>
+    <td class="num">3.89<span class="tag est">估算</span></td>
+    <td class="num">1500–1570</td>
+    <td class="num">102</td>
+    <td>无资助/公立</td>
+    <td><b class="req">是</b></td>
+    <td>按专业(硬门槛)</td>
+  </tr><tr>
+    <td>20</td>
+    <td>密歇根大学安娜堡分校</td>
+    <td class="en">University of Michigan--Ann Arbor</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">16.4</td>
+    <td class="num">9.84<span class="tag real">实测</span></td>
+    <td class="num">3.9<span class="tag est">估算</span></td>
+    <td class="num">1370–1530</td>
+    <td class="num">100</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>20</td>
+    <td>圣母大学</td>
+    <td class="en">University of Notre Dame</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">9</td>
+    <td class="num">5.4<span class="tag real">实测</span></td>
+    <td class="num">3.91<span class="tag est">估算</span></td>
+    <td class="num">1460–1540</td>
+    <td class="num">100</td>
+    <td>need-blind(助学金不影响录取)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>20</td>
+    <td>圣路易斯华盛顿大学</td>
+    <td class="en">Washington University in St. Louis</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">12</td>
+    <td class="num">7.2<span class="tag est">估算</span></td>
+    <td class="num">3.86<span class="tag est">估算</span></td>
+    <td class="num">1490–1550</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>24</td>
+    <td>埃默里大学</td>
+    <td class="en">Emory University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">10.3</td>
+    <td class="num">6.3<span class="tag real">实测</span></td>
+    <td class="num">3.83<span class="tag real">实测</span></td>
+    <td class="num">1500–1570</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>24</td>
+    <td>乔治城大学</td>
+    <td class="en">Georgetown University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">12.2</td>
+    <td class="num">7.32<span class="tag real">实测</span></td>
+    <td class="num">3.89<span class="tag est">估算</span></td>
+    <td class="num">1410–1530</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td><b class="req">是</b></td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>26</td>
+    <td>北卡罗来纳大学教堂山分校</td>
+    <td class="en">University of North Carolina--Chapel Hill</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">16.7</td>
+    <td class="num">10.02<span class="tag real">实测</span></td>
+    <td class="num">3.88<span class="tag est">估算</span></td>
+    <td class="num">1400–1530</td>
+    <td class="num">—</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>26</td>
+    <td>弗吉尼亚大学</td>
+    <td class="en">University of Virginia</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">15.4</td>
+    <td class="num">9.24<span class="tag real">实测</span></td>
+    <td class="num">3.89<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">90</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>28</td>
+    <td>南加州大学</td>
+    <td class="en">University of Southern California</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">11.2</td>
+    <td class="num">6.72<span class="tag real">实测</span></td>
+    <td class="num">3.86<span class="tag est">估算</span></td>
+    <td class="num">1470–1540</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>29</td>
+    <td>加州大学圣迭戈分校</td>
+    <td class="en">University of California, San Diego</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">28.4</td>
+    <td class="num">30.6<span class="tag real">实测</span></td>
+    <td class="num">3.83<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">80</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>按专业(硬门槛)</td>
+  </tr><tr>
+    <td>30</td>
+    <td>德克萨斯大学奥斯汀分校</td>
+    <td class="en">The University of Texas--Austin</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">22.2</td>
+    <td class="num">13.32<span class="tag real">实测</span></td>
+    <td class="num">3.83<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">79</td>
+    <td>无资助/公立</td>
+    <td><b class="req">是</b></td>
+    <td>按专业(硬门槛)</td>
+  </tr><tr>
+    <td>30</td>
+    <td>佛罗里达大学</td>
+    <td class="en">University of Florida</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">19.8</td>
+    <td class="num">11.88<span class="tag real">实测</span></td>
+    <td class="num">3.91<span class="tag est">估算</span></td>
+    <td class="num">1380–1510</td>
+    <td class="num">80</td>
+    <td>无资助/公立</td>
+    <td><b class="req">是</b></td>
+    <td>综合评审</td>
+  </tr><tr>
+    <td>32</td>
+    <td>佐治亚理工学院</td>
+    <td class="en">Georgia Institute of Technology</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">12.7</td>
+    <td class="num">7.62<span class="tag real">实测</span></td>
+    <td class="num">3.93<span class="tag est">估算</span></td>
+    <td class="num">1430–1530</td>
+    <td class="num">90</td>
+    <td>无资助/公立</td>
+    <td><b class="req">是</b></td>
+    <td>按专业(硬门槛)</td>
+  </tr><tr>
+    <td>32</td>
+    <td>纽约大学</td>
+    <td class="en">New York University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">7.7</td>
+    <td class="num">4.62<span class="tag real">实测</span></td>
+    <td class="num">3.81<span class="tag real">实测</span></td>
+    <td class="num">1480–1550</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>32</td>
+    <td>加州大学戴维斯分校</td>
+    <td class="en">University of California, Davis</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">44.6</td>
+    <td class="num">57.1<span class="tag real">实测</span></td>
+    <td class="num">3.84<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">80</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>32</td>
+    <td>加州大学欧文分校</td>
+    <td class="en">University of California, Irvine</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">28.7</td>
+    <td class="num">42.8<span class="tag real">实测</span></td>
+    <td class="num">3.84<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">80</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>36</td>
+    <td>波士顿学院</td>
+    <td class="en">Boston College</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">14</td>
+    <td class="num">8.4<span class="tag real">实测</span></td>
+    <td class="num">3.87<span class="tag est">估算</span></td>
+    <td class="num">1440–1520</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>36</td>
+    <td>塔夫茨大学</td>
+    <td class="en">Tufts University</td>
+    <td>US</td>
+    <td>private</td>
+    <td class="num">10.5</td>
+    <td class="num">6.3<span class="tag real">实测</span></td>
+    <td class="num">3.88<span class="tag est">估算</span></td>
+    <td class="num">1480–1540</td>
+    <td class="num">100</td>
+    <td>need-aware(申奖略降)</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>36</td>
+    <td>伊利诺伊大学厄巴纳-香槟分校</td>
+    <td class="en">University of Illinois Urbana-Champaign</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">36.6</td>
+    <td class="num">21.96<span class="tag real">实测</span></td>
+    <td class="num">3.76<span class="tag real">实测</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>按专业(硬门槛)</td>
+  </tr><tr>
+    <td>36</td>
+    <td>威斯康星大学麦迪逊分校</td>
+    <td class="en">University of Wisconsin--Madison</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">40.8</td>
+    <td class="num">31.6<span class="tag real">实测</span></td>
+    <td class="num">3.86<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">—</td>
+    <td>无资助/公立</td>
+    <td><b class="req">是</b></td>
+    <td>按专业</td>
+  </tr><tr>
+    <td>40</td>
+    <td>加州大学圣塔芭芭拉分校</td>
+    <td class="en">University of California, Santa Barbara</td>
+    <td>US</td>
+    <td>public</td>
+    <td class="num">38.3</td>
+    <td class="num">48.1<span class="tag est">估算</span></td>
+    <td class="num">3.78<span class="tag est">估算</span></td>
+    <td class="num">—</td>
+    <td class="num">80</td>
+    <td>无资助/公立</td>
+    <td>否</td>
+    <td>按专业</td>
+  </tr>
+</table>
+</div>
+
+<h2>五、数据来源与待核对项</h2>
+<div class="card">
+<ul>
+ <li><b>原始真实字段</b>：录取率、SAT区间、托福线、助学金政策、英/港校国际录取率，来自 US News 2026 / Common Data Set / 各校官方（部分标注估算）。</li>
+ <li><b>本次补全(标"估算")</b>：50 所美/英/港校的 <code>gpaAvg</code>（按录取率档位与学校声誉估计的"录取生平均GPA"近似值），以及 30 所美校的 <code>acceptRateIntl</code>（国内率×0.6）。这些值用于让模型"GPA/国际率真正参与计算"，<b>欢迎你按权威数据源逐一校正</b>。</li>
+ <li><b>建模取舍</b>：SAT 对 test-optional 与英/港校不计入（字段为空即豁免），符合现实；仅 7 所 test-required 美校启用 SAT 硬门槛。</li>
+</ul>
+</div>
+</body></html>
