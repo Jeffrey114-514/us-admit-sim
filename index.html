@@ -1329,49 +1329,65 @@ function stridedPick(arr,k){
   return out;
 }
 function buildBands(p){
-  // 全部学校按录取概率升序（index 0 = 最难/录取率最低，末位 = 最易）
+  const baseOf=sc=>Math.min(sc.acceptRate!=null?sc.acceptRate:99, sc.acceptRateIntl!=null?sc.acceptRateIntl:99);
+  const isTop=sc=>baseOf(sc)<3.0;   // 顶级校（哈佛等基础录取率<3%）：按声望归冲刺，绝不进保底
+  // 全部学校按该生录取概率升序（index 0 = 最难/录取率最低，末位 = 最易）
   const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc),band:null})).filter(x=>x.P>0.001)
                     .sort((a,b)=>a.P-b.P);
   const n=all.length;
-  const hi=all.filter(x=>x.P>=0.10);   // ≥10% 池（可匹配）
-  const noMatch = hi.length===0;        // 全 <10%：啥都匹配不了
+  const easiestP = n?all[n-1].P:0;          // 该生“最容易录取的学校”的命中率
+  const TOTAL=25;                           // 选校池总量严格守恒
+  // 按学校固有基础录取率(base)取“最难校”排序——与玩家标化无关，保证哈佛等顶级校稳定在内
+  const hardest = all.slice().sort((a,b)=>baseOf(a.sc)-baseOf(b.sc));
 
-  // —— 全是 <10%：无匹配，随机 25 所进冲刺，确保有得选 ——
-  if(noMatch){
-    const reach=shuffle(all.slice()).slice(0,25);
-    reach.forEach(x=>x.band="reach");
-    return {reach, match:[], safety:[], noMatch:true, noSafety:true, easiestP:0};
+  // —— 全难：最易校命中率也 <10% → 无保底、极少匹配、多数冲刺 ——
+  if(easiestP < 0.10){
+    const mT=Math.max(3, Math.round(Math.min(n,TOTAL)*0.2)); // 少量匹配（约5所）
+    const rT=Math.min(TOTAL-mT, n-mT);                       // 冲刺占多数（约20所），保证 rT+mT<=n
+    const reachSet=new Set();
+    const reach=shuffle(hardest.slice(0,rT));                // base 最难的 rT 所（含哈佛），打乱显示顺序
+    reach.forEach(x=>{x.band="reach"; reachSet.add(x.sc.nameEn);});
+    const restAfter=all.filter(x=>!reachSet.has(x.sc.nameEn));
+    let match=stridedPick(restAfter, mT);                   // 余下里间隔采样 mT 所作为少量匹配
+    if(match.length<mT){ for(const x of restAfter){ if(match.length>=mT)break; if(!match.includes(x))match.push(x);} }
+    match.forEach(x=>x.band="match");
+    return {reach, match, safety:[], noMatch:false, noSafety:true, easiestP};
   }
 
-  // —— 绝对难度锁定：基础录取率极低的“超难校”永远归冲刺，绝不当匹配/保底 ——
-  // （取国际/国内录取率的较小者，覆盖 HYS、斯坦福、MIT、普林斯顿、哥大、宾大、芝大、范德堡、加州理工等）
-  const FORCE_REACH=3.0;
-  const selLock=all.filter(x=>{
-    const a=x.sc;
-    const base=Math.min(a.acceptRate!=null?a.acceptRate:99, a.acceptRateIntl!=null?a.acceptRateIntl:99);
-    return base<FORCE_REACH;
-  });
+  // —— 其余能力：三档数量按该生能力动态分配，总量恒 25 ——
+  //   正常(最易≥35%)：冲刺5 / 匹配10 / 保底10
+  //   无保底(10%≤最易<35%)：保底0，冲刺5~10(越差越多)，匹配补齐到 25
+  let rT, mT, sT;
+  if(easiestP >= 0.35){ rT=5; mT=10; sT=10; }
+  else { sT=0; rT=Math.max(5, Math.min(10, Math.round(5 + (0.35-easiestP)/(0.35-0.10)*5))); mT=TOTAL-rT; }
 
-  // —— 冲刺 = 最难 5 所(by P) ∪ 超难校锁定；二者并集，确保哈佛等永为冲刺、且所有校都被分配 ——
-  const byPRank=all.slice(0,REACH_MAX);
-  const reachSet=new Map();
-  selLock.concat(byPRank).forEach(x=>reachSet.set(x.sc.nameEn,x));
-  const reach=Array.from(reachSet.values());
+  // 保底：最易 sT 所（正常10所；无保底时为0）；顶级校(base<3%)绝不进保底
+  let safety=[];
+  if(sT>0){
+    const nonTop=all.filter(x=>!isTop(x.sc));
+    const poolS = nonTop.length>=sT ? nonTop : all;
+    safety=poolS.slice(Math.max(0, poolS.length-sT));
+    safety.forEach(x=>x.band="safety");
+  }
+
+  // 冲刺：按 base 最难的前 HARD_POOL 所（含哈佛等顶级校）里随机抽 rT 所
+  // —— 小保护：难池基于学校固有难度，哈佛稳定在内；随机抽使其“每局不固定”，且极少掉到保底 ——
+  const HARD_POOL=8;
+  const restAfterSafety=all.filter(x=>x.band===null);
+  const hardPool=hardest.filter(x=>restAfterSafety.includes(x)).slice(0, HARD_POOL);
+  let reach=shuffle(hardPool.slice()).slice(0, Math.min(rT, hardPool.length));
+  if(reach.length<rT){ // 难池不足则从余下补齐
+    const extra=restAfterSafety.filter(x=>!hardPool.includes(x)).slice(0, rT-reach.length);
+    reach=reach.concat(extra);
+  }
   reach.forEach(x=>x.band="reach");
 
-  // —— 其余按 P 升序：冲刺已占“最难”，保底取“最容易 10 所”，中间段为匹配 ——
-  const restExclReach=all.filter(x=>x.band===null);
-  const safety=restExclReach.slice(Math.max(0, restExclReach.length-SAFETY_MAX)); // 最容易 10 所
-  safety.forEach(x=>x.band="safety");
-  const matchPool=restExclReach.slice(0, restExclReach.length-safety.length);     // 中间段（最难非冲刺 ~ 次易）
-  const match=matchPool.slice(0,MATCH_MAX);
-  match.forEach(x=>x.band="match");
-  matchPool.slice(MATCH_MAX).forEach(x=>x.band="match");                            // 剩余中间校也归匹配
+  // 匹配：去掉冲刺+保底后的中段，间隔采样 mT 所（分散、不挨在一起）
+  const restForMatch=all.filter(x=>x.band===null);
+  let match=stridedPick(restForMatch, mT);
+  if(match.length<mT){ for(const x of restForMatch){ if(match.length>=mT)break; if(!match.includes(x))match.push(x);} }
 
-  // —— 无真正保底：连最容易的校命中率都偏低 ——
-  const easiestP = safety.length?Math.max(...safety.map(x=>x.P)):0;
-  const noSafety = easiestP < 0.35;
-
+  const noSafety = sT===0;
   return {reach, match, safety, noMatch:false, noSafety, easiestP};
 }
 function goPick(){
@@ -1389,13 +1405,8 @@ function goPick(){
   renderPick();
 }
 function takeBand(k){
-  const pool=PICK.bands[k]||[], n=pool.length;
-  // 冲刺档在强档下会含“超难校锁定”，数量可能 >REACH_MAX，全部展示；其余档按 RD_PER_BAND 上限
-  const cap=k==="reach"?(PICK.noMatch?25:n):RD_PER_BAND;
-  const want=Math.min(cap,n);
-  const off=n?PICK.off[k]%n:0, out=[];
-  for(let i=0;i<want;i++) out.push(pool[(off+i)%n]);
-  return out;
+  // buildBands 已按“总量25守恒”构建好各档候选，这里直接展示全部（无需再截断）
+  return (PICK.bands[k]||[]).slice();
 }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const tagOf=sc=>sc.region==="US"?("#"+sc.rank):sc.region;
