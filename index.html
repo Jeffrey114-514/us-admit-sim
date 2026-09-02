@@ -283,7 +283,7 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
       <div id="edCard"></div>
     </div>
     <div class="card">
-      <p class="label">常规 RD（勾选 10–25 所）</p>
+      <p class="label">常规 RD（勾选 10–20 所）</p>
       <div id="bandWarn" class="warn-banner" style="display:none"></div>
       <div class="narr" id="rdDesc" style="font-size:13.5px;margin-bottom:8px"></div>
       <div class="band">
@@ -360,6 +360,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const ri=(a,b)=>Math.floor(rnd(a,b+1));
 const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+function weightedPick(arr,wFn){const ws=arr.map(wFn);const tot=ws.reduce((a,b)=>a+b,0);if(tot<=0||arr.length===0)return pick(arr);let x=Math.random()*tot;for(let i=0;i<arr.length;i++){x-=ws[i];if(x<=0)return arr[i];}return arr[arr.length-1];}
 const $=id=>document.getElementById(id);
 function gauss(mu,sg){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();
   return mu+sg*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
@@ -384,7 +385,7 @@ const ICON={
 const ic=(n,cls)=>'<span class="ico'+(cls?' '+cls:'')+'">'+(ICON[n]||ICON.star)+'</span>';
 
 /* ---------- config ---------- */
-const TOTAL_ROUNDS=8, AP_PER_ROUND=4, START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=25;
+const TOTAL_ROUNDS=8, AP_PER_ROUND=4, START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=20;
 const STAT_NAMES={academic:"学术",english:"英语",stamina:"精力上限",creativity:"创造力",social:"社交",luck:"运气"};
 const STAT_ICON={academic:"book",english:"globe",stamina:"bolt",creativity:"bulb",social:"people",luck:"star"};
 const TPL_DESC={"卷王":"学术拉满","快乐青年":"样样平均","斜杠":"活动与创意","躺平":"交给运气"};
@@ -788,52 +789,74 @@ id:"power_tip",icon:"灵",cat:"chance",stage:[6,7],power:true,title:"招生官�
    effect:g=>{g.results.spike=clamp((g.results.spike||0)+1,0,3);g.results.essayQuality=clamp(g.results.essayQuality+2,0,10);g.results.recQuality=clamp(g.results.recQuality+1,0,10);return ["good","内部点拨，文书 +2、推荐信 +1、顶尖校“信号弹”+1。"];}
   },
   {
-id:"cs_opensource",icon:"黑",cat:"creative",stage:[4,5],majors:["cs"],fit:8,title:"开源项目爆火",text:"你写的库被很多人用，star 疯涨。",
+id:"cs_opensource",icon:"黑",cat:"creative",stage:[4,5],majors:["cs"],fit:10,title:"开源项目爆火",text:"你写的库被很多人用，star 疯涨。",
    effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("开源项目");return ["good","项目出圈，创造力 +1、声望 +3、履历 +。"];}
   },
   {
-id:"cs_ctf",icon:"黑",cat:"award",stage:[4,5],majors:["cs"],fit:8,title:"CTF 全国冠军",text:"你和队友一路过关拿下全国第一。",
+id:"cs_ctf",icon:"黑",cat:"award",stage:[4,5],majors:["cs"],fit:10,title:"CTF 全国冠军",text:"你和队友一路过关拿下全国第一。",
    effect:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+5,0,100);g.results.ecs.push("CTF 冠军");return ["good","CTF 夺冠，奖项 +1、创造力 +1、声望 +5。"];}
   },
   {
-id:"biz_angel",icon:"旗",cat:"social",stage:[4,5],majors:["biz"],fit:8,title:"创业拿天使",text:"你的项目拿到第一笔投资。",
+id:"biz_angel",icon:"旗",cat:"social",stage:[4,5],majors:["biz"],fit:10,title:"创业拿天使",text:"你的项目拿到第一笔投资。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("创业");return ["good","拿到天使轮，社交 +1、声望 +3、履历 +。"];}
   },
   {
-id:"biz_final",icon:"旗",cat:"award",stage:[4,5],majors:["biz"],fit:8,title:"商赛全国总决",text:"带队杀进全国总决赛。",
+id:"biz_final",icon:"旗",cat:"award",stage:[4,5],majors:["biz"],fit:10,title:"商赛全国总决",text:"带队杀进全国总决赛。",
    effect:g=>{g.results.awards++;g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("商赛总决赛");return ["good","商赛折桂，奖项 +1、社交 +1、声望 +3。"];}
   },
   {
-id:"sci_isef",icon:"奥",cat:"award",stage:[4,5],majors:["sci"],fit:8,title:"工程大赛入围",text:"你的课题入围国际科学与工程大赛。",
+id:"sci_isef",icon:"奥",cat:"award",stage:[4,5],majors:["sci"],fit:10,title:"工程大赛入围",text:"你的课题入围国际科学与工程大赛。",
    effect:g=>{g.results.awards++;g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("科研大赛");return ["good","大赛入围，奖项 +1、学术 +1、声望 +3。"];}
   },
   {
-id:"sci_lab",icon:"研",cat:"academic",stage:[4,5],majors:["sci"],fit:8,title:"独立课题",text:"你有了自己的研究课题。",
+id:"sci_lab",icon:"研",cat:"academic",stage:[4,5],majors:["sci"],fit:10,title:"独立课题",text:"你有了自己的研究课题。",
    effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("独立课题");return ["good","独立科研，学术 +1、声望 +2、履历 +。"];}
   },
   {
-id:"soc_mun",icon:"辩",cat:"award",stage:[4,5],majors:["soc"],fit:8,title:"模拟联合国获奖",text:"你在模联拿下最佳代表。",
+id:"soc_mun",icon:"辩",cat:"award",stage:[4,5],majors:["soc"],fit:10,title:"模拟联合国获奖",text:"你在模联拿下最佳代表。",
    effect:g=>{g.results.awards++;g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("模联");return ["good","模联获奖，奖项 +1、社交 +1、声望 +2。"];}
   },
   {
-id:"soc_media",icon:"脉",cat:"social",stage:[4,5],majors:["soc"],fit:8,title:"调研被转载",text:"你的社会调研被媒体转载。",
+id:"soc_media",icon:"脉",cat:"social",stage:[4,5],majors:["soc"],fit:10,title:"调研被转载",text:"你的社会调研被媒体转载。",
    effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("调研发表");return ["good","调研出圈，社交 +1、创造力 +1、声望 +2。"];}
   },
   {
-id:"art_gallery",icon:"弹",cat:"creative",stage:[4,5],majors:["art"],fit:8,title:"作品集被收藏",text:"你的作品被画廊收藏。",
+id:"art_gallery",icon:"弹",cat:"creative",stage:[4,5],majors:["art"],fit:10,title:"作品集被收藏",text:"你的作品被画廊收藏。",
    effect:g=>{g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("作品集");return ["good","作品被收藏，创造力 +1、声望 +3、履历 +。"];}
   },
   {
-id:"art_award",icon:"弹",cat:"award",stage:[4,5],majors:["art"],fit:8,title:"设计大赛金奖",text:"你拿下了设计金奖。",
+id:"art_award",icon:"弹",cat:"award",stage:[4,5],majors:["art"],fit:10,title:"设计大赛金奖",text:"你拿下了设计金奖。",
    effect:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.results.reputation=clamp(g.results.reputation+3,0,100);g.results.ecs.push("设计金奖");return ["good","设计金奖，奖项 +1、创造力 +1、声望 +3。"];}
   },
   {
-id:"med_shadow",icon:"研",cat:"academic",stage:[4,5],majors:["med"],fit:8,title:"名医见习",text:"你跟随医生临床见习。",
+id:"med_shadow",icon:"研",cat:"academic",stage:[4,5],majors:["med"],fit:10,title:"名医见习",text:"你跟随医生临床见习。",
    effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stats.social=clamp(g.stats.social+0.5,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("临床见习");return ["good","临床见习，学术 +1、社交 +、声望 +2、履历 +。"];}
   },
   {
-id:"med_olympiad",icon:"奥",cat:"award",stage:[4,5],majors:["med"],fit:8,title:"医学竞赛获奖",text:"你拿了生物奥赛奖。",
+id:"med_olympiad",icon:"奥",cat:"award",stage:[4,5],majors:["med"],fit:10,title:"医学竞赛获奖",text:"你拿了生物奥赛奖。",
    effect:g=>{g.results.awards++;g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("生物奥赛");return ["good","奥赛获奖，奖项 +1、学术 +1、声望 +2。"];}
+  },
+  {
+id:"zk_grad",icon:"友",cat:"social",stage:[0,1],fit:3,title:"初中毕业典礼",text:"三年初中落幕，你和不舍的朋友约定未来要同校。",
+   effect:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stats.creativity=clamp(g.stats.creativity+0.5,1,12);g.results.ecs.push("初中毕业");return ["good","毕业季，社交 +1、创造力 +、履历 +。"];}
+  },
+  {
+id:"zk_clubwin",icon:"奖",cat:"award",stage:[0,1],fit:3,title:"社团拿了区奖",text:"你张罗的初中社团在全市评比里拿了奖。",
+   choices:[
+     {label:"趁热打铁招新",hint:"社交+1 声望+1",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+1,0,100);g.results.ecs.push("社团获奖");return ["good","社团影响力扩大，社交 +1、声望 +1、履历 +。"];}},
+     {label:"见好就收",hint:"压力-3",apply:g=>{g.stress=clamp(g.stress-3,0,100);return ["warn","低调收尾，压力 −3，但没再扩张。"];}}
+   ]
+  },
+  {
+id:"cs_intern",icon:"码",cat:"academic",stage:[4,5],majors:["cs"],fit:10,title:"大厂暑期实习",text:"你拿下了一家科技公司的开发实习，真刀真枪写业务代码。",
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.results.reputation=clamp(g.results.reputation+2,0,100);g.results.ecs.push("大厂实习");return ["good","实习历练，学术 +1、声望 +2、履历 +。"];}
+  },
+  {
+id:"cs_hackathon",icon:"码",cat:"creative",stage:[4,5],majors:["cs"],fit:10,title:"黑客松通宵",text:"48 小时极限开发，你和队友肝出一个能跑的 demo。",
+   choices:[
+     {label:"冲一把最佳作品",hint:"奖项+1 创造力+1 压力+4",apply:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.stress=clamp(g.stress+4,0,100);g.results.ecs.push("黑客松");return ["good","拿下最佳作品，奖项 +1、创造力 +1、履历 +，但压力 +4。"];}},
+     {label:"佛系参与攒经验",hint:"创造力+0.5 社交+0.5",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+0.5,1,12);g.stats.social=clamp(g.stats.social+0.5,1,12);g.results.ecs.push("黑客松");return ["good","重在参与，创造力 +、社交 +、履历 +。"];}}
+   ]
   }
 ];
 const catOf=e=>e.cat||"chance";
@@ -849,7 +872,7 @@ function drawEvent(){
   }
   const norm=pool.filter(e=>!e.power);
   const src=norm.length?norm:pool;
-  const e=pick(src); G.usedEvents.push(e.id); if(G.usedEvents.length>20)G.usedEvents.shift(); return e;
+  const e=weightedPick(src, ev=>ev.fit||3); G.usedEvents.push(e.id); if(G.usedEvents.length>20)G.usedEvents.shift(); return e;
 }
 
 /* 专业方向：开局选择，影响录取与行动契合度 */
@@ -872,7 +895,7 @@ const ACTIONS=[
   {id:"vocab",   name:"背单词",   icon:"globe", energy:15, stress:5,  run:doVocab},
   {id:"oral",    name:"口语角",   icon:"people",energy:15, stress:4,  run:doOral},
   {id:"read",    name:"读外刊",   icon:"book",  energy:12, stress:3,  run:doRead},
-  {id:"write",   name:"打磨文书", icon:"pencil",energy:18, stress:6,  run:doWrite},
+  {id:"write",   name:"打磨文书", icon:"pencil",energy:18, stress:6,  run:doWrite, stage:[6,7]},
   {id:"sat",     name:"刷 SAT",   icon:"pencil",energy:35, stress:12, run:doSAT},
   {id:"toefl",   name:"刷托福",   icon:"globe", energy:25, stress:8,  run:doTOEFL},
   {id:"study",   name:"啃硬课",   icon:"book",  energy:25, stress:10, run:doStudy},
@@ -1350,7 +1373,7 @@ function renderPick(){
   if(wm){ warn.style.display="block"; warn.innerHTML=wm; } else { warn.style.display="none"; }
   // 动态档位数量说明
   const rc=PICK.cand.reach.length, mc=PICK.cand.match.length, sc=PICK.cand.safety.length;
-  $("rdDesc").innerHTML=`RD 可海投。冲刺 <b>${rc}</b> 所（录取率最低，含 &lt;10% 的校）· 匹配 <b>${mc}</b> 所（录取率 10%+，分散取样）· 保底 <b>${sc}</b> 所（对你最易）。按档勾选，已选 <b id="rdCount">0</b> / 25。`;
+  $("rdDesc").innerHTML=`RD 可海投。冲刺 <b>${rc}</b> 所（录取率最低，含 &lt;10% 的校）· 匹配 <b>${mc}</b> 所（录取率 10%+，分散取样）· 保底 <b>${sc}</b> 所（对你最易）。按档勾选，已选 <b id="rdCount">0</b> / 20。`;
 
   ["reach","match","safety"].forEach(k=>{
     const box=$("cand"+cap(k)); box.innerHTML="";
@@ -1649,7 +1672,7 @@ function goEnd(){
 /* ---------- 说明 ---------- */
 const HELP=`
 <div class="help-sec"><h3>这游戏在玩什么</h3>
-<p>从初三上到高三下共 <b>8 个学期</b>。每学期：先抽一张<b>随机事件</b>（有些需要你二选一），再用 <b>4 个行动点</b>行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）+ 休息，再从其余行动里<b>随机抽 6 个</b>给你选。学期结束时按你的状态生成<b>成绩单</b>。8 个学期后先选 1 所 ED 早申校（可选），再在 RD 勾选 10–25 所，逐封拆开 offer。</p></div>
+<p>从初三上到高三下共 <b>8 个学期</b>。每学期：先抽一张<b>随机事件</b>（有些需要你二选一），再用 <b>4 个行动点</b>行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）+ 休息，再从其余行动里<b>随机抽 6 个</b>给你选。学期结束时按你的状态生成<b>成绩单</b>。8 个学期后先选 1 所 ED 早申校（可选），再在 RD 勾选 10–20 所，逐封拆开 offer。</p></div>
 
 <div class="help-sec"><h3>六维能力</h3>
 <ul>
@@ -1707,7 +1730,7 @@ const HELP=`
   <b>保底</b> = 录取率最高的 10 所（对你最易）。</li>
 <li>两种极端会明确提示：<b>全部校录取率都&lt;10%</b> → 你匹配不到任何学校，只能冲冲刺校；<b>连最容易的校命中率都偏低</b> → 你目前没有真正的保底校，匹配校已是你的上限。</li>
 <li><b>ED（早决定）</b>：从美国提供 ED 的校中选 1 所绑定提交；部分校 ED 录取率明显高于 RD。<b>一旦 ED 录取即绑定入学，须撤回全部 RD 申请</b>——此时结局页不再显示任何 RD 录取信息，符合真实规则。</li>
-<li><b>RD（常规）</b>：按上面三档勾选（冲刺 / 匹配 / 保底），可勾选 <b>10–25 所</b>提交（若候选不足则按实际最少数量），最后按概率逐封拆开。</li>
+<li><b>RD（常规）</b>：按上面三档勾选（冲刺 / 匹配 / 保底），可勾选 <b>10–20 所</b>提交（若候选不足则按实际最少数量），最后按概率逐封拆开。</li>
 <li><b>顶尖校“信号弹”</b>：强推、国际大奖、一作论文等强力事件会累积 <b>顶尖校信号</b>，以及<b>顶尖夏校</b>录取，都能<b>显著抬升最难（录取率最低）那批校</b>的命中率（对普通保底校几乎无影响）——这是冲顶尖校的关键，且都带一定概率。</li>
 <li>录取模型基于 <b>美国 US News 2026 Top 40 的 Common Data Set 真实数据 + 英国/香港名校国际生录取率估算</b>（录取率、SAT 区间、GPA、国际生政策等），在你的 GPA、标化、活动、文书、推荐信、课程难度、声望、顶尖校信号上做校正。</li>
 </ul></div>
