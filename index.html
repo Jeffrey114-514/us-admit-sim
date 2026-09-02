@@ -178,6 +178,23 @@ table.mini th,table.mini td,table.trans th,table.trans td{padding:6px 8px;border
 table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
 .gpill{display:inline-block;min-width:20px;text-align:center;border:1px solid var(--line2);font-size:11px;padding:0 4px;margin-right:3px}
 .collapsed{display:none}
+/* 拆 offer 翻牌 */
+.rdbar{display:flex;gap:10px;align-items:center;margin:2px 0 12px;flex-wrap:wrap}
+.offers{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.offer{perspective:900px;cursor:pointer;height:120px}
+.offer-inner{position:relative;width:100%;height:100%;transition:transform .55s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d}
+.offer.flipped .offer-inner{transform:rotateY(180deg)}
+.offer-front,.offer-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border:1px solid var(--line);background:var(--card);padding:12px;display:flex;flex-direction:column;justify-content:center}
+.offer-front{border-style:dashed}
+.offer-back{transform:rotateY(180deg)}
+.offer .rank{font-size:10px;color:var(--mut);letter-spacing:.04em}
+.offer .nm{font-size:15px;font-weight:600;margin:3px 0;font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif}
+.offer .pp{font-size:11.5px;color:var(--mut);line-height:1.4}
+.offer .hint{font-size:11px;color:var(--accent);margin-top:4px}
+.offer-back .result{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;font-size:20px;font-weight:400;margin:2px 0 3px}
+.offer-back .result.ad{color:var(--good)}
+.offer-back .result.rej{color:var(--bad)}
 .foot{display:flex;gap:8px;align-items:center;margin-top:18px;flex-wrap:wrap}
 
 /* help */
@@ -1666,14 +1683,28 @@ function goEnd(){
   if(edAdmitted){
     rdBox.innerHTML=`<div class="small" style="padding:10px 0">ED 已录取（绑定入学）。按真实规则你已撤回全部 <b>${PICK.rdSel.length}</b> 所 RD 申请，<b>无 RD 最终录取信息</b>。</div>`;
   } else {
-    // 档位以选校时确定的 .band 为准（此前漏传 band，导致 r.band 恒为 undefined → 全部落到默认的“保底”）
+    // 档位以选校时确定的 .band 为准（此前漏传 band，导致 r.band 恒为 undefined → 全部落到默认的"保底"）
     let rows=PICK.rdSel.map(o=>{const sc=byName[o.nameEn];const P=admitProb(p,sc);const admit=Math.random()<P;return {sc,P,admit,band:o.band};});
     rows.sort((a,b)=>b.P-a.P);
     const got=rows.filter(r=>r.admit).length;
-    let html=`<table class="mini"><tr><th>校</th><th>档</th><th>概率</th><th>结果</th></tr>`;
-    rows.forEach(r=>{ html+=`<tr><td>${tagOf(r.sc)} ${r.sc.nameZh}</td><td>${r.band==="reach"?"冲刺":r.band==="match"?"匹配":"保底"}</td><td>${(r.P*100).toFixed(1)}%</td><td style="color:${r.admit?'var(--good)':'var(--bad)'}">${r.admit?'录取':'拒绝'}</td></tr>`; });
-    html+=`</table><div class="small" style="margin-top:6px">常规 RD 录取 <b>${got}</b> / ${rows.length} 所。</div>`;
-    rdBox.innerHTML=html;
+    const bz=b=>b==="reach"?"冲刺":b==="match"?"匹配":"保底";
+    // 翻牌：每张正面写校名/档/概率，点击拆开 → 背面显示录取或拒绝
+    let cards=`<div class="offers">`;
+    rows.forEach(r=>{
+      cards+=`<div class="offer"><div class="offer-inner">
+        <div class="offer-front"><div class="rank">#${r.sc.rank} · ${bz(r.band)}</div><div class="nm">${r.sc.nameZh}</div><div class="pp">录取率 ${(r.P*100).toFixed(1)}%</div><div class="hint">点击拆开 →</div></div>
+        <div class="offer-back"><div class="rank">#${r.sc.rank} · ${bz(r.band)}</div><div class="nm">${r.sc.nameZh}</div><div class="result ${r.admit?'ad':'rej'}">${r.admit?'录取':'拒绝'}</div><div class="pp">录取率 ${(r.P*100).toFixed(1)}%</div></div>
+      </div></div>`;
+    });
+    cards+=`</div>`;
+    // 一键拆 offer 后展示的清单（即此前那种列表式界面）
+    let tbl=`<table class="mini"><tr><th>校</th><th>档</th><th>概率</th><th>结果</th></tr>`;
+    rows.forEach(r=>{ tbl+=`<tr><td>${tagOf(r.sc)} ${r.sc.nameZh}</td><td>${bz(r.band)}</td><td>${(r.P*100).toFixed(1)}%</td><td style="color:${r.admit?'var(--good)':'var(--bad)'}">${r.admit?'录取':'拒绝'}</td></tr>`; });
+    tbl+=`</table><div class="small" style="margin-top:6px">常规 RD 录取 <b>${got}</b> / ${rows.length} 所。</div>`;
+    rdBox.innerHTML=`<div class="rdbar"><button class="btn" id="revealAllBtn">🎴 一键拆 offer</button><span class="small">逐张点击模拟拆信；或一键全开看清单</span></div>${cards}<div id="rdReveal" class="collapsed">${tbl}</div>`;
+    rdBox.querySelectorAll('.offer').forEach(el=>{ el.onclick=()=>el.classList.toggle('flipped'); });
+    const ra=rdBox.querySelector('#revealAllBtn');
+    ra.onclick=()=>{ rdBox.querySelectorAll('.offer').forEach(el=>el.classList.add('flipped')); rdBox.querySelector('#rdReveal').classList.remove('collapsed'); ra.textContent='已拆开 ✓'; ra.disabled=true; };
   }
   const asc=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc)})).sort((a,b)=>b.P-a.P);
   $("allTable").innerHTML=`<table class="mini"><tr><th>排名</th><th>中文</th><th>英文</th><th>RD 概率</th></tr>${asc.slice().reverse().map(x=>`<tr><td>${tagOf(x.sc)}</td><td>${x.sc.nameZh}</td><td>${x.sc.nameEn}</td><td>${(x.P*100).toFixed(1)}%</td></tr>`).join("")}</table>`;
