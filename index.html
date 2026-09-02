@@ -562,7 +562,7 @@ const ACHIEVEMENTS=[
   {id:"perfect", name:"单学期满绩 4.0",     test:(r,s)=>r.semesters.some(x=>x.gpaU>=3.98)},
   {id:"zen",     name:"零压力毕业（峰值<30）",test:(r,s)=>r.stressMax<30},
   {id:"rep10",   name:"声望 10+",           test:(r,s)=>r.reputation>=10},
-  {id:"craft9",  name:"文书与推荐信双 9+",   test:(r,s)=>r.essayQuality>=9&&r.recQuality>=9},
+  {id:"craft5",  name:"文书与推荐信双 5+",   test:(r,s)=>r.essayQuality>=5&&r.recQuality>=5},
   {id:"noC",     name:"全学期无 C 及以下",   test:(r,s)=>r.semesters.every(x=>x.courses.every(c=>c.p>=3.0))},
   {id:"balanced",name:"六维全部 6+",         test:(r,s)=>Object.values(s).every(v=>v>=6)}
 ];
@@ -1077,14 +1077,14 @@ function doRead(){
   const e=mulFx('englishGain',1)*0.38*pen();   // 英语 0.25→0.38
   G.stats.english=clamp(G.stats.english+e,1,12);
   G.stats.creativity=clamp(G.stats.creativity+0.15*pen(),1,12);
-  G.results.essayQuality=clamp(G.results.essayQuality+0.15*mulFx('craftGain',1),0,10);
+  G.results.essayQuality=clamp(G.results.essayQuality+0.35*mulFx('craftGain',1),0,10);   // 0.15→0.35
   G.results.reputation=clamp(G.results.reputation+1,0,100);
-  return ["good",`啃外刊，英语 +${e.toFixed(2)}，语感也进了文书里、声望 +1。`];
+  return ["good",`啃外刊，英语 +${e.toFixed(2)}，文书 +0.35、声望 +1。`];
 }
 function doWrite(){
   const e=0.25*mulFx('englishGain',1)*pen();   // 英语 0.15→0.25
   G.stats.english=clamp(G.stats.english+e,1,12);
-  G.results.essayQuality=clamp(G.results.essayQuality+1.2*mulFx('craftGain',1),0,10);   // §4.1 文书 0.8→1.2
+  G.results.essayQuality=clamp(G.results.essayQuality+2.5*mulFx('craftGain',1),0,10);   // §4.1 文书 1.4→2.5
   G.results.reputation=clamp(G.results.reputation+1,0,100);
   return ["good",`文书改到第 N 版，文书质量 ${G.results.essayQuality.toFixed(1)}/10、声望 +1。`];
 }
