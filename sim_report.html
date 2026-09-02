@@ -133,7 +133,7 @@ fileInput.addEventListener("change",e=>{
       if(!m){statusEl.innerHTML='<span class="err">未找到 &lt;script&gt;，请选择本游戏的 index.html。</span>';return;}
       const script=m[1];
       const factory=new Function("document","window",script+
-        "\n;return {SCHOOLS,admitProb,buildBands,bandOf,buildProfile,freshState,MAJORS,MAJOR_BYID,cumGPA,setG:function(g){G=g;}};");
+        "\n;return {SCHOOLS,admitProb,buildBands,buildProfile,freshState,MAJORS,MAJOR_BYID,cumGPA,setG:function(g){G=g;}};");
       API=factory(docStub,{addEventListener(){}});
       statusEl.innerHTML=`已载入：<b>${API.SCHOOLS.length}</b> 所大学 · ED 校 <b>${API.SCHOOLS.filter(s=>s.region==="US"&&s.ed).length}</b> 所。可运行模拟。`;
       runBtn.disabled=false;
