@@ -220,7 +220,7 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
 <body>
 <div class="wrap">
   <h1>申请人生</h1>
-  <p class="kicker">初三到高三 · 4 个学年 · 57 所大学</p>
+  <p class="kicker">初三到高三 · 7 个学期 · 57 所大学</p>
   <hr class="rule">
 
   <section id="setup" class="screen on">
@@ -256,7 +256,7 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
     <div class="card status" id="status"></div>
     <div class="card event" id="eventCard"></div>
     <div class="card">
-      <p class="label">行动（基础行动按年级 + 随机 6 个 · 本回合 4 个行动点）</p>
+      <p class="label">行动（基础行动按年级 + 随机 6 个 · 行动点：初三 3 / 高一 4 / 高二 5 / 高三上 8）</p>
       <div class="acts" id="acts"></div>
       <div class="foot">
         <button class="btn ghost" id="endRoundBtn">结束回合</button>
@@ -385,7 +385,9 @@ const ICON={
 const ic=(n,cls)=>'<span class="ico'+(cls?' '+cls:'')+'">'+(ICON[n]||ICON.star)+'</span>';
 
 /* ---------- config ---------- */
-const TOTAL_ROUNDS=8, AP_PER_ROUND=4, START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=20;
+const TOTAL_ROUNDS=7, AP_BY_ROUND=[3,3,4,4,5,5,8], START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=20;
+// 行动点随年级递增：初三 3 / 高一 4 / 高二 5 / 高三上 8（全季共 32，与原 8×4 一致）
+function apMaxThisRound(){ return (AP_BY_ROUND[G.round]||0) + sumFx('apDelta',0); }
 const STAT_NAMES={academic:"学术",english:"英语",stamina:"精力上限",creativity:"创造力",social:"社交",luck:"运气"};
 const STAT_ICON={academic:"book",english:"globe",stamina:"bolt",creativity:"bulb",social:"people",luck:"star"};
 const TPL_DESC={"卷王":"学术拉满","快乐青年":"样样平均","斜杠":"活动与创意","躺平":"交给运气"};
@@ -450,7 +452,7 @@ const ACHIEVEMENTS=[
 let G=null;
 function freshState(stats,traits,rigor,major){
   return {
-    round:0, ap:AP_PER_ROUND,
+    round:0, ap:AP_BY_ROUND[0],
     energy:55, stress:0,
     stats:Object.assign({},stats),
     traits:traits||[], rigor:rigor||"mixed", major:major||"und",
@@ -546,8 +548,7 @@ const STAGES=[
  {yr:"高一",sem:"下",theme:"社团与探索"},
  {yr:"高二",sem:"上",theme:"标化首考 · 竞赛"},
  {yr:"高二",sem:"下",theme:"深度学习 · 成长期"},
- {yr:"高三",sem:"上",theme:"文书与早申"},
- {yr:"高三",sem:"下",theme:"提交申请"}
+ {yr:"高三",sem:"上",theme:"文书与早申"}
 ];
 const yrLabel=r=>STAGES[r].yr+STAGES[r].sem;
 
@@ -1211,12 +1212,12 @@ function endRound(){
   G.results.stressMax=Math.max(G.results.stressMax,G.stress);
   if(G.round===6 && !G.summerDone){ goSummer(); return; } // 高二下 -> 高三上：夏校申请季
   if(G.round>=TOTAL_ROUNDS){ goPick(); return; }
-  G.ap=AP_PER_ROUND+sumFx('apDelta',0);
+  G.ap=apMaxThisRound();
   dealActions();
   G.energy=clamp(G.energy+10+sumFx('energyRegen',0),0,maxEnergy());
   G.stress=clamp(G.stress-3,0,100);
   $("roundHint").textContent="";
-  const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][G.round];
+  const yr=["初三","初三","高一","高一","高二","高二","高三"][G.round];
   const sem=G.round%2===0?"上":"下";
   pushLog("info",`—— ${yr}${sem}学期 开始 ——`);
   enterEvent();
@@ -1228,12 +1229,12 @@ function pushLog(cls,txt){
   el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
 function renderStatus(){
-  const ap=Array.from({length:AP_PER_ROUND+sumFx('apDelta',0)},(_,i)=>`<span class="apdot ${i<G.ap?'on':''}"></span>`).join("");
+  const ap=Array.from({length:apMaxThisRound()},(_,i)=>`<span class="apdot ${i<G.ap?'on':''}"></span>`).join("");
   const ePct=G.energy/maxEnergy()*100;
   const eCol=ePct>50?"var(--good)":ePct>25?"var(--warn)":"var(--bad)";
   const sCol=G.stress>70?"var(--bad)":G.stress>40?"var(--warn)":"var(--good)";
   const r=G.results;
-  const yr=["初三上","初三下","高一上","高一下","高二上","高二下","高三上","高三下"][G.round];
+  const yr=["初三上","初三下","高一上","高一下","高二上","高二下","高三上"][G.round];
   const st=Object.keys(STAT_NAMES).map(k=>`<span class="st">${ic(STAT_ICON[k])}${STAT_NAMES[k]} <b>${G.stats[k].toFixed(1)}</b></span>`).join("");
   const hasGPA=r.semesters.length>0;
   $("status").innerHTML=`
@@ -1516,11 +1517,11 @@ function summerApply(){
 }
 function finishSummer(logMsg){
   G.summerDone=true;
-  G.ap=AP_PER_ROUND+sumFx('apDelta',0);
+  G.ap=apMaxThisRound();
   dealActions();
   G.energy=clamp(G.energy+10+sumFx('energyRegen',0),0,maxEnergy());
   G.stress=clamp(G.stress-3,0,100);
-  const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][G.round];
+  const yr=["初三","初三","高一","高一","高二","高二","高三"][G.round];
   const sem=G.round%2===0?"上":"下";
   pushLog("info",logMsg);
   pushLog("info",`—— ${yr}${sem}学期 开始 ——`);
@@ -1611,7 +1612,7 @@ function narrative(tags){
 function renderTranscript(){
   const ss=G.results.semesters;
   let rows=ss.map((s,i)=>{
-    const yr=["初三","初三","高一","高一","高二","高二","高三","高三"][i];
+    const yr=["初三","初三","高一","高一","高二","高二","高三"][i];
     const sm=i%2===0?"上":"下";
     return `<tr><td>${yr}${sm}</td><td>${s.courses.map(c=>`<span class="gpill">${c.g}</span>`).join("")}</td>
       <td>${s.gpaU.toFixed(2)}</td><td>${s.gpaW.toFixed(2)}</td></tr>`;
@@ -1672,7 +1673,7 @@ function goEnd(){
 /* ---------- 说明 ---------- */
 const HELP=`
 <div class="help-sec"><h3>这游戏在玩什么</h3>
-<p>从初三上到高三下共 <b>8 个学期</b>。每学期：先抽一张<b>随机事件</b>（有些需要你二选一），再用 <b>4 个行动点</b>行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）+ 休息，再从其余行动里<b>随机抽 6 个</b>给你选。学期结束时按你的状态生成<b>成绩单</b>。8 个学期后先选 1 所 ED 早申校（可选），再在 RD 勾选 10–20 所，逐封拆开 offer。</p></div>
+<p>从初三上到高三上共 <b>7 个学期</b>。每学期：先抽一张<b>随机事件</b>（有些需要你二选一），再用<b>行动点</b>行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）+ 休息，再从其余行动里<b>随机抽 6 个</b>给你选。<b>行动点随年级递增</b>：初三每期 3 个、高一 4 个、高二 5 个、高三上 8 个（全季共 32 个，与旧版 8×4 一致）。学期结束时按你的状态生成<b>成绩单</b>。7 个学期后（高三上结束）直接进入申请季：先选 1 所 ED 早申校（可选），再在 RD 勾选 10–20 所，逐封拆开 offer。</p></div>
 
 <div class="help-sec"><h3>六维能力</h3>
 <ul>
