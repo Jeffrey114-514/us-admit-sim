@@ -1945,7 +1945,7 @@ function goEnd(){
 // 想做「跨玩家真实共享榜」：把 LEADERBOARD.mode 改为 "supabase"，并填好 url / anonKey / table。
 //   - 建表 SQL 见本文件底部注释；开启 RLS：允许 anon 执行 select 与 insert。
 //   - 若 CDN 不可用或填写有误，会自动回退到本地排行榜，不会卡死。
-const LEADERBOARD={ mode:"local", url:"", anonKey:"", table:"leaderboard" };
+const LEADERBOARD={ mode:"supabase", url:"https://wthjoefsodksrwlqgreb.supabase.co", anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aGpvZWZzb2Rrc3J3bHFncmViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNDcwMTksImV4cCI6MjEwMzkyMzAxOX0.nt1BvmwrlpjUK_lY5J-y8ecZE2U5umY4Tq81TclJdoI", table:"leaderboard" };
 let LAST_RESULT=null;          // 本局最佳战绩，供上传使用
 let _lbClient=null;            // Supabase 客户端缓存（未配置/未加载则为 false）
 // 按需异步加载 Supabase 客户端：仅当 mode="supabase" 且填好 url/anonKey 时才动态注入 CDN 脚本，绝不在页面加载期阻塞。
@@ -2200,10 +2200,10 @@ renderSetup();
    );
    alter table leaderboard enable row level security;
    -- 匿名可读榜
-   create policy "public read" on leaderboard for select using (true);
-   -- 匿名可写入（限制 ID≤10 字，避免垃圾写入可自行加校验/限流）
-   create policy "public insert" on leaderboard for insert with check (char_length(id) <= 10);
-   然后把本文件 LEADERBOARD 的 mode 改为 "supabase"，并填好 url / anonKey / table。
+   -- 已通过 Supabase Management API 自动建表并应用策略（见 /tmp/supasetup.js）。
+   -- 实际生效策略（支持 select/insert/upsert，限制 id≤10 字）：
+   --   create policy "public all" on leaderboard for all to anon using (true) with check (char_length(id) <= 10);
+   -- 本文件 LEADERBOARD 已置 mode:"supabase" 并填好 url / anonKey / table，可直接使用。
    ============================================================ */
 </script>
 </body>
