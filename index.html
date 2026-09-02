@@ -953,26 +953,26 @@ function dealActions(){
 
 /* —— 英语类 —— */
 function doVocab(){
-  const g=mulFx('englishGain',1)*0.35*pen();
+  const g=mulFx('englishGain',1)*0.50*pen();   // 英语难度下调：单次加成 0.35→0.50
   G.stats.english=clamp(G.stats.english+g,1,12);
   return ["good",`词汇量上涨，英语 +${g.toFixed(2)}（现 ${G.stats.english.toFixed(1)}）。`];
 }
 function doOral(){
-  const e=mulFx('englishGain',1)*0.30*pen(), s=mulFx('socialGain',1)*0.2*pen();
+  const e=mulFx('englishGain',1)*0.42*pen(), s=mulFx('socialGain',1)*0.2*pen();   // 英语 0.30→0.42
   G.stats.english=clamp(G.stats.english+e,1,12);
   G.stats.social=clamp(G.stats.social+s,1,12);
   G.results.reputation=clamp(G.results.reputation+2*mulFx('socialGain',1),0,100);
   return ["good",`开口说英语，英语 +${e.toFixed(2)}、社交 +${s.toFixed(2)}、声望 +2。`];
 }
 function doRead(){
-  const e=mulFx('englishGain',1)*0.25*pen();
+  const e=mulFx('englishGain',1)*0.38*pen();   // 英语 0.25→0.38
   G.stats.english=clamp(G.stats.english+e,1,12);
   G.stats.creativity=clamp(G.stats.creativity+0.15*pen(),1,12);
   G.results.essayQuality=clamp(G.results.essayQuality+0.15*mulFx('craftGain',1),0,10);
   return ["good",`啃外刊，英语 +${e.toFixed(2)}，语感也进了文书里。`];
 }
 function doWrite(){
-  const e=0.15*mulFx('englishGain',1)*pen();
+  const e=0.25*mulFx('englishGain',1)*pen();   // 英语 0.15→0.25
   G.stats.english=clamp(G.stats.english+e,1,12);
   G.results.essayQuality=clamp(G.results.essayQuality+0.8*mulFx('craftGain',1),0,10);
   return ["good",`文书改到第 N 版，文书质量 ${G.results.essayQuality.toFixed(1)}/10。`];
@@ -1117,9 +1117,13 @@ function doZk(){
 function pen(){ return G.stress>=70?0.5:1; }
 
 /* ---------- GPA：每学期成绩单 ---------- */
+// 年级加成：低年级（初三/高一）课程更易拿 A，降低 GPA 刷取难度；
+// 高三还原真实压力。索引对应 round 0..6（初三上 … 高三上）。
+const GRADE_EASE=[0.6,0.6,0.3,0.3,0.1,0.1,0];
 function genSemesterCourses(){
   const plan=RIGOR[G.rigor].mix, courses=[];
   const eRatio=G.energy/maxEnergy();
+  const ease=GRADE_EASE[G.round]||0;
   for(const [lvl,n] of plan){
     for(let i=0;i<n;i++){
       let raw=2.6+0.117*G.stats.academic;
@@ -1127,6 +1131,7 @@ function genSemesterCourses(){
       raw-=G.stress/100*0.30;
       raw+=(G.stats.luck-6)*0.03;
       raw-=LEVEL_DIFF[lvl];
+      raw+=ease;   // 低年级更易拿 A：中低学术也能全 A
       raw+=gauss(0,0.22);
       raw=clamp(raw,0,4.0);
       const gr=snapGrade(raw);
@@ -1145,6 +1150,10 @@ function closeSemester(){
   const avgU=courses.reduce((a,c)=>a+c.p,0)/courses.length;
   pushLog(avgU>=3.7?"good":avgU>=3.0?"warn":"bad",
     `【第 ${G.round+1} 学期成绩单】${courses.map(c=>c.g).join(" ")} · 学期 GPA ${sem.gpaU.toFixed(2)}（加权 ${sem.gpaW.toFixed(2)}）`);
+  // 学期成长：六维（学术/英语/精力/创造力/社交/运气）里随机 3 个 +0.5，影响后续学期
+  const growKeys=shuffle(Object.keys(STAT_NAMES)).slice(0,3);
+  growKeys.forEach(k=>{ G.stats[k]=clamp(G.stats[k]+0.5,1,12); });
+  pushLog("good",`📈 学期成长：${growKeys.map(k=>STAT_NAMES[k]).join("、")} 各 +0.5`);
   return sem;
 }
 
@@ -1324,30 +1333,43 @@ function buildBands(p){
   const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc),band:null})).filter(x=>x.P>0.001)
                     .sort((a,b)=>a.P-b.P);
   const n=all.length;
-  const lo=all.filter(x=>x.P<0.10);   // <10% 池（冲刺候选）
-  const hi=all.filter(x=>x.P>=0.10);  // ≥10% 池（可匹配）
+  const hi=all.filter(x=>x.P>=0.10);   // ≥10% 池（可匹配）
+  const noMatch = hi.length===0;        // 全 <10%：啥都匹配不了
 
-  // —— 冲刺：5 所最难里随机 2 所 + 随机 3 所 <10% 的校 ——
+  // —— 冲刺：常态取最难 5 所；无匹配（全<10%）时改为 25 所随机，确保有得选 ——
   let reach=[];
-  const bottom5=all.slice(0,Math.min(5,n));
-  if(bottom5.length) reach=reach.concat(shuffle(bottom5).slice(0,Math.min(2,bottom5.length)));
-  const extraLo=lo.filter(x=>!reach.some(r=>r.sc.nameEn===x.sc.nameEn));
-  if(extraLo.length) reach=reach.concat(shuffle(extraLo).slice(0,Math.min(3,extraLo.length)));
-  reach=dedupeB(reach).slice(0,REACH_MAX);
+  if(noMatch){
+    reach=shuffle(all.slice()).slice(0,25);
+  }else{
+    const bottom5=all.slice(0,Math.min(5,n));
+    if(bottom5.length) reach=reach.concat(shuffle(bottom5).slice(0,Math.min(2,bottom5.length)));
+    const lo=all.filter(x=>x.P<0.10 && x.band===null);
+    if(lo.length) reach=reach.concat(shuffle(lo).slice(0,Math.min(3,lo.length)));
+    reach=dedupeB(reach).slice(0,REACH_MAX);
+  }
   reach.forEach(x=>x.band="reach");
 
-  // —— 全是 <10%：啥都匹配不了 ——
-  if(hi.length===0){
+  // —— 全是 <10%：只有冲刺可选（已放 25 所），无匹配/无保底 ——
+  if(noMatch){
     return {reach, match:[], safety:[], noMatch:true, noSafety:true, easiestP:0};
   }
 
   // —— 保底：录取率最高的 10 所（对你最易） ——
-  const safety=all.slice(Math.max(0,n-10)).filter(x=>x.band===null);
+  const open1=all.filter(x=>x.band===null);
+  const safety=open1.slice(Math.max(0,open1.length-10));
   safety.forEach(x=>x.band="safety");
 
-  // —— 匹配：可匹配且非保底的池里，按录取率间隔抽样，保证分散、不挨在一起 ——
+  // —— 匹配：可匹配池里间隔抽样 10 所；不足则从剩余校补齐，确保有 10 所可勾选 ——
   const matchPool=hi.filter(x=>x.band===null);
-  const match=stridedPick(matchPool, MATCH_MAX);
+  let match=stridedPick(matchPool, MATCH_MAX);
+  const stillOpen=all.filter(x=>x.band===null);
+  let mi=0;
+  while(match.length<MATCH_MAX && stillOpen.length){
+    const cand=stillOpen[mi%stillOpen.length];
+    if(!match.some(m=>m.sc.nameEn===cand.sc.nameEn)) match.push(cand);
+    if(++mi>stillOpen.length*3) break;   // 安全闸，避免极端死循环
+  }
+  match=dedupeB(match).slice(0,MATCH_MAX);
   match.forEach(x=>x.band="match");
 
   // —— 无真正保底：连最容易的校命中率都偏低 ——
@@ -1372,7 +1394,7 @@ function goPick(){
 }
 function takeBand(k){
   const pool=PICK.bands[k]||[], n=pool.length;
-  const cap=k==="reach"?REACH_MAX:RD_PER_BAND;
+  const cap=k==="reach"?(PICK.noMatch?25:REACH_MAX):RD_PER_BAND;
   const want=Math.min(cap,n);
   const off=n?PICK.off[k]%n:0, out=[];
   for(let i=0;i<want;i++) out.push(pool[(off+i)%n]);
@@ -1727,7 +1749,8 @@ const HELP=`
 <li><b>创造力</b>：影响竞赛获奖率、文书质量与特长。</li>
 <li><b>社交</b>：影响声望、推荐信与履历。</li>
 <li><b>运气</b>：缩小考试波动、提升竞赛获奖率。</li>
-</ul></div>
+</ul>
+<p>🌱 <b>学期成长</b>：每过一学期，六维里会<b>随机 3 个各 +0.5</b>——自然发育，越到后面底子越厚。</p></div>
 
 <div class="help-sec"><h3>专业方向（规划核心）</h3>
 <p>开局选一个<b>专业方向</b>（也可选「未定」，录取上不偏不倚）。它会带来两类实打实的收益：</p>
@@ -1744,6 +1767,7 @@ const HELP=`
 <li>等级对应绩点：A 4.0 / A− 3.7 / B+ 3.3 / B 3.0 / B− 2.7 / C+ 2.3 / C 2.0 / C− 1.7 / D+ 1.3 / D 1.0 / F 0。</li>
 <li>加权绩点：AP +1.0，Honors +0.5，常规 +0，上限 5.0。</li>
 <li>学期 GPA = 各科绩点按学分加权平均；<b>累计 GPA = 各学期质量点总和 ÷ 总学分</b>（不是简单平均，但学分相同时结果一致）。</li>
+<li>📗 <b>低年级更易拿 A</b>：初三 / 高一课程难度更低，中低学术水平也容易全 A；越到高二下 / 高三，压力越接近真实，需要真把学术堆起来。</li>
 </ul></div>
 
 <div class="help-sec"><h3>SAT 与托福</h3>
