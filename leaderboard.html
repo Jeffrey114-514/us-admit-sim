@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>美国大学申请模拟器 · 云端排行榜</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#181b21; --card2:#1f232b; --ink:#e8eaed; --muted:#9aa0a6;
+    --line:#2a2f37; --line2:#353b45; --accent:#6ea8fe; --good:#4ade80; --bad:#f87171;
+    --gold:#ffd479; --silver:#cdd6e0; --bronze:#e0a76b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;padding:28px 16px 64px}
+  .wrap{max-width:860px;margin:0 auto}
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:22px;margin:0;letter-spacing:.5px}
+  h1 .em{color:var(--accent)}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 18px}
+  a.back{color:var(--accent);text-decoration:none;font-size:13px}
+  a.back:hover{text-decoration:underline}
+  .banner{border:1px solid var(--line2);background:var(--card);border-radius:12px;padding:14px 16px;font-size:13px;margin-bottom:18px}
+  .banner.warn{border-color:#5a4a1f;background:#241f12;color:#f0d79a}
+  .banner code{background:#000;padding:1px 6px;border-radius:5px;color:#ffd479;font-size:12px}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  button.btn{background:var(--accent);color:#06121f;border:0;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+  button.btn:hover{filter:brightness(1.08)}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line2)}
+  .seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:7px 12px;font-size:12.5px;cursor:pointer}
+  .seg button.on{background:var(--card2);color:var(--ink)}
+  .count{color:var(--muted);font-size:12.5px;margin-left:auto}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:11px 12px;border-bottom:1px solid var(--line2);white-space:nowrap}
+  tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--card2)}
+  .rk{font-weight:800;width:34px;color:var(--muted)}
+  .rk.top1{color:var(--gold)} .rk.top2{color:var(--silver)} .rk.top3{color:var(--bronze)}
+  .name{font-weight:700}
+  .school{color:var(--ink)}
+  .school .b{color:var(--muted);font-size:12px}
+  .grade{font-weight:800}
+  .g-S{color:var(--gold)} .g-A{color:var(--accent)} .g-B{color:var(--good)} .g-none{color:var(--muted)}
+  .score{font-weight:800;font-size:15px;color:var(--ink)}
+  .ts{color:var(--muted);font-size:12px;white-space:nowrap}
+  .empty{padding:36px 16px;text-align:center;color:var(--muted)}
+  .submit{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .submit h3{margin:0 0 4px;font-size:15px}
+  .submit p{margin:0 0 12px;color:var(--muted);font-size:12.5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+  .grid input,.grid select{width:100%;background:var(--bg);border:1px solid var(--line2);color:var(--ink);border-radius:9px;padding:9px 10px;font:inherit;font-size:13px}
+  .submit .row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  .msg{font-size:12.5px}
+  .msg.ok{color:var(--good)} .msg.err{color:var(--bad)}
+  footer{margin-top:26px;color:var(--muted);font-size:11.5px;text-align:center}
+  @media (max-width:520px){.hide-sm{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌐 <span class="em">云端排行榜</span> · 申请人生</h1>
+    <a class="back" href="index.html">← 回到游戏</a>
+  </header>
+  <div class="sub">多人共享战绩榜 · 拆开 offer 后从游戏内「上传到排行榜」留名，这里实时查看所有人的最佳录取。</div>
+
+  <div id="banner"></div>
+
+  <div class="toolbar">
+    <button class="btn" id="refreshBtn">↻ 刷新</button>
+    <div class="seg" id="sortSeg">
+      <button data-k="score" class="on">按分数</button>
+      <button data-k="recent">按最新</button>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>玩家</th><th>最佳录取</th>
+          <th class="hide-sm">评级</th><th>分数</th>
+          <th class="hide-sm">GPA</th><th class="hide-sm">SAT</th><th class="hide-sm">时间</th>
+        </tr>
+      </thead>
+      <tbody id="lbBody">
+        <tr><td colspan="8" class="empty">加载中…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="submit">
+    <h3>🏆 留名上传</h3>
+    <p>也可直接在游戏内上传（分数由游戏自动算好）。这里手动填也行——「分数」可在游戏上传页看到（名校越难、评级越高，分数越高）。同名多次上传只保留最佳。</p>
+    <div class="grid">
+      <input id="f_name" maxlength="10" placeholder="玩家名（≤10字）">
+      <input id="f_school" placeholder="最佳录取校">
+      <select id="f_band"><option value="冲刺">冲刺</option><option value="匹配">匹配</option><option value="保底">保底</option></select>
+      <select id="f_grade"><option value="S">评级 S</option><option value="A">评级 A</option><option value="B">评级 B</option><option value="none">无</option></select>
+      <input id="f_score" type="number" min="0" placeholder="分数">
+      <input id="f_gpa" type="number" step="0.01" min="0" max="5" placeholder="GPA">
+      <input id="f_sat" type="number" min="0" placeholder="SAT">
+    </div>
+    <div class="row">
+      <button class="btn" id="submitBtn">确认上传</button>
+      <span class="msg" id="submitMsg"></span>
+    </div>
+  </div>
+
+  <footer>数据存于 Supabase（配置见本页顶部 <code>LEADERBOARD</code>）。未配置时仅显示提示，不会出错。</footer>
+</div>
+
+<script>
+/* ============================================================
+   云端榜配置：把 mode 改为 "supabase" 并填好 url / anonKey / table 即可启用。
+   建表 SQL（在 Supabase SQL Editor 执行）：
+     create table leaderboard (
+       id      text   primary key check (char_length(id) <= 10),
+       school  text   not null,
+       band    text   not null,
+       grade   text   not null,
+       score   int    not null,
+       gpa     real,
+       sat     int,
+       ts      bigint  default extract(epoch from now())::bigint
+     );
+     alter table leaderboard enable row level security;
+     create policy "public read"  on leaderboard for select using (true);
+     create policy "public write" on leaderboard for insert with check (char_length(id) <= 10);
+     create policy "public upd"   on leaderboard for update using (char_length(id) <= 10);
+   ============================================================ */
+const LEADERBOARD={ mode:"local", url:"", anonKey:"", table:"leaderboard" };
+let _cli=null;
+function ensureSupabase(){
+  if(_cli!==null) return Promise.resolve(!!_cli);
+  if(LEADERBOARD.mode!=="supabase"||!LEADERBOARD.url||!LEADERBOARD.anonKey) return Promise.resolve(false);
+  return new Promise(res=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"; s.async=true;
+    s.onload=()=>res(true); s.onerror=()=>res(false);
+    document.head.appendChild(s);
+  });
+}
+async function client(){
+  if(_cli!==null) return _cli;
+  const ok=await ensureSupabase();
+  if(ok && window.supabase && LEADERBOARD.url && LEADERBOARD.anonKey)
+    _cli=window.supabase.createClient(LEADERBOARD.url, LEADERBOARD.anonKey);
+  else _cli=false;
+  return _cli;
+}
+const $=(id)=>document.getElementById(id);
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// 同名去重：保留最佳成绩
+function dedupe(rows){
+  const byId={};
+  (rows||[]).forEach(e=>{ if(!byId[e.id]||(e.score||0)>(byId[e.id].score||0)) byId[e.id]=e; });
+  return Object.values(byId);
+}
+function fmtTime(ts){
+  if(!ts) return "—";
+  const d=new Date(typeof ts==="number"&&ts<1e12?ts*1000:ts);
+  if(isNaN(d)) return "—";
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+let sortKey="score";
+async function load(){
+  const body=$("lbBody");
+  body.innerHTML=`<tr><td colspan="8" class="empty">加载中…</td></tr>`;
+  const cli=await client();
+  let rows=[];
+  if(cli && LEADERBOARD.mode==="supabase"){
+    try{
+      const {data,error}=await cli.from(LEADERBOARD.table).select("*").order("score",{ascending:false}).limit(50);
+      if(error) throw error;
+      rows=data||[];
+    }catch(e){ rows=[]; }
+  }
+  rows=dedupe(rows);
+  if(sortKey==="recent") rows.sort((a,b)=>(b.ts||0)-(a.ts||0));
+  else rows.sort((a,b)=>(b.score||0)-(a.score||0));
+  $("count").textContent=rows.length?`共 ${rows.length} 条`:"";
+  if(!rows.length){
+    body.innerHTML=`<tr><td colspan="8" class="empty">还没有战绩。去游戏里拆开 offer，点「上传到排行榜」留个名吧！</td></tr>`;
+    return;
+  }
+  body.innerHTML=rows.map((r,i)=>{
+    const top=i<3?`top${i+1}`:"";
+    const g=r.grade||"none";
+    return `<tr>
+      <td class="rk ${top}">${i+1}</td>
+      <td class="name">${esc(r.id)}</td>
+      <td class="school">${esc(r.school)} <span class="b">（${esc(r.band)}）</span></td>
+      <td class="hide-sm grade g-${g}">${esc(r.grade)}</td>
+      <td class="score">${esc(r.score)}</td>
+      <td class="hide-sm">${r.gpa!=null?esc(r.gpa):"—"}</td>
+      <td class="hide-sm">${r.sat?esc(r.sat):"—"}</td>
+      <td class="hide-sm ts">${fmtTime(r.ts)}</td>
+    </tr>`;
+  }).join("");
+}
+async function submit(){
+  const msg=$("submitMsg"); msg.className="msg"; msg.textContent="";
+  const id=($("f_name").value||"").trim();
+  if(!id){ msg.className="msg err"; msg.textContent="请先填玩家名"; return; }
+  if([...id].length>10){ msg.className="msg err"; msg.textContent="名字不能超过 10 个字"; return; }
+  const score=parseInt($("f_score").value,10);
+  if(!score||score<=0){ msg.className="msg err"; msg.textContent="请填写有效分数"; return; }
+  const entry={ id, school:$("f_school").value.trim()||"—", band:$("f_band").value,
+    grade:$("f_grade").value, score, gpa:parseFloat($("f_gpa").value)||0, sat:parseInt($("f_sat").value,10)||0, ts:Date.now() };
+  const cli=await client();
+  if(cli && LEADERBOARD.mode==="supabase"){
+    try{
+      const {data:exist}=await cli.from(LEADERBOARD.table).select("score").eq("id",id).maybeSingle();
+      if(exist && (exist.score||0)>=entry.score){ msg.className="msg ok"; msg.textContent="已保留你更高的历史成绩，未覆盖。"; return; }
+      const {error}=await cli.from(LEADERBOARD.table).upsert(entry,{onConflict:"id"});
+      if(error) throw error;
+      msg.className="msg ok"; msg.textContent="✅ 已上传到云端！";
+      load();
+    }catch(e){ msg.className="msg err"; msg.textContent="上传失败，请检查配置。"; }
+  }else{
+    msg.className="msg err"; msg.textContent="云端未配置（LEADERBOARD.mode 非 supabase），无法上传。";
+  }
+}
+function renderBanner(){
+  const b=$("banner");
+  if(LEADERBOARD.mode==="supabase" && LEADERBOARD.url && LEADERBOARD.anonKey){
+    b.className="banner"; b.innerHTML=`已连接 Supabase 共享榜 · 实时多人排行。`;
+  }else{
+    b.className="banner warn";
+    b.innerHTML=`⚠️ 尚未配置云端数据库。请在 <code>leaderboard.html</code> 顶部 <code>LEADERBOARD</code> 把 <code>mode</code> 改为 <code>"supabase"</code> 并填好 <code>url</code> / <code>anonKey</code>（建表 SQL 见本页注释）。配置后这里即变多人实时榜；游戏内上传也会同步上云。`;
+  }
+}
+$("refreshBtn").onclick=load;
+$("submitBtn").onclick=submit;
+document.querySelectorAll("#sortSeg button").forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll("#sortSeg button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); sortKey=b.dataset.k; load(); };
+});
+renderBanner();
+load();
+</script>
+</body>
+</html>

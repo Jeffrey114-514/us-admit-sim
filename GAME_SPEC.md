@@ -300,6 +300,7 @@ return {reach, match, safety, noMatch, noSafety, easiestP}
 - **排行榜（上传可选）**：拆开 offer 后出现「🏆 上传到排行榜」按钮 → 输入**玩家名（≤10 字，中英文皆可）** → 入榜。同一玩家名多次上传只保留最佳成绩，不会刷屏。
   - 默认 **本地模式**（localStorage，键 `usadmit_lb`），开箱即玩、单机可见。
   - 跨玩家共享榜：把 `LEADERBOARD.mode` 改为 `"supabase"` 并填 `url/anonKey/table`（见 `index.html` 底部建表 SQL + RLS 策略）；CDN 不可用或填错自动回退本地，不会卡死。
+  - 另有独立网页 **`leaderboard.html`**（同仓库，Vercel 一并部署）：纯展示型的云端多人榜，含排行表、按分数/最新排序、留名上传（同名去重保留最佳）。其顶部 `LEADERBOARD` 配置与游戏内一致，填好 Supabase 即变实时榜。
 - 底部附**全部 57 校按录取率排序**的总表，便于复盘。
 - 另展示人格标签、完整成绩单、成就（12 项，如 SAT1500+、GPA3.9+、零压力毕业、声望 10+、六维全 6+ 等）。
 
