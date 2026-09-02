@@ -85,6 +85,9 @@ h1{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;
 .stats .st{display:flex;align-items:center;gap:6px}
 .stats b{font-variant-numeric:tabular-nums;font-weight:600}
 .scores{margin-top:10px;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums;display:flex;gap:14px;flex-wrap:wrap}
+.ed-matches{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ed-match{text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;cursor:pointer;color:var(--fg)}
+.ed-match:hover{border-color:var(--accent);background:var(--card)}
 
 /* event */
 .event .ev-cat{display:flex;align-items:center;gap:7px;margin-bottom:10px}
@@ -124,6 +127,20 @@ h1{font-family:Georgia,"Times New Roman","Songti SC","Noto Serif SC",serif;
 .bandhead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .bandhead .t{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
 .bandhead .cnt{margin-left:auto;font-size:12px;color:var(--mut)}
+.rdsum{margin:0 0 14px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.rdsum .rdg{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.rdsum .rdgl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.rdsum .rdgv{font-size:26px;font-weight:800;line-height:1}
+.rdsum .rdl{font-size:14px;margin-bottom:3px}
+.rdsum .rds{font-size:12px;color:var(--mut)}
+.rdsum.grade-S{border-color:#e0b341;background:linear-gradient(180deg,rgba(224,179,65,.16),var(--card))}
+.rdsum.grade-S .rdgv{color:#e0b341}
+.rdsum.grade-A{border-color:var(--good);background:linear-gradient(180deg,rgba(59,179,113,.12),var(--card))}
+.rdsum.grade-A .rdgv{color:var(--good)}
+.rdsum.grade-B{border-color:var(--mut)}
+.rdsum.grade-B .rdgv{color:var(--mut)}
+.rdsum.grade-none{border-color:var(--bad);background:linear-gradient(180deg,rgba(224,75,75,.10),var(--card))}
+.rdsum.grade-none .rdgv{color:var(--bad)}
 .cands{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .cand{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:11px;text-align:left;font:inherit;color:var(--ink);transition:border-color .15s}
 .cand:hover{border-color:var(--ink)}
@@ -196,6 +213,7 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
 .offer-back .result.ad{color:var(--good)}
 .offer-back .result.rej{color:var(--bad)}
 .foot{display:flex;gap:8px;align-items:center;margin-top:18px;flex-wrap:wrap}
+#uploadForm{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 
 /* help */
 .help-sec{margin-bottom:22px}
@@ -232,6 +250,17 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
 .ev-stage{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
 .env{cursor:pointer}
 #rdTable table.mini th:nth-child(4),#rdTable table.mini td:nth-child(4){text-align:right;font-weight:600}
+
+/* §5.2 招生官视角面板 */
+.ao-panel{display:flex;flex-direction:column;gap:7px;margin:4px 0 2px}
+.aorow{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.aok{width:84px;flex:none;color:var(--ink);text-align:right}
+.aobar{position:relative;flex:1;height:12px;background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.aobar.center{background:linear-gradient(90deg,transparent 49.5%,var(--mut) 49.5%,var(--mut) 50.5%,transparent 50.5%)}
+.aobar i{position:absolute;top:0;bottom:0;border-radius:5px}
+.aobar.center i{top:0;bottom:0}
+.aov{width:46px;flex:none;text-align:left;color:var(--mut);font-variant-numeric:tabular-nums}
+
 </style>
 </head>
 <body>
@@ -290,14 +319,21 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
   <section id="pick" class="screen">
     <div class="card">
       <p class="label">早申 ED（可选 · 绑定 1 所）</p>
-      <div class="narr" style="font-size:13.5px;margin-bottom:8px">部分美国名校提供 ED（早决定），录取率显著高于 RD。选 1 所提交，录取即绑定入学。无 ED 的校（如哈佛/斯坦福 REA）与英/港校只能走 RD。</div>
+      <div class="narr" style="font-size:13.5px;margin-bottom:8px">ED（早决定）可选 1 所绑定提交，录取即入学。无 ED 的校（哈佛/斯坦福等 REA）与英/港校只能走 RD。</div>
       <div class="searchbar">
         <input id="edSearch" placeholder="搜索美国 ED 校（中/英文名）" list="edList">
         <datalist id="edList"></datalist>
         <button class="btn ghost" id="edPickBtn">选为 ED</button>
+        <button class="btn ghost" id="edClearBtn" style="display:none">清除 ED</button>
       </div>
       <div class="small" id="edHint"></div>
+      <div id="edMatches" class="ed-matches"></div>
       <div id="edCard"></div>
+    </div>
+    <div class="card">
+      <p class="label">招生官眼里的你（六维通道 · 相对全池 57 校平均）</p>
+      <div id="aoPanel" class="ao-panel"></div>
+      <div class="small">招生官视角下的相对强弱：绿条=优势，红条=短板，专业契合度按 0–100% 展示。据此规划补强方向。</div>
     </div>
     <div class="card">
       <p class="label">常规 RD（勾选 10–20 所）</p>
@@ -326,7 +362,7 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
   <section id="summer" class="screen">
     <div class="card">
       <p class="label">高二升高三 · 夏校申请季</p>
-      <div class="narr" style="font-size:13.5px;margin-bottom:10px">顶尖夏校（如 RSI / SSP / MITES，录取率仅 3–10%）是冲顶尖校的“信号弹”——招生官看重的不是名校光环，而是你的 <b>加权 GPA、学术/英语实力与声望</b>（只有 RSI 额外要求 SAT）。挑 1–2 个你达标的提交申请，结果按达标程度摇号；录上越好，顶尖校录取加成越高。<b>若一个都够不到（或想补强标化），可选最下方「跳过申请 · 苦心冲标化」——英语 +1 并多考一次 SAT。</b></div>
+      <div class="narr" style="font-size:13.5px;margin-bottom:10px">顶尖夏校（RSI/SSP/MITES，录取率 3–10%）是冲顶尖校的“信号弹”。挑 1–2 个达标的提交，按达标程度摇号；录得越好，顶尖校加成越高。够不到？最下方可「跳过 · 苦心冲标化」：英语 +1 并多考一次 SAT。</div>
       <div id="summerList" class="summer-list"></div>
       <div class="foot">
         <button class="btn" id="summerApplyBtn">确认</button>
@@ -361,6 +397,10 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
       </div>
       <div id="allTable" class="collapsed"></div>
     </div>
+    <div class="card">
+      <p class="label">排行榜 · 录取最优战绩</p>
+      <div id="lbPanel"><div class="small">读取中…</div></div>
+    </div>
   </section>
 
   <section id="help" class="screen">
@@ -369,8 +409,67 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
   </section>
 </div>
 
+<!-- 排行榜共享榜客户端：默认不加载外部脚本，避免阻塞页面渲染。只有在 LEADERBOARD.mode="supabase" 且填好 url/anonKey 时，才由 ensureSupabase() 按需异步注入 CDN 脚本；加载失败自动回退本地榜 -->
 <script>
-const SCHOOLS = [{"rank":1,"nameEn":"Princeton University","nameZh":"普林斯顿大学","state":"NJ","type":"private","acceptRate":4.4,"acceptRateIntl":2.29,"sat25":1490,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.96,"toeflMin":null,"intlPct":14.1,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Intl rate = 250/10,897 (official). SCEA rate no longer published. Test-optional in 2025-26.","region":"US"},{"rank":2,"nameEn":"Massachusetts Institute of Technology","nameZh":"麻省理工学院","state":"MA","type":"private","acceptRate":4.56,"acceptRateIntl":1.96,"sat25":1520,"sat75":1580,"act25":34,"act75":36,"gpaAvg":3.96,"toeflMin":90,"intlPct":10,"aidIntl":"need-blind","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT/ACT are ADMITTED-student mid-50 (M 780-800, ERW 740-780). EA 5.98%. Test-required.","region":"US","testReq":true},{"rank":3,"nameEn":"Harvard University","nameZh":"哈佛大学","state":"MA","type":"private","acceptRate":4.18,"acceptRateIntl":2.51,"sat25":1450,"sat75":1560,"act25":33,"act75":35,"gpaAvg":3.95,"toeflMin":null,"intlPct":15.8,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT composite summed from CDS sections (ERW 720-770, M 730-790). CDS avg GPA 4.22 is weighted, so null.","region":"US"},{"rank":4,"nameEn":"Stanford University","nameZh":"斯坦福大学","state":"CA","type":"private","acceptRate":3.8,"acceptRateIntl":2.28,"sat25":1520,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.94,"toeflMin":null,"intlPct":12.7,"aidIntl":"need-aware","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Last test-optional class; SAT/ACT required again from Class of 2030. No ED, REA only.","region":"US"},{"rank":4,"nameEn":"Yale University","nameZh":"耶鲁大学","state":"CT","type":"private","acceptRate":4.8,"acceptRateIntl":2.88,"sat25":1480,"sat75":1560,"act25":33,"act75":35,"gpaAvg":3.94,"toeflMin":100,"intlPct":11,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-flexible (SAT/ACT/AP/IB). Official 4.8% (CDS 2,387/50,264). No published avg GPA.","region":"US"},{"rank":6,"nameEn":"University of Chicago","nameZh":"芝加哥大学","state":"IL","type":"private","acceptRate":4.48,"acceptRateIntl":2.69,"sat25":1500,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.93,"toeflMin":null,"intlPct":13,"aidIntl":"need-aware","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-optional; offers EA + ED0/EDI/EDII. CDS avg GPA 4.54 is weighted, so gpaAvg null.","region":"US"},{"rank":7,"nameEn":"Duke University","nameZh":"杜克大学","state":"NC","type":"private","acceptRate":5.2,"acceptRateIntl":3.12,"sat25":1520,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":12.6,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT/ACT = mid-50 of admits who reported. Apply to Trinity or Pratt; Pratt is harder.","region":"US"},{"rank":7,"nameEn":"Johns Hopkins University","nameZh":"约翰斯·霍普金斯大学","state":"MD","type":"private","acceptRate":5.14,"acceptRateIntl":3.08,"sat25":1530,"sat75":1570,"act25":35,"act75":35,"gpaAvg":3.95,"toeflMin":100,"intlPct":13.5,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":10.49,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Apply to Krieger or Whiting; Whiting harder. Official avg unweighted GPA 3.95; ACT mid-50 = 35.","region":"US"},{"rank":7,"nameEn":"Northwestern University","nameZh":"西北大学","state":"IL","type":"private","acceptRate":7,"acceptRateIntl":4.2,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.92,"toeflMin":100,"intlPct":10,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":20,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Apply to one of 6 schools (Medill/McCormick/Bienen hardest). SAT/ACT = submitters' mid-50.","region":"US"},{"rank":7,"nameEn":"University of Pennsylvania","nameZh":"宾夕法尼亚大学","state":"PA","type":"private","acceptRate":4.9,"acceptRateIntl":2.94,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.92,"toeflMin":100,"intlPct":15,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Wharton far harder than College/Nursing. SAT/ACT = enrolled submitters. Tests required from 2030.","region":"US"},{"rank":11,"nameEn":"California Institute of Technology","nameZh":"加州理工学院","state":"CA","type":"private","acceptRate":3.78,"acceptRateIntl":2.27,"sat25":1550,"sat75":1580,"act25":35,"act75":36,"gpaAvg":3.95,"toeflMin":null,"intlPct":14,"aidIntl":"need-aware","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"REA only; Caltech says REA and RD both under 5%. SAT composite summed from CDS sections.","region":"US"},{"rank":12,"nameEn":"Cornell University","nameZh":"康奈尔大学","state":"NY","type":"private","acceptRate":8.38,"acceptRateIntl":5.03,"sat25":1490,"sat75":1550,"act25":33,"act75":35,"gpaAvg":3.9,"toeflMin":100,"intlPct":9.8,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":18.78,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Admits by 7 colleges with very different rates (Engineering/Dyson lowest, Hotel/CALS highest).","region":"US"},{"rank":13,"nameEn":"Brown University","nameZh":"布朗大学","state":"RI","type":"private","acceptRate":5.65,"acceptRateIntl":3.39,"sat25":1480,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.93,"toeflMin":100,"intlPct":14,"aidIntl":"need-blind","ed":true,"ea":false,"rea":false,"edAcceptRate":17.95,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Need-blind for internationals from Class of 2029. Test-required again since 2024-25 cycle.","region":"US"},{"rank":13,"nameEn":"Dartmouth College","nameZh":"达特茅斯学院","state":"NH","type":"private","acceptRate":6.02,"acceptRateIntl":3.61,"sat25":1440,"sat75":1550,"act25":32,"act75":35,"gpaAvg":3.93,"toeflMin":null,"intlPct":12.8,"aidIntl":"need-blind","ed":true,"ea":false,"rea":false,"edAcceptRate":21.62,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"No longer publishes mid-50 SAT/ACT; shown values are CDS 2025-26 enrolled figures. ED-only.","region":"US"},{"rank":15,"nameEn":"Columbia University","nameZh":"哥伦比亚大学","state":"NY","type":"private","acceptRate":4.94,"acceptRateIntl":2.96,"sat25":1510,"sat75":1560,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":105,"intlPct":16,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Permanently test-optional. SAT/ACT = enrolled submitters. Columbia Engineering harder than CC.","region":"US"},{"rank":15,"nameEn":"University of California, Berkeley","nameZh":"加州大学伯克利分校","state":"CA","type":"public","acceptRate":11.4,"acceptRateIntl":5.8,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":80,"intlPct":11.4,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind. EECS/CS and capped majors far harder than campus average. No need aid for intl.","region":"US"},{"rank":17,"nameEn":"Rice University","nameZh":"莱斯大学","state":"TX","type":"private","acceptRate":8.01,"acceptRateIntl":4.81,"sat25":1510,"sat75":1560,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":100,"intlPct":13,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":13.2,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-optional (scores recommended). SAT/ACT = deposited students. ED I 13.2%, ED II 6.0%.","region":"US"},{"rank":17,"nameEn":"University of California, Los Angeles","nameZh":"加州大学洛杉矶分校","state":"CA","type":"public","acceptRate":9.4,"acceptRateIntl":6.3,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.92,"toeflMin":87,"intlPct":8.4,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind. By school: Nursing 0.5%, Engineering 6.8%, College 11%. No need aid for intl.","region":"US"},{"rank":17,"nameEn":"Vanderbilt University","nameZh":"范德堡大学","state":"TN","type":"private","acceptRate":4.7,"acceptRateIntl":2.82,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.9,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":13.2,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"ED I + ED II combined 13.2% (891/6,762); RD 3.3%. Test-optional through Class of 2031.","region":"US"},{"rank":20,"nameEn":"Carnegie Mellon University","nameZh":"卡内基梅隆大学","state":"PA","type":"private","acceptRate":11.1,"acceptRateIntl":6.66,"sat25":1500,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.89,"toeflMin":102,"intlPct":19,"aidIntl":"none","ed":true,"ea":false,"rea":false,"edAcceptRate":20.6,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"SCS <5% vs Dietrich ~24%; CMU gives no need-based aid to internationals","region":"US","testReq":true},{"rank":20,"nameEn":"University of Michigan--Ann Arbor","nameZh":"密歇根大学安娜堡分校","state":"MI","type":"public","acceptRate":16.4,"acceptRateIntl":9.84,"sat25":1370,"sat75":1530,"act25":32,"act75":34,"gpaAvg":3.9,"toeflMin":100,"intlPct":null,"aidIntl":"none","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"OOS/intl far below 16.4%; Ross 7.1%, CoE 14%; binding ED added for Class of 2030","region":"US"},{"rank":20,"nameEn":"University of Notre Dame","nameZh":"圣母大学","state":"IN","type":"private","acceptRate":9,"acceptRateIntl":5.4,"sat25":1460,"sat75":1540,"act25":33,"act75":35,"gpaAvg":3.91,"toeflMin":100,"intlPct":8,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"REA 12.9% vs RD 6.7%; need-blind, no-loan aid for all students incl. international","region":"US"},{"rank":20,"nameEn":"Washington University in St. Louis","nameZh":"圣路易斯华盛顿大学","state":"MO","type":"private","acceptRate":12,"acceptRateIntl":7.2,"sat25":1490,"sat75":1550,"act25":33,"act75":35,"gpaAvg":3.86,"toeflMin":100,"intlPct":12,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"61% of class via ED; need-aware for intl; EA being added for Class of 2031","region":"US"},{"rank":24,"nameEn":"Emory University","nameZh":"埃默里大学","state":"GA","type":"private","acceptRate":10.3,"acceptRateIntl":6.3,"sat25":1500,"sat75":1570,"act25":33,"act75":35,"gpaAvg":3.83,"toeflMin":100,"intlPct":null,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":22.2,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"ED 22.2% vs RD 8.6%; Oxford Coll 13.3% vs Emory Coll 10.3%","region":"US"},{"rank":24,"nameEn":"Georgetown University","nameZh":"乔治城大学","state":"DC","type":"private","acceptRate":12.2,"acceptRateIntl":7.32,"sat25":1410,"sat75":1530,"act25":32,"act75":35,"gpaAvg":3.89,"toeflMin":100,"intlPct":12,"aidIntl":"need-aware","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Admits by school (CAS/SFS/Health/Nursing); EA is restrictive; test-required","region":"US","testReq":true},{"rank":26,"nameEn":"University of North Carolina--Chapel Hill","nameZh":"北卡罗来纳大学教堂山分校","state":"NC","type":"public","acceptRate":16.7,"acceptRateIntl":10.02,"sat25":1400,"sat75":1530,"act25":29,"act75":34,"gpaAvg":3.88,"toeflMin":null,"intlPct":5.6,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"82% of class must be NC residents; OOS/intl rate far lower than 16.7%","region":"US"},{"rank":26,"nameEn":"University of Virginia","nameZh":"弗吉尼亚大学","state":"VA","type":"public","acceptRate":15.4,"acceptRateIntl":9.24,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.89,"toeflMin":90,"intlPct":null,"aidIntl":"none","ed":true,"ea":true,"rea":false,"edAcceptRate":25.8,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 23% vs OOS 12.5%; ED 25.8%, EA 16.1%, RD 9.7%; no aid for internationals","region":"US"},{"rank":28,"nameEn":"University of Southern California","nameZh":"南加州大学","state":"CA","type":"private","acceptRate":11.2,"acceptRateIntl":6.72,"sat25":1470,"sat75":1540,"act25":32,"act75":35,"gpaAvg":3.86,"toeflMin":100,"intlPct":21,"aidIntl":"need-aware","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Fall-only rate; SCA ~2-4%; ED = Marshall pilot only; need-blind domestic only","region":"US"},{"rank":29,"nameEn":"University of California, San Diego","nameZh":"加州大学圣迭戈分校","state":"CA","type":"public","acceptRate":28.4,"acceptRateIntl":30.6,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":80,"intlPct":11,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; capped majors (CS/bioeng) far harder than 28.4%","region":"US"},{"rank":30,"nameEn":"The University of Texas--Austin","nameZh":"德克萨斯大学奥斯汀分校","state":"TX","type":"public","acceptRate":22.2,"acceptRateIntl":13.32,"sat25":1300,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":79,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"TX top 6% auto-admit fills ~75% of in-state seats; OOS/intl ~10%; no ED","region":"US","testReq":true},{"rank":30,"nameEn":"University of Florida","nameZh":"佛罗里达大学","state":"FL","type":"public","acceptRate":19.8,"acceptRateIntl":11.88,"sat25":1380,"sat75":1510,"act25":31,"act75":34,"gpaAvg":3.91,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Published 4.5-4.7 GPA is WEIGHTED; 10,510 EA + 7,659 RD admits; tests required","region":"US","testReq":true},{"rank":32,"nameEn":"Georgia Institute of Technology","nameZh":"佐治亚理工学院","state":"GA","type":"public","acceptRate":12.7,"acceptRateIntl":7.62,"sat25":1430,"sat75":1530,"act25":31,"act75":35,"gpaAvg":3.93,"toeflMin":90,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 30% vs non-resident 9%; EA1 ~33% (GA only) vs EA2 ~8%; test-required","region":"US","testReq":true},{"rank":32,"nameEn":"New York University","nameZh":"纽约大学","state":"NY","type":"private","acceptRate":7.7,"acceptRateIntl":4.62,"sat25":1480,"sat75":1550,"act25":34,"act75":35,"gpaAvg":3.81,"toeflMin":100,"intlPct":26,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"CAS/Stern/Nursing <5% each; >50% of class via ED; ED rate not published","region":"US"},{"rank":32,"nameEn":"University of California, Davis","nameZh":"加州大学戴维斯分校","state":"CA","type":"public","acceptRate":44.6,"acceptRateIntl":57.1,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.84,"toeflMin":80,"intlPct":12.8,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; UC-weighted GPA 4.00-4.26; admits by college","region":"US"},{"rank":32,"nameEn":"University of California, Irvine","nameZh":"加州大学欧文分校","state":"CA","type":"public","acceptRate":28.7,"acceptRateIntl":42.8,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.84,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; Nursing 0.8%, CS 27.6%, Engineering 26.6%","region":"US"},{"rank":36,"nameEn":"Boston College","nameZh":"波士顿学院","state":"MA","type":"private","acceptRate":14,"acceptRateIntl":8.4,"sat25":1440,"sat75":1520,"act25":33,"act75":35,"gpaAvg":3.87,"toeflMin":100,"intlPct":null,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"14% includes waitlist admits (initial ~12.6%); 4 undergrad schools","region":"US"},{"rank":36,"nameEn":"Tufts University","nameZh":"塔夫茨大学","state":"MA","type":"private","acceptRate":10.5,"acceptRateIntl":6.3,"sat25":1480,"sat75":1540,"act25":33,"act75":35,"gpaAvg":3.88,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":32,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"ED I & II only (no EA); ED 32% vs RD 8.5%; scores from CDS enrolled profile","region":"US"},{"rank":36,"nameEn":"University of Illinois Urbana-Champaign","nameZh":"伊利诺伊大学厄巴纳-香槟分校","state":"IL","type":"public","acceptRate":36.6,"acceptRateIntl":21.96,"sat25":1340,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.76,"toeflMin":79,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"First-choice-major rate 30.2% vs 36.6% campus; CS ~7-8%; Grainger Eng 21.1%","region":"US"},{"rank":36,"nameEn":"University of Wisconsin--Madison","nameZh":"威斯康星大学麦迪逊分校","state":"WI","type":"public","acceptRate":40.8,"acceptRateIntl":31.6,"sat25":1340,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.86,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 56.4%, OOS 40.3%, intl 31.6%; admits by college/school","region":"US","testReq":null},{"rank":40,"nameEn":"University of California, Santa Barbara","nameZh":"加州大学圣塔芭芭拉分校","state":"CA","type":"public","acceptRate":38.3,"acceptRateIntl":48.1,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; Engineering 21.3% vs 38.3% campus-wide","region":"US"},{"rank":1,"nameEn":"University of Oxford","nameZh":"牛津大学","state":"UK","type":"public","acceptRate":16,"acceptRateIntl":9,"sat25":1460,"sat75":1560,"act25":null,"act75":null,"gpaAvg":3.95,"toeflMin":110,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":2,"nameEn":"University of Cambridge","nameZh":"剑桥大学","state":"UK","type":"public","acceptRate":21,"acceptRateIntl":13,"sat25":1460,"sat75":1560,"act25":null,"act75":null,"gpaAvg":3.95,"toeflMin":110,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":3,"nameEn":"Imperial College London","nameZh":"帝国理工学院","state":"UK","type":"public","acceptRate":14,"acceptRateIntl":11,"sat25":1440,"sat75":1550,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":92,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":4,"nameEn":"University College London","nameZh":"伦敦大学学院","state":"UK","type":"public","acceptRate":30,"acceptRateIntl":13,"sat25":1420,"sat75":1530,"act25":null,"act75":null,"gpaAvg":3.88,"toeflMin":92,"intlPct":50,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":5,"nameEn":"London School of Economics and Political Science","nameZh":"伦敦政治经济学院","state":"UK","type":"public","acceptRate":16,"acceptRateIntl":9,"sat25":1430,"sat75":1540,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":100,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":6,"nameEn":"University of Edinburgh","nameZh":"爱丁堡大学","state":"UK","type":"public","acceptRate":47,"acceptRateIntl":20,"sat25":1400,"sat75":1520,"act25":null,"act75":null,"gpaAvg":3.82,"toeflMin":92,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":7,"nameEn":"King's College London","nameZh":"伦敦国王学院","state":"UK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1400,"sat75":1510,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":92,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":8,"nameEn":"University of Manchester","nameZh":"曼彻斯特大学","state":"UK","type":"public","acceptRate":56,"acceptRateIntl":25,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":90,"intlPct":35,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":9,"nameEn":"University of Warwick","nameZh":"华威大学","state":"UK","type":"public","acceptRate":50,"acceptRateIntl":18,"sat25":1390,"sat75":1510,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":87,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":10,"nameEn":"University of Bristol","nameZh":"布里斯托大学","state":"UK","type":"public","acceptRate":68,"acceptRateIntl":22,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":90,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":11,"nameEn":"University of Glasgow","nameZh":"格拉斯哥大学","state":"UK","type":"public","acceptRate":70,"acceptRateIntl":25,"sat25":1370,"sat75":1490,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":90,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":12,"nameEn":"University of Southampton","nameZh":"南安普顿大学","state":"UK","type":"public","acceptRate":80,"acceptRateIntl":30,"sat25":1360,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.75,"toeflMin":81,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},{"rank":13,"nameEn":"University of Hong Kong","nameZh":"香港大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":12,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":93,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},{"rank":14,"nameEn":"Chinese University of Hong Kong","nameZh":"香港中文大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1360,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":85,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},{"rank":15,"nameEn":"Hong Kong University of Science and Technology","nameZh":"香港科技大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.82,"toeflMin":85,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},{"rank":16,"nameEn":"City University of Hong Kong","nameZh":"香港城市大学","state":"HK","type":"public","acceptRate":45,"acceptRateIntl":20,"sat25":1300,"sat75":1450,"act25":null,"act75":null,"gpaAvg":3.62,"toeflMin":79,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},{"rank":17,"nameEn":"Hong Kong Polytechnic University","nameZh":"香港理工大学","state":"HK","type":"public","acceptRate":50,"acceptRateIntl":25,"sat25":1280,"sat75":1430,"act25":null,"act75":null,"gpaAvg":3.6,"toeflMin":80,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"}];
+const SCHOOLS = [
+  {"rank":1,"nameEn":"Princeton University","nameZh":"普林斯顿大学","state":"NJ","type":"private","acceptRate":4.4,"acceptRateIntl":2.29,"sat25":1490,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.96,"toeflMin":null,"intlPct":14.1,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Intl rate = 250/10,897 (official). SCEA rate no longer published. Test-optional in 2025-26.","region":"US"},
+  {"rank":2,"nameEn":"Massachusetts Institute of Technology","nameZh":"麻省理工学院","state":"MA","type":"private","acceptRate":4.56,"acceptRateIntl":1.96,"sat25":1520,"sat75":1580,"act25":34,"act75":36,"gpaAvg":3.96,"toeflMin":90,"intlPct":10,"aidIntl":"need-blind","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT/ACT are ADMITTED-student mid-50 (M 780-800, ERW 740-780). EA 5.98%. Test-required.","region":"US","testReq":true},
+  {"rank":3,"nameEn":"Harvard University","nameZh":"哈佛大学","state":"MA","type":"private","acceptRate":4.18,"acceptRateIntl":2.51,"sat25":1450,"sat75":1560,"act25":33,"act75":35,"gpaAvg":3.95,"toeflMin":null,"intlPct":15.8,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT composite summed from CDS sections (ERW 720-770, M 730-790). CDS avg GPA 4.22 is weighted, so null.","region":"US"},
+  {"rank":4,"nameEn":"Stanford University","nameZh":"斯坦福大学","state":"CA","type":"private","acceptRate":3.8,"acceptRateIntl":2.28,"sat25":1520,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.94,"toeflMin":null,"intlPct":12.7,"aidIntl":"need-aware","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Last test-optional class; SAT/ACT required again from Class of 2030. No ED, REA only.","region":"US"},
+  {"rank":4,"nameEn":"Yale University","nameZh":"耶鲁大学","state":"CT","type":"private","acceptRate":4.8,"acceptRateIntl":2.88,"sat25":1480,"sat75":1560,"act25":33,"act75":35,"gpaAvg":3.94,"toeflMin":100,"intlPct":11,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-flexible (SAT/ACT/AP/IB). Official 4.8% (CDS 2,387/50,264). No published avg GPA.","region":"US"},
+  {"rank":6,"nameEn":"University of Chicago","nameZh":"芝加哥大学","state":"IL","type":"private","acceptRate":4.48,"acceptRateIntl":2.69,"sat25":1500,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.93,"toeflMin":null,"intlPct":13,"aidIntl":"need-aware","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-optional; offers EA + ED0/EDI/EDII. CDS avg GPA 4.54 is weighted, so gpaAvg null.","region":"US"},
+  {"rank":7,"nameEn":"Duke University","nameZh":"杜克大学","state":"NC","type":"private","acceptRate":5.2,"acceptRateIntl":3.12,"sat25":1520,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":12.6,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT/ACT = mid-50 of admits who reported. Apply to Trinity or Pratt; Pratt is harder.","region":"US"},
+  {"rank":7,"nameEn":"Johns Hopkins University","nameZh":"约翰斯·霍普金斯大学","state":"MD","type":"private","acceptRate":5.14,"acceptRateIntl":3.08,"sat25":1530,"sat75":1570,"act25":35,"act75":35,"gpaAvg":3.95,"toeflMin":100,"intlPct":13.5,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":10.49,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Apply to Krieger or Whiting; Whiting harder. Official avg unweighted GPA 3.95; ACT mid-50 = 35.","region":"US"},
+  {"rank":7,"nameEn":"Northwestern University","nameZh":"西北大学","state":"IL","type":"private","acceptRate":7,"acceptRateIntl":4.2,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.92,"toeflMin":100,"intlPct":10,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":20,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Apply to one of 6 schools (Medill/McCormick/Bienen hardest). SAT/ACT = submitters' mid-50.","region":"US"},
+  {"rank":7,"nameEn":"University of Pennsylvania","nameZh":"宾夕法尼亚大学","state":"PA","type":"private","acceptRate":4.9,"acceptRateIntl":2.94,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.92,"toeflMin":100,"intlPct":15,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Wharton far harder than College/Nursing. SAT/ACT = enrolled submitters. Tests required from 2030.","region":"US"},
+  {"rank":11,"nameEn":"California Institute of Technology","nameZh":"加州理工学院","state":"CA","type":"private","acceptRate":3.78,"acceptRateIntl":2.27,"sat25":1550,"sat75":1580,"act25":35,"act75":36,"gpaAvg":3.95,"toeflMin":null,"intlPct":14,"aidIntl":"need-aware","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"REA only; Caltech says REA and RD both under 5%. SAT composite summed from CDS sections.","region":"US"},
+  {"rank":12,"nameEn":"Cornell University","nameZh":"康奈尔大学","state":"NY","type":"private","acceptRate":8.38,"acceptRateIntl":5.03,"sat25":1490,"sat75":1550,"act25":33,"act75":35,"gpaAvg":3.9,"toeflMin":100,"intlPct":9.8,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":18.78,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Admits by 7 colleges with very different rates (Engineering/Dyson lowest, Hotel/CALS highest).","region":"US"},
+  {"rank":13,"nameEn":"Brown University","nameZh":"布朗大学","state":"RI","type":"private","acceptRate":5.65,"acceptRateIntl":3.39,"sat25":1480,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.93,"toeflMin":100,"intlPct":14,"aidIntl":"need-blind","ed":true,"ea":false,"rea":false,"edAcceptRate":17.95,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Need-blind for internationals from Class of 2029. Test-required again since 2024-25 cycle.","region":"US"},
+  {"rank":13,"nameEn":"Dartmouth College","nameZh":"达特茅斯学院","state":"NH","type":"private","acceptRate":6.02,"acceptRateIntl":3.61,"sat25":1440,"sat75":1550,"act25":32,"act75":35,"gpaAvg":3.93,"toeflMin":null,"intlPct":12.8,"aidIntl":"need-blind","ed":true,"ea":false,"rea":false,"edAcceptRate":21.62,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"No longer publishes mid-50 SAT/ACT; shown values are CDS 2025-26 enrolled figures. ED-only.","region":"US"},
+  {"rank":15,"nameEn":"Columbia University","nameZh":"哥伦比亚大学","state":"NY","type":"private","acceptRate":4.94,"acceptRateIntl":2.96,"sat25":1510,"sat75":1560,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":105,"intlPct":16,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Permanently test-optional. SAT/ACT = enrolled submitters. Columbia Engineering harder than CC.","region":"US"},
+  {"rank":15,"nameEn":"University of California, Berkeley","nameZh":"加州大学伯克利分校","testBlind":true,"state":"CA","type":"public","acceptRate":11.4,"acceptRateIntl":5.8,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":80,"intlPct":11.4,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind. EECS/CS and capped majors far harder than campus average. No need aid for intl.","region":"US"},
+  {"rank":17,"nameEn":"Rice University","nameZh":"莱斯大学","state":"TX","type":"private","acceptRate":8.01,"acceptRateIntl":4.81,"sat25":1510,"sat75":1560,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":100,"intlPct":13,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":13.2,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-optional (scores recommended). SAT/ACT = deposited students. ED I 13.2%, ED II 6.0%.","region":"US"},
+  {"rank":17,"nameEn":"University of California, Los Angeles","nameZh":"加州大学洛杉矶分校","testBlind":true,"state":"CA","type":"public","acceptRate":9.4,"acceptRateIntl":6.3,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.92,"toeflMin":87,"intlPct":8.4,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind. By school: Nursing 0.5%, Engineering 6.8%, College 11%. No need aid for intl.","region":"US"},
+  {"rank":17,"nameEn":"Vanderbilt University","nameZh":"范德堡大学","state":"TN","type":"private","acceptRate":4.7,"acceptRateIntl":2.82,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.9,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":13.2,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"ED I + ED II combined 13.2% (891/6,762); RD 3.3%. Test-optional through Class of 2031.","region":"US"},
+  {"rank":20,"nameEn":"Carnegie Mellon University","nameZh":"卡内基梅隆大学","state":"PA","type":"private","acceptRate":11.1,"acceptRateIntl":6.66,"sat25":1500,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.89,"toeflMin":102,"intlPct":19,"aidIntl":"none","ed":true,"ea":false,"rea":false,"edAcceptRate":20.6,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"SCS <5% vs Dietrich ~24%; CMU gives no need-based aid to internationals","region":"US","testReq":true},
+  {"rank":20,"nameEn":"University of Michigan--Ann Arbor","nameZh":"密歇根大学安娜堡分校","state":"MI","type":"public","acceptRate":16.4,"acceptRateIntl":9.84,"sat25":1370,"sat75":1530,"act25":32,"act75":34,"gpaAvg":3.9,"toeflMin":100,"intlPct":null,"aidIntl":"none","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"OOS/intl far below 16.4%; Ross 7.1%, CoE 14%; binding ED added for Class of 2030","region":"US"},
+  {"rank":20,"nameEn":"University of Notre Dame","nameZh":"圣母大学","state":"IN","type":"private","acceptRate":9,"acceptRateIntl":5.4,"sat25":1460,"sat75":1540,"act25":33,"act75":35,"gpaAvg":3.91,"toeflMin":100,"intlPct":8,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"REA 12.9% vs RD 6.7%; need-blind, no-loan aid for all students incl. international","region":"US"},
+  {"rank":20,"nameEn":"Washington University in St. Louis","nameZh":"圣路易斯华盛顿大学","state":"MO","type":"private","acceptRate":12,"acceptRateIntl":7.2,"sat25":1490,"sat75":1550,"act25":33,"act75":35,"gpaAvg":3.86,"toeflMin":100,"intlPct":12,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"61% of class via ED; need-aware for intl; EA being added for Class of 2031","region":"US"},
+  {"rank":24,"nameEn":"Emory University","nameZh":"埃默里大学","state":"GA","type":"private","acceptRate":10.3,"acceptRateIntl":6.3,"sat25":1500,"sat75":1570,"act25":33,"act75":35,"gpaAvg":3.83,"toeflMin":100,"intlPct":null,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":22.2,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"ED 22.2% vs RD 8.6%; Oxford Coll 13.3% vs Emory Coll 10.3%","region":"US"},
+  {"rank":24,"nameEn":"Georgetown University","nameZh":"乔治城大学","state":"DC","type":"private","acceptRate":12.2,"acceptRateIntl":7.32,"sat25":1410,"sat75":1530,"act25":32,"act75":35,"gpaAvg":3.89,"toeflMin":100,"intlPct":12,"aidIntl":"need-aware","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Admits by school (CAS/SFS/Health/Nursing); EA is restrictive; test-required","region":"US","testReq":true},
+  {"rank":26,"nameEn":"University of North Carolina--Chapel Hill","nameZh":"北卡罗来纳大学教堂山分校","state":"NC","type":"public","acceptRate":16.7,"acceptRateIntl":10.02,"sat25":1400,"sat75":1530,"act25":29,"act75":34,"gpaAvg":3.88,"toeflMin":null,"intlPct":5.6,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"82% of class must be NC residents; OOS/intl rate far lower than 16.7%","region":"US"},
+  {"rank":26,"nameEn":"University of Virginia","nameZh":"弗吉尼亚大学","state":"VA","type":"public","acceptRate":15.4,"acceptRateIntl":9.24,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.89,"toeflMin":90,"intlPct":null,"aidIntl":"none","ed":true,"ea":true,"rea":false,"edAcceptRate":25.8,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 23% vs OOS 12.5%; ED 25.8%, EA 16.1%, RD 9.7%; no aid for internationals","region":"US"},
+  {"rank":28,"nameEn":"University of Southern California","nameZh":"南加州大学","state":"CA","type":"private","acceptRate":11.2,"acceptRateIntl":6.72,"sat25":1470,"sat75":1540,"act25":32,"act75":35,"gpaAvg":3.86,"toeflMin":100,"intlPct":21,"aidIntl":"need-aware","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Fall-only rate; SCA ~2-4%; ED = Marshall pilot only; need-blind domestic only","region":"US"},
+  {"rank":29,"nameEn":"University of California, San Diego","nameZh":"加州大学圣迭戈分校","testBlind":true,"state":"CA","type":"public","acceptRate":28.4,"acceptRateIntl":30.6,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":80,"intlPct":11,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; capped majors (CS/bioeng) far harder than 28.4%","region":"US"},
+  {"rank":30,"nameEn":"The University of Texas--Austin","nameZh":"德克萨斯大学奥斯汀分校","state":"TX","type":"public","acceptRate":22.2,"acceptRateIntl":13.32,"sat25":1300,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":79,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"TX top 6% auto-admit fills ~75% of in-state seats; OOS/intl ~10%; no ED","region":"US","testReq":true},
+  {"rank":30,"nameEn":"University of Florida","nameZh":"佛罗里达大学","state":"FL","type":"public","acceptRate":19.8,"acceptRateIntl":11.88,"sat25":1380,"sat75":1510,"act25":31,"act75":34,"gpaAvg":3.91,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Published 4.5-4.7 GPA is WEIGHTED; 10,510 EA + 7,659 RD admits; tests required","region":"US","testReq":true},
+  {"rank":32,"nameEn":"Georgia Institute of Technology","nameZh":"佐治亚理工学院","state":"GA","type":"public","acceptRate":12.7,"acceptRateIntl":7.62,"sat25":1430,"sat75":1530,"act25":31,"act75":35,"gpaAvg":3.93,"toeflMin":90,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 30% vs non-resident 9%; EA1 ~33% (GA only) vs EA2 ~8%; test-required","region":"US","testReq":true},
+  {"rank":32,"nameEn":"New York University","nameZh":"纽约大学","state":"NY","type":"private","acceptRate":7.7,"acceptRateIntl":4.62,"sat25":1480,"sat75":1550,"act25":34,"act75":35,"gpaAvg":3.81,"toeflMin":100,"intlPct":26,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"CAS/Stern/Nursing <5% each; >50% of class via ED; ED rate not published","region":"US"},
+  {"rank":32,"nameEn":"University of California, Davis","nameZh":"加州大学戴维斯分校","testBlind":true,"state":"CA","type":"public","acceptRate":44.6,"acceptRateIntl":57.1,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.84,"toeflMin":80,"intlPct":12.8,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; UC-weighted GPA 4.00-4.26; admits by college","region":"US"},
+  {"rank":32,"nameEn":"University of California, Irvine","nameZh":"加州大学欧文分校","testBlind":true,"state":"CA","type":"public","acceptRate":28.7,"acceptRateIntl":42.8,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.84,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; Nursing 0.8%, CS 27.6%, Engineering 26.6%","region":"US"},
+  {"rank":36,"nameEn":"Boston College","nameZh":"波士顿学院","state":"MA","type":"private","acceptRate":14,"acceptRateIntl":8.4,"sat25":1440,"sat75":1520,"act25":33,"act75":35,"gpaAvg":3.87,"toeflMin":100,"intlPct":null,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"14% includes waitlist admits (initial ~12.6%); 4 undergrad schools","region":"US"},
+  {"rank":36,"nameEn":"Tufts University","nameZh":"塔夫茨大学","state":"MA","type":"private","acceptRate":10.5,"acceptRateIntl":6.3,"sat25":1480,"sat75":1540,"act25":33,"act75":35,"gpaAvg":3.88,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":32,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"ED I & II only (no EA); ED 32% vs RD 8.5%; scores from CDS enrolled profile","region":"US"},
+  {"rank":36,"nameEn":"University of Illinois Urbana-Champaign","nameZh":"伊利诺伊大学厄巴纳-香槟分校","state":"IL","type":"public","acceptRate":36.6,"acceptRateIntl":21.96,"sat25":1340,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.76,"toeflMin":79,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"First-choice-major rate 30.2% vs 36.6% campus; CS ~7-8%; Grainger Eng 21.1%","region":"US"},
+  {"rank":36,"nameEn":"University of Wisconsin--Madison","nameZh":"威斯康星大学麦迪逊分校","state":"WI","type":"public","acceptRate":40.8,"acceptRateIntl":31.6,"sat25":1340,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.86,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 56.4%, OOS 40.3%, intl 31.6%; admits by college/school","region":"US","testReq":null},
+  {"rank":40,"nameEn":"University of California, Santa Barbara","nameZh":"加州大学圣塔芭芭拉分校","testBlind":true,"state":"CA","type":"public","acceptRate":38.3,"acceptRateIntl":48.1,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; Engineering 21.3% vs 38.3% campus-wide","region":"US"},
+  {"rank":1,"nameEn":"University of Oxford","nameZh":"牛津大学","state":"UK","type":"public","acceptRate":16,"acceptRateIntl":9,"sat25":1460,"sat75":1560,"act25":null,"act75":null,"gpaAvg":3.95,"toeflMin":110,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":2,"nameEn":"University of Cambridge","nameZh":"剑桥大学","state":"UK","type":"public","acceptRate":21,"acceptRateIntl":13,"sat25":1460,"sat75":1560,"act25":null,"act75":null,"gpaAvg":3.95,"toeflMin":110,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":3,"nameEn":"Imperial College London","nameZh":"帝国理工学院","state":"UK","type":"public","acceptRate":14,"acceptRateIntl":11,"sat25":1440,"sat75":1550,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":92,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":4,"nameEn":"University College London","nameZh":"伦敦大学学院","state":"UK","type":"public","acceptRate":30,"acceptRateIntl":13,"sat25":1420,"sat75":1530,"act25":null,"act75":null,"gpaAvg":3.88,"toeflMin":92,"intlPct":50,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":5,"nameEn":"London School of Economics and Political Science","nameZh":"伦敦政治经济学院","state":"UK","type":"public","acceptRate":16,"acceptRateIntl":9,"sat25":1430,"sat75":1540,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":100,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":6,"nameEn":"University of Edinburgh","nameZh":"爱丁堡大学","state":"UK","type":"public","acceptRate":47,"acceptRateIntl":20,"sat25":1400,"sat75":1520,"act25":null,"act75":null,"gpaAvg":3.82,"toeflMin":92,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":7,"nameEn":"King's College London","nameZh":"伦敦国王学院","state":"UK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1400,"sat75":1510,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":92,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":8,"nameEn":"University of Manchester","nameZh":"曼彻斯特大学","state":"UK","type":"public","acceptRate":56,"acceptRateIntl":25,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":90,"intlPct":35,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":9,"nameEn":"University of Warwick","nameZh":"华威大学","state":"UK","type":"public","acceptRate":50,"acceptRateIntl":18,"sat25":1390,"sat75":1510,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":87,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":10,"nameEn":"University of Bristol","nameZh":"布里斯托大学","state":"UK","type":"public","acceptRate":68,"acceptRateIntl":22,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":90,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":11,"nameEn":"University of Glasgow","nameZh":"格拉斯哥大学","state":"UK","type":"public","acceptRate":70,"acceptRateIntl":25,"sat25":1370,"sat75":1490,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":90,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":12,"nameEn":"University of Southampton","nameZh":"南安普顿大学","state":"UK","type":"public","acceptRate":80,"acceptRateIntl":30,"sat25":1360,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.75,"toeflMin":81,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
+  {"rank":13,"nameEn":"University of Hong Kong","nameZh":"香港大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":12,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":93,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},
+  {"rank":14,"nameEn":"Chinese University of Hong Kong","nameZh":"香港中文大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1360,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":85,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},
+  {"rank":15,"nameEn":"Hong Kong University of Science and Technology","nameZh":"香港科技大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.82,"toeflMin":85,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},
+  {"rank":16,"nameEn":"City University of Hong Kong","nameZh":"香港城市大学","state":"HK","type":"public","acceptRate":45,"acceptRateIntl":20,"sat25":1300,"sat75":1450,"act25":null,"act75":null,"gpaAvg":3.62,"toeflMin":79,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},
+  {"rank":17,"nameEn":"Hong Kong Polytechnic University","nameZh":"香港理工大学","state":"HK","type":"public","acceptRate":50,"acceptRateIntl":25,"sat25":1280,"sat75":1430,"act25":null,"act75":null,"gpaAvg":3.6,"toeflMin":80,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"}
+];
 
 /* ---------- utils ---------- */
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -402,7 +501,11 @@ const ICON={
 const ic=(n,cls)=>'<span class="ico'+(cls?' '+cls:'')+'">'+(ICON[n]||ICON.star)+'</span>';
 
 /* ---------- config ---------- */
-const TOTAL_ROUNDS=7, AP_BY_ROUND=[3,3,4,4,5,5,8], START_POINTS=24, DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=20;
+const TOTAL_ROUNDS=7, AP_BY_ROUND=[3,3,4,4,5,5,8], DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=20;
+const SEM_W=[0.8,0.8,1.0,1.0,1.1,1.1,1.2];   // §4.6 学期权重：高年级成绩更重（美本“看趋势”），初三权重最低
+const EPS_SIGMA=1.0;  // §5.1 共同冲击：每轮申请季抽一次 ε~N(0,σ)，让各校录取相关、制造“本季好坏年”波动
+const ADMIT_SCALE=1.5;  // 重标定：录取强度系数（原 3.0）。#4 移除 blanket×0.62 后 base 率偏高，下调至 1.5 压缩强档优势、恢复保底校真实不确定性；同时让 ε 冲击相对更强。
+const START_POINTS=24;   // 开局起始点数（固定）
 // 行动点随年级递增：初三 3 / 高一 4 / 高二 5 / 高三上 8（全季共 32，与原 8×4 一致）
 function apMaxThisRound(){ return (AP_BY_ROUND[G.round]||0) + sumFx('apDelta',0); }
 const STAT_NAMES={academic:"学术",english:"英语",stamina:"精力上限",creativity:"创造力",social:"社交",luck:"运气"};
@@ -419,7 +522,6 @@ const CAT_ICON={academic:"book",social:"people",chance:"star",health:"heart",fam
 
 /* GPA：真实成绩单制 */
 const GRADE_SCALE=[["A",4.0],["A-",3.7],["B+",3.3],["B",3.0],["B-",2.7],["C+",2.3],["C",2.0],["C-",1.7],["D+",1.3],["D",1.0],["F",0.0]];
-const LEVEL_NAME={AP:"AP",H:"Honors",R:"常规"};
 const LEVEL_BONUS={AP:1.0,H:0.5,R:0};
 const LEVEL_DIFF={AP:0.20,H:0.10,R:0};
 const RIGOR={
@@ -459,7 +561,7 @@ const ACHIEVEMENTS=[
   {id:"awards3", name:"3 个以上国家级奖项",  test:(r,s)=>r.awards>=3},
   {id:"perfect", name:"单学期满绩 4.0",     test:(r,s)=>r.semesters.some(x=>x.gpaU>=3.98)},
   {id:"zen",     name:"零压力毕业（峰值<30）",test:(r,s)=>r.stressMax<30},
-  {id:"rep80",   name:"声望 80+",           test:(r,s)=>r.reputation>=80},
+  {id:"rep10",   name:"声望 10+",           test:(r,s)=>r.reputation>=10},
   {id:"craft9",  name:"文书与推荐信双 9+",   test:(r,s)=>r.essayQuality>=9&&r.recQuality>=9},
   {id:"noC",     name:"全学期无 C 及以下",   test:(r,s)=>r.semesters.every(x=>x.courses.every(c=>c.p>=3.0))},
   {id:"balanced",name:"六维全部 6+",         test:(r,s)=>Object.values(s).every(v=>v>=6)}
@@ -471,6 +573,7 @@ function freshState(stats,traits,rigor,major){
   return {
     round:0, ap:AP_BY_ROUND[0],
     energy:55, stress:0,
+    semAcc:{eSum:0,sSum:0,n:0},   // #3 本学期精力/压力均值累计
     stats:Object.assign({},stats),
     traits:traits||[], rigor:rigor||"mixed", major:major||"und",
     majorFit:30,
@@ -478,10 +581,11 @@ function freshState(stats,traits,rigor,major){
              reputation:0,recQuality:3,essayQuality:3,stressMax:0,
              spike:0, summerPts:0},
     summerDone:false,
+    powerCount:0,   // #10 本局已抽到的 power 事件次数（上限 2）
     log:[], usedEvents:[], phase:'event', dealtBasic:null, dealtRand:[]
   };
 }
-function maxEnergy(){ return 55 + 4*G.stats.stamina + sumFx('stamina',0); }
+function maxEnergy(){ return 50 + 6*G.stats.stamina + sumFx('stamina',0); }   // §4.3 精力斜率加陡：stamina 更值钱
 function cumGPA(kind){
   const ss=G.results.semesters;
   if(!ss.length) return 0;
@@ -556,6 +660,12 @@ function normalizeTo24(){
     const ks=Object.keys(editStats).sort((a,b)=>editStats[b]-editStats[a]);
     for(const k of ks){ if(editStats[k]>1){editStats[k]--;break;} }
   }
+  // #9：点数没花满时补回（原逻辑只做减法，导致可低于 24 点开局）
+  while(ptsUsed()<START_POINTS){
+    const ks=Object.keys(editStats).filter(k=>editStats[k]<12);
+    if(!ks.length) break;
+    editStats[pick(ks)]++;
+  }
 }
 
 const STAGES=[
@@ -573,35 +683,31 @@ const yrLabel=r=>STAGES[r].yr+STAGES[r].sem;
 const EVENTS=[
   {
 id:"flu",icon:"烧",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"模考当天发烧",text:"喉咙像吞了砂纸，今天状态全无，考试直接请假。",
-   effect:g=>{g.stress=clamp(g.stress+12,0,100);g.energy=clamp(g.energy-10,0,maxEnergy());return ["bad","发烧退赛，压力 +12、精力 −10。"];}
+   effect:g=>{addStress(g,+12);g.energy=clamp(g.energy-10,0,maxEnergy());return ["bad","发烧退赛，压力 +12、精力 −10。"];}
   },
   {
 id:"pet",icon:"猫",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"撸猫治愈",text:"邻居的猫主动蹭过来，紧绷的神经一下松了。",
-   effect:g=>{g.stress=clamp(g.stress-15,0,100);g.energy=clamp(g.energy+5,0,maxEnergy());return ["good","猫猫治愈，压力 −15、精力 +5。"];}
+   effect:g=>{addStress(g,-15);g.energy=clamp(g.energy+5,0,maxEnergy());return ["good","猫猫治愈，压力 −15、精力 +5。"];}
   },
   {
 id:"carepkg",icon:"箱",cat:"family",stage:[0,1,2,3,4,5,6,7],title:"爸妈空投补给",text:"一箱零食加现金寄到，家的味道最治愈。",
-   effect:g=>{g.energy=clamp(g.energy+12,0,maxEnergy());g.stress=clamp(g.stress-8,0,100);return ["good","家庭补给，精力 +12、压力 −8。"];}
+   effect:g=>{g.energy=clamp(g.energy+12,0,maxEnergy());addStress(g,-8);return ["good","家庭补给，精力 +12、压力 −8。"];}
   },
   {
 id:"gacha",icon:"金",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"抽卡出金",text:"游戏里一发入魂，今天运气玄学在线。",
    effect:g=>{g.stats.luck=clamp(g.stats.luck+1,1,12);return ["good","欧气转移，运气 +1。"];}
   },
   {
-id:"lucky",icon:"鲤",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"锦鲤附体",text:"干啥都顺，连抽卡都出金。",
-   effect:g=>{g.stats.luck=clamp(g.stats.luck+1,1,12);return ["good","欧气满满，运气 +1。"];}
-  },
-  {
 id:"burnout",icon:"崩",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"倦怠预警",text:"连续高强度，身体亮红灯。",
-   effect:g=>{g.energy=clamp(g.energy-15,0,maxEnergy());g.stress=clamp(g.stress+12,0,100);return ["bad","倦怠预警，精力 −15、压力 +12。快去休息！"];}
+   effect:g=>{g.energy=clamp(g.energy-15,0,maxEnergy());addStress(g,+12);return ["bad","倦怠预警，精力 −15、压力 +12。快去休息！"];}
   },
   {
 id:"shorts",icon:"短",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"短视频上头",text:"刷了一晚短视频，啥也没干。",
-   effect:g=>{g.energy=clamp(g.energy-8,0,maxEnergy());g.stress=clamp(g.stress-5,0,100);return ["warn","时间黑洞，精力 −8、压力 −5。"];}
+   effect:g=>{g.energy=clamp(g.energy-8,0,maxEnergy());addStress(g,+3);return ["warn","时间黑洞，精力 −8、压力 +3（越刷越慌，什么也没干）。"];}   // 压力系统①：刷短视频本应浪费时间带来焦虑，原为 −5 减压属“该加却减”，改为 +3
   },
   {
 id:"proc",icon:"瘫",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"沙发封印一整天",text:"意志力被封印，啥也没干。",
-   effect:g=>{g.stress=clamp(g.stress-8,0,100);return ["warn","摆烂一天，压力 −8，但进度为零。"];}
+   effect:g=>{addStress(g,+4);return ["warn","摆烂一天，压力 +4（其实更焦虑了），进度还是零。"];}   // 压力系统①：瘫一整天本应更焦虑，原为 −8 减压属“该加却减”，改为 +4
   },
   {
 id:"scholar",icon:"光",cat:"chance",stage:[0,1,2,3,4,5,6,7],title:"天降奖学金情报",text:"刷到一条小众项目，正好对口你的特长。",
@@ -633,41 +739,41 @@ id:"exchange",icon:"飞",cat:"social",stage:[2,3,4,5,6,7],title:"交流项目名
   },
   {
 id:"fit",icon:"跑",cat:"health",stage:[0,1,2,3,4,5,6,7],title:"健身打卡",text:"坚持晨跑一个月，体能和精神都好了。",
-   effect:g=>{g.stats.stamina=clamp(g.stats.stamina+1,1,12);g.stress=clamp(g.stress-6,0,100);return ["good","健身回血，精力上限 +1、压力 −6。"];}
+   effect:g=>{g.stats.stamina=clamp(g.stats.stamina+1,1,12);addStress(g,-6);return ["good","健身回血，精力上限 +1、压力 −6。"];}
   },
   {
 id:"roommate",icon:"室",cat:"academic",stage:[2,3,4,5,6,7],title:"室友是卷王",text:"室友天天打卡图书馆，你被卷进去了。",
-   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","被室友带飞，学术 +1、压力 +6。"];}
+   effect:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);addStress(g,+6);return ["warn","被室友带飞，学术 +1、压力 +6。"];}
   },
   {
 id:"farewell",icon:"别",cat:"social",stage:[2,3,4,5,6,7],title:"好友转学",text:"最好的朋友去了别的城市，有点失落。",
-   effect:g=>{g.stats.social=clamp(g.stats.social-1,1,12);g.stress=clamp(g.stress+6,0,100);return ["bad","离别情绪，社交 −1、压力 +6。"];}
+   effect:g=>{g.stats.social=clamp(g.stats.social-1,1,12);addStress(g,+6);return ["bad","离别情绪，社交 −1、压力 +6。"];}
   },
   {
 id:"fomo",icon:"焦",cat:"social",stage:[6,7],title:"朋友圈焦虑",text:"看别人晒 offer 预热，开始自我怀疑。",
-   effect:g=>{g.stress=clamp(g.stress+9,0,100);return ["bad","同辈压力，压力 +9。"];}
+   effect:g=>{addStress(g,+9);return ["bad","同辈压力，压力 +9。"];}
   },
   {
 id:"family",icon:"家",cat:"family",stage:[2,3,4,5,6,7],title:"家里出了点事",text:"家里临时有变故，你不得不分担。",
    choices:[
-     {label:"自己扛下来",hint:"社交+1 压力+6",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","顶住压力，社交 +1、压力 +6。"];}},
-     {label:"找老师求助",hint:"压力-4 精力-5",apply:g=>{g.stress=clamp(g.stress-4,0,100);g.energy=clamp(g.energy-5,0,maxEnergy());return ["good","及时求助，压力 −4、精力 −5。"];}}
+     {label:"自己扛下来",hint:"社交+1 压力+6",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);addStress(g,+6);return ["warn","顶住压力，社交 +1、压力 +6。"];}},
+     {label:"找老师求助",hint:"压力-4 精力-5",apply:g=>{addStress(g,-4);g.energy=clamp(g.energy-5,0,maxEnergy());return ["good","及时求助，压力 −4、精力 −5。"];}}
    ]
   },
   {
 id:"family_trip",icon:"家",cat:"family",stage:[0,1,2,3,4,5,6,7],title:"全家短途旅行",text:"爸妈强行把你拖去周边游，强制断电两天。",
-   effect:g=>{g.stress=clamp(g.stress-12,0,100);g.energy=clamp(g.energy+10,0,maxEnergy());return ["good","旅行回血，压力 −12、精力 +10。"];}
+   effect:g=>{addStress(g,-12);g.energy=clamp(g.energy+10,0,maxEnergy());return ["good","旅行回血，压力 −12、精力 +10。"];}
   },
   {
 id:"zk_mock",icon:"测",cat:"academic",stage:[0,1],fit:4,title:"中考一模出炉",text:"成绩不理想，但暴露了薄弱知识点。",
    choices:[
-     {label:"分析错题复盘",hint:"学术+1 压力-3",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","查漏补缺，学术 +1、压力 −3。"];}},
-     {label:"先摆烂两天",hint:"压力-6",apply:g=>{g.stress=clamp(g.stress-6,0,100);return ["warn","缓口气，压力 −6，但没涨分。"];}}
+     {label:"分析错题复盘",hint:"学术+1 压力-3",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);addStress(g,-3);return ["good","查漏补缺，学术 +1、压力 −3。"];}},
+     {label:"先摆烂两天",hint:"压力-6",apply:g=>{addStress(g,-6);return ["warn","缓口气，压力 −6，但没涨分。"];}}
    ]
   },
   {
 id:"zk_sports",icon:"跑",cat:"health",stage:[0,1],title:"中考体育集训",text:"每天放学后狂练跑步，体能肉眼可见地上来了。",
-   effect:g=>{g.stats.stamina=clamp(g.stats.stamina+1,1,12);g.energy=clamp(g.energy-8,0,maxEnergy());g.stress=clamp(g.stress+3,0,100);return ["good","体能提升，精力上限 +1、精力 −8。"];}
+   effect:g=>{g.stats.stamina=clamp(g.stats.stamina+1,1,12);g.energy=clamp(g.energy-8,0,maxEnergy());addStress(g,+3);return ["good","体能提升，精力上限 +1、精力 −8。"];}
   },
   {
 id:"zk_club",icon:"戏",cat:"social",stage:[0,1],title:"初中社团招新",text:"你挑了一个感兴趣的社团，认识了同好。",
@@ -676,17 +782,17 @@ id:"zk_club",icon:"戏",cat:"social",stage:[0,1],title:"初中社团招新",text
   {
 id:"zk_interest",icon:"灵",cat:"creative",stage:[0,1],fit:4,title:"兴趣萌芽",text:"你迷上了某样东西，眼睛一下亮了。",
    choices:[
-     {label:"深究下去",hint:"创造力+1.5 压力-3",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+1.5,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","天赋被点燃，创造力 +1.5、压力 −3。"];}},
+     {label:"深究下去",hint:"创造力+1.5 压力-3",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+1.5,1,12);addStress(g,-3);return ["good","天赋被点燃，创造力 +1.5、压力 −3。"];}},
      {label:"浅尝辄止",hint:"创造力+0.5",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+0.5,1,12);return ["good","体验一下，创造力 +0.5。"];}}
    ]
   },
   {
 id:"zk_parent",icon:"压",cat:"family",stage:[0,1],title:"家长会后施压",text:"“别人家孩子都签约重点了！”压力暴增。",
-   effect:g=>{g.stress=clamp(g.stress+14,0,100);return ["bad","家长施压，压力 +14。记得找时间休息。"];}
+   effect:g=>{addStress(g,+14);return ["bad","家长施压，压力 +14。记得找时间休息。"];}
   },
   {
 id:"zk_burnout",icon:"熬",cat:"health",stage:[0,1],title:"刷题到吐",text:"中考题海战术，人麻了。",
-   effect:g=>{g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+10,0,100);return ["bad","连轴转，精力 −12、压力 +10。"];}
+   effect:g=>{g.energy=clamp(g.energy-12,0,maxEnergy());addStress(g,+10);return ["bad","连轴转，精力 −12、压力 +10。"];}
   },
   {
 id:"zk_friend",icon:"友",cat:"social",stage:[0,1],title:"初中死党",text:"和死党约好以后要同校。",
@@ -695,8 +801,8 @@ id:"zk_friend",icon:"友",cat:"social",stage:[0,1],title:"初中死党",text:"�
   {
 id:"hs_adapt",icon:"书",cat:"academic",stage:[2,3],title:"高中第一课",text:"节奏和初中完全不同，你有点懵。",
    choices:[
-     {label:"调整节奏",hint:"学术+1 压力-3",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress-3,0,100);return ["good","找到节奏，学术 +1、压力 −3。"];}},
-     {label:"硬扛",hint:"学术+0 压力+6",apply:g=>{g.stress=clamp(g.stress+6,0,100);return ["warn","硬撑着，压力 +6。"];}}
+     {label:"调整节奏",hint:"学术+1 压力-3",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);addStress(g,-3);return ["good","找到节奏，学术 +1、压力 −3。"];}},
+     {label:"硬扛",hint:"学术+0 压力+6",apply:g=>{addStress(g,+6);return ["warn","硬撑着，压力 +6。"];}}
    ]
   },
   {
@@ -709,7 +815,7 @@ id:"hs_teacher",icon:"导",cat:"academic",stage:[2,3],title:"遇上好老师",te
   },
   {
 id:"hs_fail",icon:"砸",cat:"academic",stage:[2,3],title:"第一次月考翻车",text:"高中第一次大考，措手不及。",
-   effect:g=>{g.stress=clamp(g.stress+6,0,100);return ["bad","小测翻车，压力 +6。"];}
+   effect:g=>{addStress(g,+6);return ["bad","小测翻车，压力 +6。"];}
   },
   {
 id:"hs_explore",icon:"探",cat:"creative",stage:[2,3],title:"社团初体验",text:"你在社团里找到归属感。",
@@ -718,15 +824,15 @@ id:"hs_explore",icon:"探",cat:"creative",stage:[2,3],title:"社团初体验",te
   {
 id:"sat_prep",icon:"测",cat:"academic",stage:[4,5],fit:4,title:"SAT 首考倒计时",text:"标化首考临近，你开始紧张。",
    choices:[
-     {label:"全力冲刺",hint:"英语+1 精力-12 压力+6",apply:g=>{g.stats.english=clamp(g.stats.english+1,1,12);g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+6,0,100);return ["warn","冲刺提分，英语 +1、精力 −12、压力 +6。"];}},
-     {label:"平常心",hint:"压力-3",apply:g=>{g.stress=clamp(g.stress-3,0,100);return ["good","稳住心态，压力 −3。"];}}
+     {label:"全力冲刺",hint:"英语+1 精力-12 压力+6",apply:g=>{g.stats.english=clamp(g.stats.english+1,1,12);g.energy=clamp(g.energy-12,0,maxEnergy());addStress(g,+6);return ["warn","冲刺提分，英语 +1、精力 −12、压力 +6。"];}},
+     {label:"平常心",hint:"压力-3",apply:g=>{addStress(g,-3);return ["good","稳住心态，压力 −3。"];}}
    ]
   },
   {
 id:"contest_season",icon:"奥",cat:"award",stage:[4,5],fit:4,title:"竞赛季来临",text:"各类学科竞赛扎堆，你挑了主攻方向。",
    choices:[
      {label:"全力冲奖",hint:"奖项+2 精力-15",apply:g=>{g.results.awards+=2;g.energy=clamp(g.energy-15,0,maxEnergy());return ["good","竞赛发力，奖项 +2，精力 −15。"];}},
-     {label:"浅尝辄止",hint:"压力-5",apply:g=>{g.stress=clamp(g.stress-5,0,100);return ["warn","体验一下，压力 −5，没拿奖。"];}}
+     {label:"浅尝辄止",hint:"压力-5",apply:g=>{addStress(g,-5);return ["warn","体验一下，压力 −5，没拿奖。"];}}
    ]
   },
   {
@@ -735,13 +841,13 @@ id:"research_start",icon:"研",cat:"academic",stage:[4,5],fit:4,title:"进实验
   },
   {
 id:"ap_exam",icon:"考",cat:"academic",stage:[4,5],title:"AP 大考周",text:"一周五门 AP，脑子快要炸了。",
-   effect:g=>{g.energy=clamp(g.energy-10,0,maxEnergy());g.stress=clamp(g.stress+8,0,100);return ["warn","AP 周，精力 −10、压力 +8。"];}
+   effect:g=>{g.energy=clamp(g.energy-10,0,maxEnergy());addStress(g,+8);return ["warn","AP 周，精力 −10、压力 +8。"];}
   },
   {
 id:"summer_program",icon:"夏",cat:"chance",stage:[4,5],title:"夏校放榜",text:"梦校夏校结果下来了。",
    choices:[
      {label:"录取！",hint:"社交+1 履历+",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.ecs.push("夏校");return ["good","夏校录取，社交 +1、履历 +。"];}},
-     {label:"被拒",hint:"学术+1 压力+6",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);g.stress=clamp(g.stress+6,0,100);return ["warn","被拒但更拼了，学术 +1、压力 +6。"];}}
+     {label:"被拒",hint:"学术+1 压力+6",apply:g=>{g.stats.academic=clamp(g.stats.academic+1,1,12);addStress(g,+6);return ["warn","被拒但更拼了，学术 +1、压力 +6。"];}}
    ]
   },
   {
@@ -755,8 +861,8 @@ id:"hack_season",icon:"黑",cat:"creative",stage:[4,5],title:"科创节",text:"�
   {
 id:"essay_block",icon:"灵",cat:"creative",stage:[6,7],fit:5,title:"文书卡壳",text:"主文书改了八版还是不对味。",
    choices:[
-     {label:"推倒重写",hint:"文书+1 压力+5",apply:g=>{g.results.essayQuality=clamp(g.results.essayQuality+1,0,10);g.stress=clamp(g.stress+5,0,100);return ["good","灵感来了，文书质量 +1、压力 +5。"];}},
-     {label:"先放着",hint:"压力-3",apply:g=>{g.stress=clamp(g.stress-3,0,100);return ["warn","缓一缓，压力 −3。"];}}
+     {label:"推倒重写",hint:"文书+1 压力+5",apply:g=>{g.results.essayQuality=clamp(g.results.essayQuality+1,0,10);addStress(g,+5);return ["good","灵感来了，文书质量 +1、压力 +5。"];}},
+     {label:"先放着",hint:"压力-3",apply:g=>{addStress(g,-3);return ["warn","缓一缓，压力 −3。"];}}
    ]
   },
   {
@@ -765,18 +871,18 @@ id:"rec_ask",icon:"导",cat:"award",stage:[6,7],fit:5,title:"找推荐人",text:
   },
   {
 id:"early_night",icon:"夜",cat:"chance",stage:[6,7],title:"早申提交夜",text:"ED 截止前最后一晚，心跳加速。",
-   effect:g=>{g.stress=clamp(g.stress+6,0,100);g.energy=clamp(g.energy-5,0,maxEnergy());return ["warn","截止夜，压力 +6、精力 −5。"];}
+   effect:g=>{addStress(g,+6);g.energy=clamp(g.energy-5,0,maxEnergy());return ["warn","截止夜，压力 +6、精力 −5。"];}
   },
   {
 id:"waitlist_dread",icon:"焦",cat:"social",stage:[6,7],title:"早申放榜日",text:"同学早申陆续上岸，你五味杂陈。",
    choices:[
      {label:"替他人开心",hint:"社交+1",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);return ["good","大方祝福，社交 +1。"];}},
-     {label:"自我怀疑",hint:"压力+8",apply:g=>{g.stress=clamp(g.stress+8,0,100);return ["bad","陷入内耗，压力 +8。"];}}
+     {label:"自我怀疑",hint:"压力+8",apply:g=>{addStress(g,+8);return ["bad","陷入内耗，压力 +8。"];}}
    ]
   },
   {
 id:"final_rush",icon:"考",cat:"academic",stage:[6,7],title:"申请季冲刺",text:"RD 截止前最后两周，连轴转。",
-   effect:g=>{g.energy=clamp(g.energy-12,0,maxEnergy());g.stress=clamp(g.stress+10,0,100);return ["bad","冲刺期，精力 −12、压力 +10。"];}
+   effect:g=>{g.energy=clamp(g.energy-12,0,maxEnergy());addStress(g,+10);return ["bad","冲刺期，精力 −12、压力 +10。"];}
   },
   {
 id:"interview",icon:"谈",cat:"social",stage:[6,7],title:"校友面试",text:"和校友面试官聊得投机。",
@@ -784,7 +890,7 @@ id:"interview",icon:"谈",cat:"social",stage:[6,7],title:"校友面试",text:"�
   },
   {
 id:"submit_relief",icon:"舒",cat:"health",stage:[6,7],title:"提交完毕",text:"最后一所提交，如释重负。",
-   effect:g=>{g.stress=clamp(g.stress-15,0,100);g.energy=clamp(g.energy+8,0,maxEnergy());return ["good","尘埃落定，压力 −15、精力 +8。"];}
+   effect:g=>{addStress(g,-15);g.energy=clamp(g.energy+8,0,maxEnergy());return ["good","尘埃落定，压力 −15、精力 +8。"];}
   },
   {
 id:"power_rec",icon:"导",cat:"award",stage:[2,3,4,5,6,7],power:true,title:"业界大牛亲笔推荐",text:"你帮过的教授主动要给你写强推，分量极重。",
@@ -862,7 +968,7 @@ id:"zk_grad",icon:"友",cat:"social",stage:[0,1],fit:3,title:"初中毕业典礼
 id:"zk_clubwin",icon:"奖",cat:"award",stage:[0,1],fit:3,title:"社团拿了区奖",text:"你张罗的初中社团在全市评比里拿了奖。",
    choices:[
      {label:"趁热打铁招新",hint:"社交+1 声望+1",apply:g=>{g.stats.social=clamp(g.stats.social+1,1,12);g.results.reputation=clamp(g.results.reputation+1,0,100);g.results.ecs.push("社团获奖");return ["good","社团影响力扩大，社交 +1、声望 +1、履历 +。"];}},
-     {label:"见好就收",hint:"压力-3",apply:g=>{g.stress=clamp(g.stress-3,0,100);return ["warn","低调收尾，压力 −3，但没再扩张。"];}}
+     {label:"见好就收",hint:"压力-3",apply:g=>{addStress(g,-3);return ["warn","低调收尾，压力 −3，但没再扩张。"];}}
    ]
   },
   {
@@ -872,7 +978,7 @@ id:"cs_intern",icon:"码",cat:"academic",stage:[4,5],majors:["cs"],fit:10,title:
   {
 id:"cs_hackathon",icon:"码",cat:"creative",stage:[4,5],majors:["cs"],fit:10,title:"黑客松通宵",text:"48 小时极限开发，你和队友肝出一个能跑的 demo。",
    choices:[
-     {label:"冲一把最佳作品",hint:"奖项+1 创造力+1 压力+4",apply:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);g.stress=clamp(g.stress+4,0,100);g.results.ecs.push("黑客松");return ["good","拿下最佳作品，奖项 +1、创造力 +1、履历 +，但压力 +4。"];}},
+     {label:"冲一把最佳作品",hint:"奖项+1 创造力+1 压力+4",apply:g=>{g.results.awards++;g.stats.creativity=clamp(g.stats.creativity+1,1,12);addStress(g,+4);g.results.ecs.push("黑客松");return ["good","拿下最佳作品，奖项 +1、创造力 +1、履历 +，但压力 +4。"];}},
      {label:"佛系参与攒经验",hint:"创造力+0.5 社交+0.5",apply:g=>{g.stats.creativity=clamp(g.stats.creativity+0.5,1,12);g.stats.social=clamp(g.stats.social+0.5,1,12);g.results.ecs.push("黑客松");return ["good","重在参与，创造力 +、社交 +、履历 +。"];}}
    ]
   }
@@ -880,13 +986,13 @@ id:"cs_hackathon",icon:"码",cat:"creative",stage:[4,5],majors:["cs"],fit:10,tit
 const catOf=e=>e.cat||"chance";
 function drawEvent(){
   const r=G.round;
-  const majorOk=e=>G.major==="und"?true:(!e.majors||e.majors.includes(G.major));
+  const majorOk=e=>!e.majors || (G.major!=="und" && e.majors.includes(G.major));
   let pool=EVENTS.filter(e=>e.stage.includes(r)&&majorOk(e)&&!G.usedEvents.includes(e.id));
   if(!pool.length) pool=EVENTS.filter(e=>majorOk(e)&&!G.usedEvents.includes(e.id));
   if(!pool.length) pool=EVENTS;
   const powers=pool.filter(e=>e.power);
-  if(powers.length && Math.random()<0.20){
-    const e=pick(powers); G.usedEvents.push(e.id); if(G.usedEvents.length>20)G.usedEvents.shift(); return e;
+  if(powers.length && G.powerCount<2 && Math.random()<0.10){   // #10 power 触发率 0.20→0.10，且每局最多 2 次
+    const e=pick(powers); G.usedEvents.push(e.id); G.powerCount++; if(G.usedEvents.length>20)G.usedEvents.shift(); return e;
   }
   const norm=pool.filter(e=>!e.power);
   const src=norm.length?norm:pool;
@@ -896,16 +1002,19 @@ function drawEvent(){
 /* 专业方向：开局选择，影响录取与行动契合度 */
 const MAJORS=[
   {id:"und", name:"未定",        icon:"star",   desc:"先广泛探索，后期再聚焦。录取上不偏不倚。", related:[]},
-  {id:"cs",  name:"计算机/工程",  icon:"bolt",   desc:"写代码、做项目、打 CTF。契合工程/CS 强校（如帝国理工、CMU 类）。", related:["code","research","contest","study"]},
+  {id:"cs",  name:"计算机/工程",  icon:"bolt",   desc:"写代码、做项目、打 CTF。契合工程/CS 强校（如帝国理工、CMU 类）。", related:["code","research","contest"]},
   {id:"biz", name:"商科/经济",    icon:"flag",   desc:"商赛、创业、读财报。契合 LSE/沃顿类商强校。", related:["biz","club","contest","network"]},
-  {id:"sci", name:"自然科学",      icon:"book",   desc:"进实验室、发论文。契合科研型大学。", related:["lab","research","contest","study"]},
+  {id:"sci", name:"自然科学",      icon:"book",   desc:"进实验室、发论文。契合科研型大学。", related:["lab","research","contest"]},
   {id:"soc", name:"人文社科",      icon:"people", desc:"调研、写作、辩论。契合 LSE/社科强校。", related:["debate","write","club","read"]},
   {id:"art", name:"艺术设计",      icon:"bulb",   desc:"创作、参展、作品集。契合艺术类/综合校艺术系。", related:["art","talent","contest","read"]},
   {id:"med", name:"医学预科",      icon:"heart",  desc:"医疗志愿、科研、生物。契合 Pre-med 强校。", related:["med","research","club"]}
 ];
 const MAJOR_BYID={}; MAJORS.forEach(m=>MAJOR_BYID[m.id]=m);
-const BASIC_IDS=["vocab","study","toefl","sat"];
-function bumpFit(n){ if(G&&G.major!=="und") G.majorFit=clamp(G.majorFit+n,0,100); }
+function bumpFit(n){
+  if(!G || G.major==="und") return;
+  const room=(100-G.majorFit)/70;            // §4.4 越高涨越慢，避免 9~12 次行动就拉满
+  G.majorFit=clamp(G.majorFit + n*Math.max(0.25, room), 0, 100);
+}
 function majorGainFrom(a){ if(!G||G.major==="und"||!a) return 0; const m=MAJOR_BYID[G.major]; if(!m) return 0; if(a.major===G.major) return 8; if(m.related.includes(a.id)) return 6; return 0; }
 
 /* ---------- actions ---------- */
@@ -931,7 +1040,7 @@ const ACTIONS=[
   {id:"art",     name:"艺术创作", icon:"bulb", energy:18, stress:5,  major:"art", run:doArt},
   {id:"med",     name:"医疗志愿", icon:"heart", energy:20, stress:6,  major:"med", run:doMed}
 ];
-const REST={id:"rest",name:"休息",icon:"moon",energy:-45,stress:-25,run:doRest};
+const REST={id:"rest",name:"休息",icon:"moon",energy:-45,stress:-14,run:doRest};   // 压力系统②：减压由 -25→-14，休息不再“随便补偿”
 function dealActions(){
   const r=G.round;
   let basicIds=["vocab","study"];
@@ -945,7 +1054,7 @@ function dealActions(){
     const m=MAJOR_BYID[G.major];
     const rel=pool.filter(a=>a.major===G.major||(m&&m.related.includes(a.id)));
     const others=pool.filter(a=>!rel.includes(a));
-    G.dealtRand=rel.slice(0,Math.min(2,rel.length)).concat(others).slice(0,DEALT);
+    G.dealtRand=rel.slice(0,2).concat(shuffle(others.concat(rel.slice(2)))).slice(0,DEALT);   // #11：第3+个对口行动也进随机池
   }else{
     G.dealtRand=pool.slice(0,DEALT);
   }
@@ -969,18 +1078,20 @@ function doRead(){
   G.stats.english=clamp(G.stats.english+e,1,12);
   G.stats.creativity=clamp(G.stats.creativity+0.15*pen(),1,12);
   G.results.essayQuality=clamp(G.results.essayQuality+0.15*mulFx('craftGain',1),0,10);
-  return ["good",`啃外刊，英语 +${e.toFixed(2)}，语感也进了文书里。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  return ["good",`啃外刊，英语 +${e.toFixed(2)}，语感也进了文书里、声望 +1。`];
 }
 function doWrite(){
   const e=0.25*mulFx('englishGain',1)*pen();   // 英语 0.15→0.25
   G.stats.english=clamp(G.stats.english+e,1,12);
-  G.results.essayQuality=clamp(G.results.essayQuality+0.8*mulFx('craftGain',1),0,10);
-  return ["good",`文书改到第 N 版，文书质量 ${G.results.essayQuality.toFixed(1)}/10。`];
+  G.results.essayQuality=clamp(G.results.essayQuality+1.2*mulFx('craftGain',1),0,10);   // §4.1 文书 0.8→1.2
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  return ["good",`文书改到第 N 版，文书质量 ${G.results.essayQuality.toFixed(1)}/10、声望 +1。`];
 }
 /* —— 标化：SAT 与托福分开，SAT 10 分一档 —— */
 function doSAT(){
   const e=G.stats.english,lk=G.stats.luck;
-  const penalty=G.stress>=70?60:0;
+  const penalty=clamp((G.stress-40)/60,0,1)*70;   // §4.2 线性：压力越高扣分越多，无免疫阈值
   const base=1090+40*e;
   const noise=gauss(0,55)*(1-0.04*lk);
   let sat=Math.round(clamp(base+noise+(lk-6)*5-penalty,400,1560)/10)*10;
@@ -993,13 +1104,13 @@ function doSAT(){
   else if(sat<expected-80){msg=`SAT ${sat}，翻车了，下回合还能再刷。`;cls="bad";}
   else {msg=`SAT ${sat}，中规中矩。`;cls="warn";}
   if(sat<=prev) msg+=`（未超过最佳 ${prev}）`;
-  if(G.stress>=70) msg+="（高压扣分）";
+  if(penalty>0) msg+="（高压扣分）";
   if(sat===1600) msg+=" 满分！凤毛麟角。";
   return [cls,msg];
 }
 function doTOEFL(){
   const e=G.stats.english,lk=G.stats.luck;
-  const penalty=G.stress>=70?6:0;
+  const penalty=clamp((G.stress-40)/60,0,1)*7;    // §4.2 线性
   const base=52+5.6*e;
   const noise=gauss(0,5)*(1-0.04*lk);
   let toefl=Math.round(clamp(base+noise+(lk-6)*1.2-penalty,40,118));
@@ -1007,7 +1118,7 @@ function doTOEFL(){
   const prev=G.results.toeflBest;
   if(toefl>prev) G.results.toeflBest=toefl;
   let msg=toefl>prev?`托福 ${toefl}，刷新最佳。`:`托福 ${toefl}（未超过最佳 ${prev}）。`;
-  if(G.stress>=70) msg+="（高压扣分）";
+  if(penalty>0) msg+="（高压扣分）";
   if(toefl===120) msg+=" 满分！凤毛麟角。";
   return [toefl>=100?"good":toefl>=85?"warn":"bad",msg];
 }
@@ -1015,21 +1126,24 @@ function doTOEFL(){
 function doStudy(){
   const g=0.7*pen()*mulFx('academicGain',1);
   G.stats.academic=clamp(G.stats.academic+g,1,12);
-  return ["good",`死磕课业，学术 +${g.toFixed(2)}（现 ${G.stats.academic.toFixed(1)}）。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  return ["good",`死磕课业，学术 +${g.toFixed(2)}（现 ${G.stats.academic.toFixed(1)}）、声望 +1。`];
 }
 function doLibrary(){
   const g=0.5*pen()*mulFx('academicGain',1);
   G.stats.academic=clamp(G.stats.academic+g,1,12);
   G.stats.creativity=clamp(G.stats.creativity+0.1,1,12);
-  return ["good",`图书馆一日游，学术 +${g.toFixed(2)}。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  return ["good",`图书馆一日游，学术 +${g.toFixed(2)}、声望 +1。`];
 }
 function doResearch(){
-  const g=0.6*pen()*mulFx('academicGain',1);
+  const g=0.45*pen()*mulFx('academicGain',1);   // §4.1 学术 0.6→0.45
   G.stats.academic=clamp(G.stats.academic+g,1,12);
-  G.results.recQuality=clamp(G.results.recQuality+0.4*mulFx('craftGain',1),0,10);
+  G.results.recQuality=clamp(G.results.recQuality+0.35*mulFx('craftGain',1),0,10);   // §4.1 推荐信 0.4→0.35
   G.results.ecs.push("科研");
-  if(Math.random()<0.2+0.03*G.stats.academic){G.results.awards++;return ["good",`科研出成果还拿了奖，学术 +、奖项 +1。`];}
-  return ["good",`泡实验室，学术 +${g.toFixed(2)}、推荐信潜力 +。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  if(Math.random()<0.12+0.02*G.stats.academic){G.results.awards++;G.results.reputation=clamp(G.results.reputation+1,0,100);return ["good",`科研出成果还拿了奖，学术 +、奖项 +1、声望 +2。`];}   // §4.1 奖概率 0.2+0.03ac→0.12+0.02ac
+  return ["good",`泡实验室，学术 +${g.toFixed(2)}、推荐信潜力 +、声望 +1。`];
 }
 function doContest(){
   G.stats.creativity=clamp(G.stats.creativity+0.3*pen(),1,12);
@@ -1051,13 +1165,14 @@ function doTalent(){
   const g=0.6*pen();
   G.stats.creativity=clamp(G.stats.creativity+g,1,12);
   G.results.essayQuality=clamp(G.results.essayQuality+0.2*mulFx('craftGain',1),0,10);
-  if(Math.random()<0.25+0.05*G.stats.creativity){G.results.awards++;return ["good",`特长精进还顺手拿奖，荣誉 +1！`];}
-  return ["good",`死磕特长，创造力 +${g.toFixed(2)}。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  if(Math.random()<0.25+0.05*G.stats.creativity){G.results.awards++;return ["good",`特长精进还顺手拿奖，荣誉 +1、声望 +1！`];}
+  return ["good",`死磕特长，创造力 +${g.toFixed(2)}、声望 +1。`];
 }
 function doNetwork(){
-  const s=mulFx('socialGain',1)*0.5*pen();
+  const s=mulFx('socialGain',1)*0.6*pen();   // §4.1 社交 0.5→0.6
   G.stats.social=clamp(G.stats.social+s,1,12);
-  G.results.recQuality=clamp(G.results.recQuality+0.6*mulFx('craftGain',1),0,10);
+  G.results.recQuality=clamp(G.results.recQuality+0.9*mulFx('craftGain',1),0,10);   // §4.1 推荐信 0.6→0.9
   G.results.reputation=clamp(G.results.reputation+2*mulFx('socialGain',1),0,100);
   return ["good",`经营人脉，社交 +${s.toFixed(2)}、推荐信 ${G.results.recQuality.toFixed(1)}/10、声望 +2。`];
 }
@@ -1084,21 +1199,24 @@ function doLab(){
   G.stats.academic=clamp(G.stats.academic+g,1,12);
   G.results.ecs.push("实验室科研");
   G.results.recQuality=clamp(G.results.recQuality+0.3*mulFx('craftGain',1),0,10);
-  return ["good",`进实验室搬砖，学术 +${g.toFixed(2)}、推荐信潜力 +。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  return ["good",`进实验室搬砖，学术 +${g.toFixed(2)}、推荐信潜力 +、声望 +1。`];
 }
 function doDebate(){
   const s=mulFx('socialGain',1)*0.3*pen();
   G.stats.social=clamp(G.stats.social+s,1,12);
   G.results.essayQuality=clamp(G.results.essayQuality+0.3*mulFx('craftGain',1),0,10);
   G.results.ecs.push("社科调研");
-  return ["good",`做社会调研写报告，社交 +${s.toFixed(2)}、文书 +、履历 +。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  return ["good",`做社会调研写报告，社交 +${s.toFixed(2)}、文书 +、履历 +、声望 +1。`];
 }
 function doArt(){
   const g=0.5*pen();
   G.stats.creativity=clamp(G.stats.creativity+g,1,12);
   G.results.essayQuality=clamp(G.results.essayQuality+0.2*mulFx('craftGain',1),0,10);
   G.results.ecs.push("艺术作品集");
-  return ["good",`打磨作品集，创造力 +${g.toFixed(2)}、文书 +、履历 +。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  return ["good",`打磨作品集，创造力 +${g.toFixed(2)}、文书 +、履历 +、声望 +1。`];
 }
 function doMed(){
   const g=0.4*pen();
@@ -1112,9 +1230,21 @@ function doZk(){
   const g=0.6*pen()*mulFx('academicGain',1);
   G.stats.academic=clamp(G.stats.academic+g,1,12);
   G.results.ecs.push("中考备战");
-  return ["good",`中考刷题，学术 +${g.toFixed(2)}、履历 +1。`];
+  G.results.reputation=clamp(G.results.reputation+1,0,100);
+  return ["good",`中考刷题，学术 +${g.toFixed(2)}、履历 +1、声望 +1。`];
 }
-function pen(){ return G.stress>=70?0.5:1; }
+function pen(){ return 1 - 0.45*clamp((G.stress-45)/45,0,1); }   // §4.2 去悬崖：45 分起线性衰减，不再有“卡 69 免疫”
+// #7：事件造成的压力统一走此函数，套用抗压/玻璃心等 stressMul 特质倍率（动作压力已在 doAction 走倍率，事件此前绕过）
+function addStress(g,n){ g.stress=clamp(g.stress + n*mulFx('stressMul',1), 0, 100); }
+// 压力系统③：长期高压拖累 GPA——压力越高拖累越明显（每 ~10 点加速），但幅度很轻。
+// 用「本学期平均压力」衡量，避免玩家靠期末前休息刷掉惩罚；二次项让高压力区效果更显著。
+const STRESS_GPA_DRAG_K=0.008;      // 二次项系数：drag = K*(avgStress/10)^2
+const STRESS_GPA_DRAG_CAP=0.45;     // 单学期 GPA 最多被拖累的点数（封顶，避免极端值摧毁成绩）
+function stressDrag(){
+  const s = (G.semAcc && G.semAcc.n) ? G.semAcc.sSum/G.semAcc.n : G.stress;  // 本学期平均压力
+  const t = s/10;
+  return Math.min(STRESS_GPA_DRAG_CAP, STRESS_GPA_DRAG_K*t*t);
+}
 
 /* ---------- GPA：每学期成绩单 ---------- */
 // 年级加成：低年级（初三/高一）课程更易拿 A，降低 GPA 刷取难度；
@@ -1122,13 +1252,14 @@ function pen(){ return G.stress>=70?0.5:1; }
 const GRADE_EASE=[0.6,0.6,0.3,0.3,0.1,0.1,0];
 function genSemesterCourses(){
   const plan=RIGOR[G.rigor].mix, courses=[];
-  const eRatio=G.energy/maxEnergy();
+  const eRatio=G.semAcc.n ? G.semAcc.eSum/G.semAcc.n : G.energy/maxEnergy();
+  const strAvg=G.semAcc.n ? G.semAcc.sSum/G.semAcc.n : G.stress;
   const ease=GRADE_EASE[G.round]||0;
   for(const [lvl,n] of plan){
     for(let i=0;i<n;i++){
       let raw=2.6+0.117*G.stats.academic;
       raw+=(eRatio-0.5)*0.45;
-      raw-=G.stress/100*0.30;
+      raw-=strAvg/100*0.30;   // #3 用学期压力均值，避免“最后一动休息”微操刷 GPA
       raw+=(G.stats.luck-6)*0.03;
       raw-=LEVEL_DIFF[lvl];
       raw+=ease;   // 低年级更易拿 A：中低学术也能全 A
@@ -1142,18 +1273,21 @@ function genSemesterCourses(){
 }
 function closeSemester(){
   const courses=genSemesterCourses();
-  const credits=courses.reduce((a,c)=>a+c.credit,0);
+  const credits=SEM_W[G.round]*courses.reduce((a,c)=>a+c.credit,0);   // §4.6 学期权重：高年级学分更“重”
   const qpU=courses.reduce((a,c)=>a+c.p*c.credit,0);
   const qpW=courses.reduce((a,c)=>a+c.wp*c.credit,0);
-  const sem={i:G.round,courses,gpaU:qpU/credits,gpaW:qpW/credits,credits};
+  const drag=stressDrag();   // 压力系统③：高压拖累本学期 GPA
+  const sem={i:G.round,courses,gpaU:clamp(qpU/credits-drag,0,4),gpaW:clamp(qpW/credits-drag,0,4),credits,drag};
   G.results.semesters.push(sem);
   const avgU=courses.reduce((a,c)=>a+c.p,0)/courses.length;
   pushLog(avgU>=3.7?"good":avgU>=3.0?"warn":"bad",
     `【第 ${G.round+1} 学期成绩单】${courses.map(c=>c.g).join(" ")} · 学期 GPA ${sem.gpaU.toFixed(2)}（加权 ${sem.gpaW.toFixed(2)}）`);
+  if(drag>0.05) pushLog("warn",`😰 长期高压拖累成绩：本学期 GPA 被扣 ${drag.toFixed(2)} 点。`);   // 压力系统③：略显压力后果
   // 学期成长：六维（学术/英语/精力/创造力/社交/运气）里随机 3 个 +0.5，影响后续学期
   const growKeys=shuffle(Object.keys(STAT_NAMES)).slice(0,3);
   growKeys.forEach(k=>{ G.stats[k]=clamp(G.stats[k]+0.5,1,12); });
   pushLog("good",`📈 学期成长：${growKeys.map(k=>STAT_NAMES[k]).join("、")} 各 +0.5`);
+  G.semAcc={eSum:0,sSum:0,n:0};   // #3 重置本学期精力/压力均值累计
   return sem;
 }
 
@@ -1181,7 +1315,7 @@ function enterEvent(){
   G._curEvent=e;
   const card=$("eventCard");
   const hasChoice=e.choices&&e.choices.length;
-  const ct=catOf(e.id);
+  const ct=catOf(e);
   let html=`<div class="ev-cat">${ic(CAT_ICON[ct])}<span>${CAT_NAME[ct]}</span></div>
     <div class="ev-stage">${STAGES[G.round].yr}${STAGES[G.round].sem} · ${STAGES[G.round].theme}</div><h3>${e.title}</h3><p>${e.text}</p>`;
   if(hasChoice){
@@ -1203,6 +1337,7 @@ function enterEvent(){
   renderStatus();
 }
 function afterEvent(r){
+  G.results.stressMax=Math.max(G.results.stressMax,G.stress);   // #6：事件造成的压力也计入最高压力（用于成就/统计）
   pushLog(r[0],`【事件】${r[1]}`);
   G.phase="action";
   $("eventCard").innerHTML=`<div class="ev-cat">${ic("pencil")}<span>已结算</span></div><h3>事件结算完毕</h3><p>下面是行动时间。</p>`;
@@ -1228,6 +1363,9 @@ function doAction(a){
   const mg=majorGainFrom(a);
   if(mg){ bumpFit(mg); r[1]+=`（契合专业，契合度 +${mg}）`; }
   pushLog(r[0],`【${a.name}】${r[1]}`);
+  G.semAcc.eSum += G.energy/maxEnergy();   // #3 累计本学期精力/压力均值
+  G.semAcc.sSum += G.stress;
+  G.semAcc.n++;
   renderStatus();renderActions();
   if(G.ap<=0) $("roundHint").textContent="行动点已用完。";
 }
@@ -1241,7 +1379,7 @@ function endRound(){
   G.ap=apMaxThisRound();
   dealActions();
   G.energy=clamp(G.energy+10+sumFx('energyRegen',0),0,maxEnergy());
-  G.stress=clamp(G.stress-3,0,100);
+  G.stress=clamp(G.stress-2,0,100);   // 压力系统②：自动减压 -3→-2，压力更黏
   $("roundHint").textContent="";
   const yr=["初三","初三","高一","高一","高二","高二","高三"][G.round];
   const sem=G.round%2===0?"上":"下";
@@ -1353,15 +1491,20 @@ function buildBands(p){
 function goPick(){
   $("game").classList.remove("on"); $("pick").classList.add("on");
   PICK.p=buildProfile();
+  // §5.1 共同冲击：在选校时一次性抽取本季 ε，后续 ED/RD 显示与摇号均用它，保证“拆开前看到的概率”与“最终摇号概率”一致。
+  G.seasonEps=gauss(0,EPS_SIGMA);
   PICK.bands=buildBands(PICK.p);
   PICK.noMatch=!!PICK.bands.noMatch;
   PICK.noSafety=!!PICK.bands.noSafety;
   PICK.easiestP=PICK.bands.easiestP||0;
   PICK.cand={}; PICK.off={reach:0,match:0,safety:0};
   ["reach","match","safety"].forEach(k=>PICK.cand[k]=takeBand(k));
+  renderAOPanel(PICK.p);   // §5.2 招生官视角面板
   const edSchools=SCHOOLS.filter(s=>s.region==="US"&&s.ed);
   $("edList").innerHTML=edSchools.map(s=>`<option value="${s.nameZh}">#${s.rank} ${s.nameZh} ${s.nameEn}</option>`).join("");
   PICK.edSel=null; PICK.rdSel=[];
+  $("edCard").innerHTML=""; $("edMatches").innerHTML=""; $("edSearch").value="";
+  $("edClearBtn").style.display="none";
   renderPick();
 }
 function takeBand(k){
@@ -1370,6 +1513,31 @@ function takeBand(k){
 }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const tagOf=sc=>sc.region==="US"?("#"+sc.rank):sc.region;
+// §5.2 招生官视角面板：六通道条形
+function renderAOPanel(p){
+  const el=document.getElementById("aoPanel"); if(!el||!p) return;
+  const c=profileChannels(p);
+  const ch=[
+    {k:"GPA 学术", v:c.zA, kind:"z"},
+    {k:"SAT 标化", v:c.zT, kind:"z"},
+    {k:"托福",     v:c.zTOEFL, kind:"z"},
+    {k:"活动/奖项", v:c.zE, kind:"z"},
+    {k:"文书/推荐", v:c.zR, kind:"z"},
+    {k:"专业契合", v:c.majorFit, kind:"fit"},
+  ];
+  el.innerHTML=ch.map(x=>{
+    if(x.kind==="fit"){
+      const w=Math.round(clamp(x.v,0,1)*100);
+      const col=w>=60?"var(--good)":w>=30?"var(--warn)":"var(--bad)";
+      return `<div class="aorow"><span class="aok">${x.k}</span><div class="aobar"><i style="left:0;width:${w}%;background:${col}"></i></div><span class="aov">${w}%</span></div>`;
+    }
+    const z=x.v, half=clamp(z/2.5,-1,1), w=Math.abs(half)*50;
+    const left=half>=0?50:50-w;
+    const col=z>=0?"var(--good)":"var(--bad)";
+    const tag=(z>=0?"+":"")+z.toFixed(2);
+    return `<div class="aorow"><span class="aok">${x.k}</span><div class="aobar center"><i style="left:${left}%;width:${w}%;background:${col}"></i></div><span class="aov">${tag}</span></div>`;
+  }).join("");
+}
 function renderPick(){
   // 档位提示横幅：匹配不到 / 无法保底
   const warn=$("bandWarn"); let wm="";
@@ -1388,7 +1556,8 @@ function renderPick(){
     PICK.cand[k].forEach(x=>{
       const sel=PICK.rdSel.some(o=>o.nameEn===x.sc.nameEn);
       const b=document.createElement("button"); b.className="cand"+(sel?" sel":"");
-      b.innerHTML=`<div class="rk">${tagOf(x.sc)}</div><div class="nm">${x.sc.nameZh}</div><div class="pp">${(x.P*100).toFixed(1)}%</div>`;
+      const trueP=admitProb(PICK.p,x.sc,false,G.seasonEps);
+      b.innerHTML=`<div class="rk">${tagOf(x.sc)}</div><div class="nm">${x.sc.nameZh}</div><div class="pp">${(trueP*100).toFixed(1)}%</div>`;
       b.onclick=()=>toggleRD(k,x); box.appendChild(b);
     });
   });
@@ -1406,7 +1575,7 @@ function toggleRD(k,x){
   if(i>=0) PICK.rdSel.splice(i,1);
   else {
     if(PICK.rdSel.length>=RD_MAX){ $("pickHint").textContent=`已达上限 ${RD_MAX} 所。`; return; }
-    const P=admitProb(PICK.p,x.sc);
+    const P=admitProb(PICK.p,x.sc,false,G.seasonEps);
     PICK.rdSel.push({nameEn:x.sc.nameEn,band:x.band,P});
   }
   renderPick();
@@ -1414,12 +1583,30 @@ function toggleRD(k,x){
 function edPick(){
   const q=$("edSearch").value.trim();
   if(!q){ $("edHint").textContent="请输入校名。"; return; }
-  const sc=SCHOOLS.find(s=>s.region==="US"&&s.ed&&(s.nameZh.includes(q)||s.nameEn.toLowerCase().includes(q.toLowerCase())));
-  if(!sc){ $("edHint").textContent="未找到 ED 校（仅美国提供 ED 的校可选）。"; return; }
+  const ql=q.toLowerCase();
+  const hits=SCHOOLS.filter(s=>s.region==="US"&&s.ed&&(s.nameZh.includes(q)||s.nameEn.toLowerCase().includes(ql)));
+  if(hits.length===0){ $("edHint").textContent="未找到 ED 校（仅美国提供 ED 的校可选）。"; $("edMatches").innerHTML=""; return; }
+  if(hits.length===1){ selectED(hits[0]); return; }
+  // 多结果：列出可点击候选，点选其一
+  $("edHint").textContent=`匹配到 ${hits.length} 所，点选其一：`;
+  $("edMatches").innerHTML=hits.map(s=>`<button class="ed-match" data-r="${s.rank}">#${s.rank} · ${s.nameZh}（${s.nameEn}）</button>`).join("");
+  $("edMatches").querySelectorAll(".ed-match").forEach(b=>{
+    b.onclick=()=>selectED(SCHOOLS.find(s=>s.rank==b.dataset.r));
+  });
+}
+function selectED(sc){
   PICK.edSel=sc;
-  const Ped=admitProb(PICK.p,sc,true), Prd=admitProb(PICK.p,sc);
+  $("edMatches").innerHTML="";
+  const Ped=admitProb(PICK.p,sc,true,G.seasonEps), Prd=admitProb(PICK.p,sc,false,G.seasonEps);
   $("edCard").innerHTML=`<div class="env open" style="cursor:default"><div class="rank">#${sc.rank} · ED</div><div class="nm">${sc.nameZh}</div><div class="pp">ED 概率 <b>${(Ped*100).toFixed(1)}%</b> ｜ RD 仅 ${(Prd*100).toFixed(1)}%</div></div>`;
   $("edHint").textContent="已选 ED 校，提交后先拆这封。";
+  $("edClearBtn").style.display="";
+}
+function clearED(){
+  PICK.edSel=null;
+  $("edCard").innerHTML=""; $("edMatches").innerHTML=""; $("edSearch").value="";
+  $("edHint").textContent="已清除 ED 选择，可重新搜索。";
+  $("edClearBtn").style.display="none";
 }
 
 /* ---------- 夏校申请季（高二升高三） ---------- */
@@ -1514,7 +1701,8 @@ function summerApply(){
   let got=[];
   SUMMER.sel.forEach(i=>{
     const {pp,q}=SUMMER.list[i];
-    const pr=clamp(0.12+0.55*q.score+(G.stats.luck-5)*0.02, 0.04, 0.85);
+    const selPenalty=pp.boost;   // §4.7 按 boost 反推：顶尖夏校极难、本地助研较易
+    const pr=clamp(0.75-0.55*selPenalty+(G.stats.luck-5)*0.02, 0.08, 0.75);
     if(Math.random()<pr){
       G.results.summerPts=clamp((G.results.summerPts||0)+pp.boost,0,1.2);
       got.push(pp.name);
@@ -1527,7 +1715,7 @@ function finishSummer(logMsg){
   G.ap=apMaxThisRound();
   dealActions();
   G.energy=clamp(G.energy+10+sumFx('energyRegen',0),0,maxEnergy());
-  G.stress=clamp(G.stress-3,0,100);
+  G.stress=clamp(G.stress-2,0,100);   // 压力系统②：夏校路径自动减压与 endRound 保持一致（-3→-2）
   const yr=["初三","初三","高一","高一","高二","高二","高三"][G.round];
   const sem=G.round%2===0?"上":"下";
   pushLog("info",logMsg);
@@ -1544,8 +1732,8 @@ function buildProfile(){
     gpa:cumGPA("U"), gpaW:cumGPA("W"),
     sat:r.satBest||0, toefl:r.toeflBest||0,
     ecCount:r.ecs.length,
-    leadRoles:Math.round(s.social/2),
-    founded:s.creativity>=7,
+    leadRoles:clamp(Math.min(s.social/2.6, r.ecs.length/3), 0, 4),   // §4.3 去台阶：社交与实际活动数双约束
+    founded:(s.creativity>=7 && r.ecs.length>=6),                       // §4.3 需真正做够活动才"创办"
     natlAwards:r.awards,
     creativity:s.creativity, social:s.social, english:s.english, academic:s.academic,
     essay:clamp(r.essayQuality*0.7+s.creativity*0.3,1,10),
@@ -1556,16 +1744,38 @@ function buildProfile(){
     majorFit:G.major==="und"?0.5:G.majorFit/100,
     spike:r.spike||0,
     summer:clamp(r.summerPts||0,0,1.2),
-    isIntl:true, needAid:false, round:"RD", majorDiff:"mid"
+    isIntl:true, round:"RD", majorDiff:"mid"
   };
 }
-function admitProb(p,sc,ed){
+// §5.2 招生官视角：把六条通道的贡献值（相对全池 57 校平均的 z 分数）算出来给面板用
+function profileChannels(p){
+  const rigorPts=(p.rigor==="heavy"?0.42:p.rigor==="mixed"?0.20:0);
+  const gpaEff=p.gpa+rigorPts*clamp((p.gpa-2.4)/1.4,0,1);
+  let zA=0,zT=0,zTO=0,n=0;
+  SCHOOLS.forEach(sc=>{
+    if(sc.gpaAvg!=null) zA+=(gpaEff-sc.gpaAvg)/0.35;
+    if(p.sat>0){ const mid=sc.sat25!=null?(sc.sat25+sc.sat75)/2:1420; zT+=(p.sat-mid)/165; }
+    if(p.toefl>0){ const ref=sc.toeflMin!=null?sc.toeflMin:95; zTO+=(p.toefl-ref)/28; }
+    n++;
+  });
+  zA/=n; zT/=n; zTO/=n;
+  const ecScore=p.ecCount*0.5+p.leadRoles*0.7+(p.founded?1:0)+p.natlAwards*1.1+p.creativity*0.15;
+  const zE=Math.min(ecScore/6-0.5, 2.5);
+  const er=(clamp(p.essay,0,10)+clamp(p.rec,0,10))/20;
+  const zR=er-0.5;
+  return {zA,zT,zTOEFL:zTO,zE,zR,majorFit:p.majorFit};
+}
+function admitProb(p,sc,ed,eps=0){   // eps：本季共同冲击（logit 增量），由 goEnd 统一抽取并传入
   // —— D. 国际生录取率：缺失时按国内率×0.6 保守估计（国际生通常更卷），避免退化到更宽松的国内率 ——
   let intlRate = sc.acceptRateIntl!=null ? sc.acceptRateIntl : Math.max(sc.acceptRate*0.6, 0.8);
   let baseRate = p.isIntl ? intlRate : sc.acceptRate;
-  if(ed){
-    if(sc.ed && sc.edAcceptRate!=null) baseRate=sc.edAcceptRate;
-    else if(sc.ed) baseRate=clamp((p.isIntl?intlRate:sc.acceptRate)*2.4,0.5,42);
+  if(ed && sc.ed){
+    if(sc.edAcceptRate!=null && sc.acceptRate>0){
+      const mult = clamp(sc.edAcceptRate / sc.acceptRate, 1, 3.0);   // #2 ED 相对 RD 的提升倍数（钳制 1~3）
+      baseRate = clamp((p.isIntl?intlRate:sc.acceptRate) * mult, 0.5, 42);
+    }else{
+      baseRate = clamp((p.isIntl?intlRate:sc.acceptRate) * 2.2, 0.5, 42);
+    }
   }
   const base=clamp(baseRate,0.5,95)/100;
   const logit=Math.log(base/(1-base));
@@ -1579,17 +1789,17 @@ function admitProb(p,sc,ed){
   let zTOEFL=0;
   if(p.toefl>0){ const ref = sc.toeflMin!=null ? sc.toeflMin : 95; zTOEFL=(p.toefl-ref)/28; }
   const ecScore=p.ecCount*0.5+p.leadRoles*0.7+(p.founded?1:0)+p.natlAwards*1.1+p.creativity*0.15;
-  const zE=ecScore/6-0.5;
+  const zE=Math.min(ecScore/6-0.5, 2.5);   // §3 硬截断：封顶活动刷子(ecScore>18)，普通玩家零感知
   const er=(clamp(p.essay,0,10)+clamp(p.rec,0,10))/20;
   const zR=er-0.5;
-  let S=0.28*zA+0.20*zT+0.12*zTOEFL+0.24*zE+0.16*zR;
-  S+=(p.luck-5)*0.03;
+  let wA=0.28, wT=0.20, wTO=0.12, wE=0.24, wR=0.16;
+  if(sc.testBlind){ wA+=0.13; wE+=0.07; wT=0; }   // §4.5 test-blind：SAT 权重归零，转给 GPA 与活动
+  let S=wA*zA+wT*zT+wTO*zTOEFL+wE*zE+wR*zR;
+  S+=(p.luck-5)*0.02;   // §4.3 运气权重 0.03→0.02（且运气无法靠行动培养，降权避免开局买点主导）
   S+=(p.reputation/100-0.4)*0.12;
   const mw=(sc.admitByMajor==="major"||sc.admitByMajor==="major-strict"||sc.region==="UK"||sc.region==="HK")?0.5:0.18;
   S+=(p.majorFit-0.5)*mw;
-  let P=1/(1+Math.exp(-(logit+3.0*S)));
-  // 国际生助学金政策
-  if(p.isIntl){ if(sc.aidIntl==="none")P*=0.62; else if(sc.aidIntl==="need-aware")P*=0.88; }
+  let P=1/(1+Math.exp(-(logit+ADMIT_SCALE*S+eps)));   // §5.1 共同冲击：eps>0 好年(各校易录)/eps<0 坏年(各校难录)
   // 标化惩罚（保底乘法）：未考/低于线 明显扣减
   if(p.toefl===0) P*=0.75;
   else if(sc.toeflMin!=null&&p.toefl<sc.toeflMin) P*=0.6;
@@ -1601,7 +1811,7 @@ function admitProb(p,sc,ed){
   if(dist>0){
     const sel=clamp(-Math.log(base/(1-base))/3.0, 0, 1.1); // 选择性权重：顶尖校 ~1.1，普通校 ~0
     const add=dist*sel*0.5;                                // 降权到原一半
-    const P2=1/(1+Math.exp(-(logit+3.0*S+add)));
+    const P2=1/(1+Math.exp(-(logit+ADMIT_SCALE*S+add)));
     P = P + (P2 - P)*0.5;                                  // 部分叠加（最多拿到一半加成）
   }
   // —— B. 硬门槛：test-required 美校缺 SAT / 有托福线却无托福，直接压到极低（模拟基本拒） ——
@@ -1666,22 +1876,43 @@ function goEnd(){
   });
   renderTranscript(); renderAch();
   const byName={}; SCHOOLS.forEach(s=>byName[s.nameEn]=s);
+  const eps=(typeof G.seasonEps==="number")?G.seasonEps:gauss(0,EPS_SIGMA);   // §5.1 共同冲击：选校时已抽取，ED/RD 共用；直接进结局则现场补抽
   const edBox=$("edResult");
-  let edAdmitted=false;
+  let edAdmitted=false, edGrade="none", edBest=null, edBand="safety";
   if(PICK.edSel){
-    const sc=PICK.edSel, Ped=admitProb(p,sc,true), admit=Math.random()<Ped;
+    const sc=PICK.edSel, Ped=admitProb(p,sc,true,eps), admit=Math.random()<Ped;
     edAdmitted=admit;
+    // ED 校档位按该生 ED 录取率套用与 RD 一致的三档阈值（≤10% 冲刺 / 10–30% 匹配 / >30% 保底）
+    edBand = Ped<=0.10?"reach":Ped<=0.30?"match":"safety";
+    edGrade = edBand==="reach"?"S":edBand==="match"?"A":"B";
+    edBest=sc;
     edBox.innerHTML=`<div class="env open" style="cursor:default"><div class="rank">#${sc.rank} · ED（早决定）</div><div class="nm">${sc.nameZh}</div><div class="result ${admit?'ad':'rej'}">${admit?'录取 · 绑定入学':'未录取'}</div><div class="pp">ED 概率 ${(Ped*100).toFixed(1)}%${admit?'。按 ED 绑定规则，你已撤回全部 RD 申请，尘埃落定！':'。转入 RD 常规轮。'}</div></div>`;
   } else edBox.innerHTML=`<div class="small">未选 ED，全部走 RD。</div>`;
   const rdBox=$("rdTable");
   if(edAdmitted){
-    rdBox.innerHTML=`<div class="small" style="padding:10px 0">ED 已录取（绑定入学）。按真实规则你已撤回全部 <b>${PICK.rdSel.length}</b> 所 RD 申请，<b>无 RD 最终录取信息</b>。</div>`;
+    const bz=b=>b==="reach"?"冲刺":b==="match"?"匹配":"保底";
+    const score=computeScore(edBest,edGrade);
+    LAST_RESULT={school:edBest.nameZh, band:bz(edBand), grade:edGrade, score, gpa:cumGPA("U"), sat:G.results.satBest||0};
+    rdBox.innerHTML=`<div class="small" style="padding:10px 0">ED 已录取（绑定入学）。按真实规则你已撤回全部 <b>${PICK.rdSel.length}</b> 所 RD 申请，<b>无 RD 最终录取信息</b>。</div>
+      <div class="rdsum grade-${edGrade}" style="margin-top:10px"><div class="rdg"><span class="rdgl">评级</span><b class="rdgv">${edGrade}</b></div><div class="rdl">最佳录取：<b>${edBest.nameZh}（${bz(edBand)}）</b></div><div class="rds">ED 早申已锁定 · ${edGrade==="S"?"逆风翻盘冲入冲刺":edGrade==="A"?"稳扎稳打进匹配":"保底上岸"}</div></div>
+      <div class="rdbar"><button class="btn" id="uploadBtn">🏆 上传到排行榜</button><span class="small">拆开结果后即可留名，上传你的最佳战绩</span></div><div id="uploadForm" class="collapsed"></div>`;
+    rdBox.querySelector('#uploadBtn').onclick=()=>openUploadForm(rdBox);
   } else {
     // 档位以选校时确定的 .band 为准（此前漏传 band，导致 r.band 恒为 undefined → 全部落到默认的"保底"）
-    let rows=PICK.rdSel.map(o=>{const sc=byName[o.nameEn];const P=admitProb(p,sc);const admit=Math.random()<P;return {sc,P,admit,band:o.band};});
+    let rows=PICK.rdSel.map(o=>{const sc=byName[o.nameEn];const P=admitProb(p,sc,false,eps);const admit=Math.random()<P;return {sc,P,admit,band:o.band};});
     rows.sort((a,b)=>b.P-a.P);
     const got=rows.filter(r=>r.admit).length;
     const bz=b=>b==="reach"?"冲刺":b==="match"?"匹配":"保底";
+    // §5.1 计分：最佳录取优先按档位（冲刺 > 匹配 > 保底），同档再按 rank（越小越牛）+ S/A/B 评级
+    const bandW={reach:3,match:2,safety:1};
+    const admitted=rows.filter(r=>r.admit).sort((a,b)=>bandW[b.band]-bandW[a.band]||a.sc.rank-b.sc.rank);
+    const best=admitted[0]||null;
+    const grade=!best?"none":best.band==="reach"?"S":best.band==="match"?"A":"B";
+    const gtxt={none:"落空 · 本季全拒",S:"S 级 · 逆风翻盘冲入冲刺",A:"A 级 · 稳扎稳打进匹配",B:"B 级 · 保底上岸"}[grade];
+    const score=best?computeScore(best.sc,grade):0;
+    // 评级与上传：默认收进 #rdSummary（.collapsed），拆开 offer 之后才 reveal，保留悬念
+    const summary=`<div class="rdg"><span class="rdgl">评级</span><b class="rdgv">${grade==="none"?"—":grade}</b></div><div class="rdl">最佳录取：<b>${best?best.sc.nameZh+"（"+bz(best.band)+"）":"无"}</b></div><div class="rds">常规 RD 录取 <b>${got}</b> / ${rows.length} 所${best?" ｜ 最高冲入 "+bz(best.band)+" 档":""} ｜ ${gtxt}</div>
+      <div class="rdbar"><button class="btn" id="uploadBtn">🏆 上传到排行榜</button><span class="small">拆开 offer 后留名，上传你的最佳战绩</span></div><div id="uploadForm" class="collapsed"></div>`;
     // 翻牌：每张正面写校名/档/概率，点击拆开 → 背面显示录取或拒绝
     let cards=`<div class="offers">`;
     rows.forEach(r=>{
@@ -1695,93 +1926,212 @@ function goEnd(){
     let tbl=`<table class="mini"><tr><th>校</th><th>档</th><th>概率</th><th>结果</th></tr>`;
     rows.forEach(r=>{ tbl+=`<tr><td>${tagOf(r.sc)} ${r.sc.nameZh}</td><td>${bz(r.band)}</td><td>${(r.P*100).toFixed(1)}%</td><td style="color:${r.admit?'var(--good)':'var(--bad)'}">${r.admit?'录取':'拒绝'}</td></tr>`; });
     tbl+=`</table><div class="small" style="margin-top:6px">常规 RD 录取 <b>${got}</b> / ${rows.length} 所。</div>`;
-    rdBox.innerHTML=`<div class="rdbar"><button class="btn" id="revealAllBtn">🎴 一键拆 offer</button><span class="small">逐张点击模拟拆信；或一键全开看清单</span></div>${cards}<div id="rdReveal" class="collapsed">${tbl}</div>`;
-    rdBox.querySelectorAll('.offer').forEach(el=>{ el.onclick=()=>el.classList.toggle('flipped'); });
+    LAST_RESULT={school: best?best.sc.nameZh:"无", band: best?bz(best.band):"—", grade, score, gpa:cumGPA("U"), sat:G.results.satBest||0};
+    // 评级/上传默认收起，拆开 offer 后才出现
+    rdBox.innerHTML=`<div class="rdbar"><button class="btn" id="revealAllBtn">🎴 一键拆 offer</button><span class="small">逐张点击模拟拆信；或一键全开看清单与评级</span></div>${cards}<div id="rdReveal" class="collapsed">${tbl}</div><div id="rdSummary" class="collapsed"><div class="rdsum grade-${grade}">${summary}</div></div>`;
+    rdBox.querySelectorAll('.offer').forEach(el=>{ el.onclick=()=>{ el.classList.toggle('flipped'); maybeRevealRating(rdBox); }; });
     const ra=rdBox.querySelector('#revealAllBtn');
-    ra.onclick=()=>{ rdBox.querySelectorAll('.offer').forEach(el=>el.classList.add('flipped')); rdBox.querySelector('#rdReveal').classList.remove('collapsed'); ra.textContent='已拆开 ✓'; ra.disabled=true; };
+    ra.onclick=()=>{ rdBox.querySelectorAll('.offer').forEach(el=>el.classList.add('flipped')); rdBox.querySelector('#rdReveal').classList.remove('collapsed'); rdBox.querySelector('#rdSummary').classList.remove('collapsed'); ra.textContent='已拆开 ✓'; ra.disabled=true; renderLeaderboard(); };
+    rdBox.querySelector('#uploadBtn').onclick=()=>openUploadForm(rdBox);
   }
   const asc=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc)})).sort((a,b)=>b.P-a.P);
-  $("allTable").innerHTML=`<table class="mini"><tr><th>排名</th><th>中文</th><th>英文</th><th>RD 概率</th></tr>${asc.slice().reverse().map(x=>`<tr><td>${tagOf(x.sc)}</td><td>${x.sc.nameZh}</td><td>${x.sc.nameEn}</td><td>${(x.P*100).toFixed(1)}%</td></tr>`).join("")}</table>`;
+  $("allTable").innerHTML=`<div class="small" style="margin-bottom:6px">表中为<b>模型期望录取率（未含本季共同冲击 ε）</b>；实际摇号概率已含 ε，故会与表中数值略有偏差。</div><table class="mini"><tr><th>排名</th><th>中文</th><th>英文</th><th>RD 概率</th></tr>${asc.slice().reverse().map(x=>`<tr><td>${tagOf(x.sc)}</td><td>${x.sc.nameZh}</td><td>${x.sc.nameEn}</td><td>${(x.P*100).toFixed(1)}%</td></tr>`).join("")}</table>`;
+  renderLeaderboard();
+}
+
+/* ---------- 排行榜（评级拆 offer 后上传 / 共享榜）---------- */
+// 默认本地模式（localStorage）：无需后端即可游玩与排行（仅本机可见）。
+// 想做「跨玩家真实共享榜」：把 LEADERBOARD.mode 改为 "supabase"，并填好 url / anonKey / table。
+//   - 建表 SQL 见本文件底部注释；开启 RLS：允许 anon 执行 select 与 insert。
+//   - 若 CDN 不可用或填写有误，会自动回退到本地排行榜，不会卡死。
+const LEADERBOARD={ mode:"local", url:"", anonKey:"", table:"leaderboard" };
+let LAST_RESULT=null;          // 本局最佳战绩，供上传使用
+let _lbClient=null;            // Supabase 客户端缓存（未配置/未加载则为 false）
+// 按需异步加载 Supabase 客户端：仅当 mode="supabase" 且填好 url/anonKey 时才动态注入 CDN 脚本，绝不在页面加载期阻塞。
+// CDN 加载失败（onerror）则回退本地榜，不影响游玩。
+function ensureSupabase(){
+  if(_lbClient!==null) return Promise.resolve(!!_lbClient);   // 已解析过（true/false）
+  if(LEADERBOARD.mode!=="supabase" || !LEADERBOARD.url || !LEADERBOARD.anonKey)
+    return Promise.resolve(false);
+  return new Promise(resolve=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    s.async=true;
+    s.onload=()=>resolve(true);
+    s.onerror=()=>resolve(false);   // CDN 不可达 → 回退本地
+    document.head.appendChild(s);
+  });
+}
+async function lbClient(){
+  if(_lbClient!==null) return _lbClient;
+  const ok=await ensureSupabase();
+  if(ok && typeof window!=="undefined" && window.supabase && LEADERBOARD.url && LEADERBOARD.anonKey)
+    _lbClient=window.supabase.createClient(LEADERBOARD.url, LEADERBOARD.anonKey);
+  else _lbClient=false;
+  return _lbClient;
+}
+function lbLocalGet(){ try{ return JSON.parse(localStorage.getItem("usadmit_lb")||"[]"); }catch(e){ return []; } }
+function lbLocalSet(a){ try{ localStorage.setItem("usadmit_lb", JSON.stringify(a.slice(0,200))); }catch(e){} }
+function lbEntry(e){ return {id:e.id, school:e.school, band:e.band, grade:e.grade, score:e.score, gpa:Math.round(e.gpa*100)/100, sat:e.sat||0, ts:e.ts}; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// 名校声望分：rank 越小越牛 → 分数越高；再叠加评级加成。0~1060 区间，足够排序且不至于差距过大。
+function computeScore(sc, grade){
+  if(!sc) return 0;
+  const N=SCHOOLS.length;
+  const prestige=Math.max(0, Math.round((1-(sc.rank-1)/(N-1))*1000));
+  const gbonus={S:60,A:30,B:10,none:0}[grade]||0;
+  return prestige+gbonus;
+}
+async function lbSubmit(entry){
+  entry.ts=Date.now(); entry.id=(entry.id||"").trim();
+  const cli=await lbClient();
+  if(cli && LEADERBOARD.mode==="supabase" && entry.id){
+    try{
+      // 同名去重（UPSERT on id）：保留该玩家历史最佳，避免刷榜或覆盖高分
+      const {data:exist}=await cli.from(LEADERBOARD.table).select("score").eq("id",entry.id).maybeSingle();
+      if(exist && (exist.score||0) >= (entry.score||0)) return {ok:true, where:"supabase", note:"keep-best"};
+      const {error}=await cli.from(LEADERBOARD.table).upsert(lbEntry(entry), {onConflict:"id"});
+      if(error) throw error;
+      return {ok:true, where:"supabase"};
+    }catch(err){ /* 失败则回退本地 */ }
+  }
+  // 本地榜：按 id 去重，同一玩家只保留最佳成绩，防止一人多次上传刷屏
+  const a=lbLocalGet();
+  a.push(lbEntry(entry));
+  const byId={};
+  a.forEach(e=>{ if(!byId[e.id] || (e.score||0)>(byId[e.id].score||0)) byId[e.id]=e; });
+  lbLocalSet(Object.values(byId));
+  return {ok:true, where:"local"};
+}
+async function lbFetch(){
+  const cli=await lbClient();
+  if(cli && LEADERBOARD.mode==="supabase"){
+    try{
+      const {data,error}=await cli.from(LEADERBOARD.table).select("*").order("score",{ascending:false}).limit(50);
+      if(error) throw error;
+      return data&&data.length?data:[];
+    }catch(err){ console.warn("排行榜拉取失败，回退本地", err); }
+  }
+  return lbLocalGet().sort((a,b)=>b.score-a.score).slice(0,50);
+}
+// 按玩家名去重，同一名字只保留最佳成绩（兼容历史上可能的重复数据）
+function lbDedupe(rows){
+  const byId={};
+  (rows||[]).forEach(e=>{ if(!byId[e.id] || (e.score||0)>(byId[e.id].score||0)) byId[e.id]=e; });
+  return Object.values(byId).sort((a,b)=>(b.score||0)-(a.score||0));
+}
+async function renderLeaderboard(){
+  const el=document.getElementById("lbPanel"); if(!el) return;
+  const rows=lbDedupe(await lbFetch());
+  if(!rows.length){ el.innerHTML=`<div class="small">还没有人上传成绩。拆开 offer 后，点「上传到排行榜」留下你的名字吧！</div>`; return; }
+  el.innerHTML=`<table class="mini"><tr><th>#</th><th>玩家</th><th>最佳录取</th><th>评级</th><th>分数</th></tr>`+
+    rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.school)}（${escapeHtml(r.band)}）</td><td>${escapeHtml(r.grade)}</td><td><b>${r.score}</b></td></tr>`).join("")+`</table>`+
+    (LEADERBOARD.mode==="supabase"?`<div class="small" style="margin-top:6px">共享榜（Supabase）· 实时</div>`:`<div class="small" style="margin-top:6px">本地榜（本机）· 在 LEADERBOARD 配置里填好 Supabase 即可升级为跨玩家共享榜</div>`);
+}
+function openUploadForm(rdBox){
+  const box=rdBox.querySelector('#uploadForm'); if(!box || !LAST_RESULT) return;
+  if(box.dataset.open==="1"){ submitUpload(rdBox); return; }
+  box.dataset.open="1"; box.classList.remove('collapsed');
+  box.innerHTML=`<span class="small">玩家名：</span><input id="lbId" maxlength="10" placeholder="≤10字，中英文皆可" style="font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line2);background:var(--card);color:var(--ink);width:160px"> <button class="btn" id="lbConfirm">确认上传</button> <button class="btn ghost" id="lbCancel">取消</button> <span id="lbMsg" class="small"></span>`;
+  box.querySelector('#lbCancel').onclick=()=>{ box.classList.add('collapsed'); box.dataset.open="0"; box.innerHTML=""; };
+  box.querySelector('#lbConfirm').onclick=()=>submitUpload(rdBox);
+}
+async function submitUpload(rdBox){
+  const box=rdBox.querySelector('#uploadForm'); if(!box) return;
+  const idEl=box.querySelector('#lbId'); const msg=box.querySelector('#lbMsg'); if(!idEl) return;
+  const id=(idEl.value||"").trim();
+  if(!id){ msg.textContent="请先输入临时ID"; msg.style.color="var(--bad)"; return; }
+  if([...id].length>10){ msg.textContent="ID 不能超过 10 个字"; msg.style.color="var(--bad)"; return; }
+  const res=await lbSubmit(Object.assign({}, LAST_RESULT, {id}));
+  if(res.ok){
+    msg.textContent="已上传 ✓"; msg.style.color="var(--good)";
+    const c=box.querySelector('#lbConfirm'); if(c) c.disabled=true; idEl.disabled=true;
+    renderLeaderboard();
+  }else{
+    msg.textContent="上传失败"; msg.style.color="var(--bad)";
+  }
+}
+// 逐张拆信：当所有 offer 都被翻面时，自动揭开隐藏的评级与上传入口
+function maybeRevealRating(rdBox){
+  const offs=rdBox.querySelectorAll('.offer');
+  if(offs.length && [...offs].every(o=>o.classList.contains('flipped'))){
+    const s=rdBox.querySelector('#rdSummary'); if(s) s.classList.remove('collapsed');
+    renderLeaderboard();
+  }
 }
 
 /* ---------- 说明 ---------- */
-const HELP=`
-<div class="help-sec"><h3>这游戏在玩什么</h3>
-<p>从初三上到高三上共 <b>7 个学期</b>。每学期：先抽一张<b>随机事件</b>（有些需要你二选一），再用<b>行动点</b>行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）+ 休息，再从其余行动里<b>随机抽 6 个</b>给你选。<b>行动点随年级递增</b>：初三每期 3 个、高一 4 个、高二 5 个、高三上 8 个（全季共 32 个，与旧版 8×4 一致）。学期结束时按你的状态生成<b>成绩单</b>。7 个学期后（高三上结束）直接进入申请季：先选 1 所 ED 早申校（可选），再在 RD 勾选 10–20 所，逐封拆开 offer。</p></div>
+const HELP=`<div class="help-sec"><h3>这游戏在玩什么</h3>
+<p>初三上到高三上共 <b>7 个学期</b>。每学期：先抽一张随机事件（部分需二选一），再用行动点行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）加休息，其余行动每回合随机抽 6 个。行动点随年级递增：初三 3 / 高一 4 / 高二 5 / 高三上 8。学期末生成成绩单。7 学期后进入申请季：可选 1 所 ED，再在 RD 勾选 10–20 所，逐封拆 offer。</p></div>
 
 <div class="help-sec"><h3>六维能力</h3>
 <ul>
-<li><b>学术</b>：决定每门课能拿什么等级，是 GPA 的主因。</li>
-<li><b>英语</b>：决定 SAT 与托福的期望分。<b>可以提升</b>——背单词、口语角、读外刊、打磨文书都会涨，部分事件也会。</li>
-<li><b>精力上限</b>：精力池上限。精力低会拉低成绩。</li>
-<li><b>创造力</b>：影响竞赛获奖率、文书质量与特长。</li>
-<li><b>社交</b>：影响声望、推荐信与履历。</li>
-<li><b>运气</b>：缩小考试波动、提升竞赛获奖率。</li>
+<li><b>学术</b>：决定课程等级，是 GPA 主因。</li>
+<li><b>英语</b>：决定 SAT/托福期望分，可提升。</li>
+<li><b>精力上限</b>：精力池上限，低则成绩下滑。</li>
+<li><b>创造力</b>：影响竞赛获奖、文书、特长。</li>
+<li><b>社交</b>：影响声望、推荐信、履历。</li>
+<li><b>运气</b>：缩小考试波动、提升获奖率。</li>
 </ul>
-<p>🌱 <b>学期成长</b>：每过一学期，六维里会<b>随机 3 个各 +0.5</b>——自然发育，越到后面底子越厚。</p></div>
+<p>🌱 每学期随机 3 维各 +0.5——自然发育，越往后底子越厚。</p></div>
 
-<div class="help-sec"><h3>专业方向（规划核心）</h3>
-<p>开局选一个<b>专业方向</b>（也可选「未定」，录取上不偏不倚）。它会带来两类实打实的收益：</p>
-<ul>
-<li><b>专属行动</b>：写代码 / 搞商赛 / 进实验室 / 社科调研 / 艺术创作 / 医疗志愿——做<b>与专业相关</b>的行动，以及部分相关事件，会积累<b>专业契合度</b>（0–100，开局 30）。</li>
-<li><b>录取加成</b>：契合度越高，对相关校（英国 / 香港校、以及按专业录取的美国校）的录取概率加成越明显；对综合评估校也有小幅加成。所以<b>提前定方向、持续做相关活动</b>，能靠规划把录取概率堆上去。</li>
-</ul></div>
+<div class="help-sec"><h3>专业方向</h3>
+<p>开局选方向（可「未定」），收益有二：<b>专属行动</b>积累专业契合度（0–100，开局 30）；<b>录取加成</b>——契合度越高，对英/港校与按专业录取的美校加成越明显，综合评估校也有小幅加成。提前定方向、持续做相关活动，能靠规划堆高概率。</p></div>
 
-<div class="help-sec"><h3>GPA：真实成绩单制</h3>
-<p>每学期修 <b>5 门课</b>，课程组合由开局选的<b>课程难度</b>决定。每门课按下面公式算出一个连续分，再<b>就近映射</b>到字母等级：</p>
-<p><code>基础 2.6 + 0.117×学术 + (精力占比−0.5)×0.45 − 压力/100×0.30 + (运气−6)×0.03 − 难度惩罚 + 随机波动</code></p>
+<div class="help-sec"><h3>GPA</h3>
+<p>每学期 5 门课，按公式算连续分再就近映射字母等级（A=4.0…F=0）：</p>
+<p><code>2.6 + 0.117×学术 + (精力占比−0.5)×0.45 − 压力×0.30 + (运气−6)×0.03 − 难度惩罚 + 随机</code></p>
 <ul>
-<li>难度惩罚：AP −0.20，Honors −0.10，常规 0。<b>选 AP 更难拿 A，但加权更高</b>。</li>
-<li>等级对应绩点：A 4.0 / A− 3.7 / B+ 3.3 / B 3.0 / B− 2.7 / C+ 2.3 / C 2.0 / C− 1.7 / D+ 1.3 / D 1.0 / F 0。</li>
-<li>加权绩点：AP +1.0，Honors +0.5，常规 +0，上限 5.0。</li>
-<li>学期 GPA = 各科绩点按学分加权平均；<b>累计 GPA = 各学期质量点总和 ÷ 总学分</b>（不是简单平均，但学分相同时结果一致）。</li>
-<li>📗 <b>低年级更易拿 A</b>：初三 / 高一课程难度更低，中低学术水平也容易全 A；越到高二下 / 高三，压力越接近真实，需要真把学术堆起来。</li>
+<li>难度惩罚：AP −0.20 / Honors −0.10 / 常规 0（AP 更难拿 A，但加权更高）。</li>
+<li>加权绩点：AP +1.0 / Honors +0.5 / 常规 0，上限 5.0。</li>
+<li>累计 GPA = 各学期质量点总和 ÷ 总学分。</li>
+<li>📗 低年级更易拿 A，越往后越需真把学术堆起来。</li>
 </ul></div>
 
 <div class="help-sec"><h3>SAT 与托福</h3>
 <ul>
-<li>两者是<b>独立行动</b>，可以分开刷，各自只保留<b>历史最高分</b>。</li>
-<li><b>SAT 以 10 分为最小单位</b>（真实 SAT 就是这样）。期望分 ≈ <code>1090 + 40×英语</code>，运气越高波动越小。<b>1600 满分极罕见</b>——只在高英语 + 高运气且极小概率下才出现。</li>
-<li>托福满分 120，期望分 ≈ <code>52 + 5.6×英语</code>。<b>120 满分同样极罕见</b>。</li>
-<li>压力 ≥70% 时考试会扣分（高压状态）。没考过托福的国际生申请会打折。</li>
+<li>两者独立行动，各自只留历史最高分。</li>
+<li>SAT 以 10 分为单位，期望 ≈ <code>1090 + 40×英语</code>；1600 满分极罕见。</li>
+<li>托福满分 120，期望 ≈ <code>52 + 5.6×英语</code>；120 极罕见。</li>
+<li>压力高时考试扣分；没考托福的国际生申请会打折。</li>
 </ul></div>
 
-<div class="help-sec"><h3>精力、压力与声望</h3>
+<div class="help-sec"><h3>精力、压力、声望</h3>
 <ul>
-<li><b>精力</b>：行动消耗，低精力会直接拉低当学期成绩。<b>休息</b>常驻在行动里，永远能回血。</li>
-<li><b>压力</b>：行动会加压力，压力 ≥70% 时行动收益减半、考试扣分。休息可降 25。</li>
-<li><b>声望</b>：社团、人脉、竞赛累积，影响推荐信质量与录取模型（最高 +0.12 的加分）。</li>
+<li><b>精力</b>：行动消耗，低则拉低成绩；休息常驻可回血。</li>
+<li><b>压力</b>：行动会加压力，高压时收益减半、考试扣分。休息仅降 14、每学期自动回落仅 2 点——压力更黏；压力越高，本学期 GPA 还会被悄悄拖累。</li>
+<li><b>声望</b>：社团/人脉/竞赛累积，影响推荐信与录取（最高 +0.12）。</li>
 </ul></div>
 
 <div class="help-sec"><h3>行动池</h3>
-<p>行动分成两类：<b>基础行动</b>随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书），外加<b>休息</b>，保证你永远能回血、永远有标化可刷；其余行动每回合<b>随机抽 6 个</b>给你挑。所以标化选项不会抽不到，同时每回合都有新鲜选择。</p></div>
+<p>基础行动随年级变化（含休息，永远能回血、有标化可刷）；其余行动每回合随机抽 6 个，保证新鲜选择。</p></div>
 
 <div class="help-sec"><h3>天性特质</h3>
-<p>开局随机抽 <b>2 个</b>特质，会持续影响整局（如早起鸟每回合回精力、书虫学术收益 +35%、拖延症耗精力更多但英语起步更高）。可以重抽。</p></div>
+<p>开局随机 2 个特质，持续影响整局（如早起鸟回精力、书虫学术 +35%）。可重抽。</p></div>
 
 <div class="help-sec"><h3>选校与录取</h3>
 <ul>
-<li>按你的最终画像算出全部学校的录取概率，由<b>难到易</b>排序后分成三档：
-  <b>冲刺</b> = 录取率最低的 5 所里随机 2 所 + 随机 3 所录取率&lt;10% 的校；
-  <b>匹配</b> = 录取率≥10% 且非保底的校里，按录取率<b>间隔取样</b>（保证分散、不扎堆）挑约 10 所；
-  <b>保底</b> = 录取率最高的 10 所（对你最易）。</li>
-<li>两种极端会明确提示：<b>全部校录取率都&lt;10%</b> → 你匹配不到任何学校，只能冲冲刺校；<b>连最容易的校命中率都偏低</b> → 你目前没有真正的保底校，匹配校已是你的上限。</li>
-<li><b>ED（早决定）</b>：从美国提供 ED 的校中选 1 所绑定提交；部分校 ED 录取率明显高于 RD。<b>一旦 ED 录取即绑定入学，须撤回全部 RD 申请</b>——此时结局页不再显示任何 RD 录取信息，符合真实规则。</li>
-<li><b>RD（常规）</b>：按上面三档勾选（冲刺 / 匹配 / 保底），可勾选 <b>10–20 所</b>提交（若候选不足则按实际最少数量），最后按概率逐封拆开。</li>
-<li><b>顶尖校“信号弹”</b>：强推、国际大奖、一作论文等强力事件会累积 <b>顶尖校信号</b>，以及<b>顶尖夏校</b>录取，都能<b>显著抬升最难（录取率最低）那批校</b>的命中率（对普通保底校几乎无影响）——这是冲顶尖校的关键，且都带一定概率。</li>
-<li>录取模型基于 <b>美国 US News 2026 Top 40 的 Common Data Set 真实数据 + 英国/香港名校国际生录取率估算</b>（录取率、SAT 区间、GPA、国际生政策等），在你的 GPA、标化、活动、文书、推荐信、课程难度、声望、顶尖校信号上做校正。</li>
+<li>全部学校按<b>你的录取概率</b>由难到易分三档：<b>冲刺</b>=≤10%；<b>匹配</b>=10%–30%；<b>保底</b>=>30%。默认展示 5 冲刺 / 10 匹配 / 10 保底；匹配或保底可选校不足时，缺额补进冲刺。档位即概率区间，所见即所得。</li>
+<li><b>本季共同冲击</b>：申请季会抽一次全局波动 ε（好年/坏年），你看到的 ED/RD 概率已经包含它，拆开前后一致。</li>
+<li>两种极端会提示：全部校都 ≤10% → 只能冲冲刺校；连最容易的都偏低 → 没真正保底。</li>
+<li><b>ED</b>：美国提供 ED 的校中选 1 所绑定；一旦录取即撤回全部 RD，结局页不再显示 RD 录取。</li>
+<li><b>RD</b>：按档次勾选 10–20 所，最后按概率逐封拆开。</li>
+<li><b>顶尖校信号弹</b>：强推 / 国际大奖 / 一作 / 顶尖夏校，会抬升最难那批校的命中率（对保底几乎无影响）——冲顶尖校的关键，且都带概率。</li>
+<li>录取概率基于 US News 2026 Top 40 真实数据 + 英/港校国际生率估算，结合你的 GPA、标化、活动、文书、推荐信、课程、声望、信号弹综合推算。</li>
 </ul></div>
 
 <div class="help-sec"><h3>夏校申请季（高二升高三）</h3>
-<p>高二下结束后会插入一个<b>夏校申请季</b>：系统从 8 个夏校里随机给出 4 个（难度从 RSI/SSP/MITES 这类研究型，到本地大学科研助理）。能否申请取决于你的 <b>加权 GPA、SAT、学术/英语、声望</b> 是否达标（门槛按实测可达区间标定；<b>声望</b>是真正稀缺的资源——靠随机事件堆出来，已压到较低要求；SAT 因高二起基础行动常驻、刷不动就休息回血，几乎每局都考，故可作通用门槛）。提交后按达标程度<b>摇号</b>录取；录上越好（boost 越高），后续顶尖校录取加成越大——这是冲名校的一条真实路径。</p>
-<p><b>一个都够不到？</b>最下方还有一栏<b>永远可选</b>的<b>「跳过申请 · 苦心冲标化」</b>：不申夏校，把暑假全用来刷标化，立即获得 <b>英语 +1</b> 并<b>额外多考一次 SAT</b>（可能刷新最佳分数）。它与申请夏校<b>二选一</b>，确保你在夏校季永远有得选、不会空手而归。</p></div>
+<p>高二下后插入：从 8 个夏校随机给 4 个（RSI/SSP/MITES 到本地科研助理）。能否申取决于加权 GPA、SAT、学术/英语、声望是否达标；按达标程度摇号，录得越好顶尖校加成越大。够不到？最下方可「跳过 · 苦心冲标化」：英语 +1 并多考一次 SAT，与申夏校二选一。</p></div>
 
 <div class="help-sec"><h3>成就</h3>
-<p>结局页会结算 12 项成就，作为重复游玩的目标。</p></div>
-`;
+<p>结局页结算 12 项成就，作重复游玩目标。</p></div>`;
+
 
 /* ---------- wire up ---------- */
-$("startBtn").onclick=startGame;
+$("startBtn").onclick=()=>{
+  if(ptsUsed()!==START_POINTS){ $("ptsLeft").textContent=`点数必须为 ${START_POINTS}（当前 ${ptsUsed()}），请先点“随机”或手动调整。`; return; }   // #9：开局校验点数恰好 24
+  startGame();
+};
 $("randBtn").onclick=()=>{Object.keys(editStats).forEach(k=>editStats[k]=ri(1,10));normalizeTo24();renderSetup();};
 $("rerollTraitBtn").onclick=rollTraits;
 $("endRoundBtn").onclick=endRound;
@@ -1801,9 +2151,31 @@ $("helpBackBtn").onclick=()=>{
   $(helpFrom).classList.add("on");
 };
 $("edPickBtn").onclick=edPick;
+$("edClearBtn").onclick=clearED;
 $("summerApplyBtn").onclick=summerApply;
 rollTraits();
 renderSetup();
+
+/* ============================================================
+   共享榜（Supabase）建表 SQL —— 在 Supabase SQL Editor 执行：
+   ------------------------------------------------------------
+   create table leaderboard (
+     id      text   primary key check (char_length(id) <= 10),
+     school  text   not null,
+     band    text   not null,
+     grade   text   not null,
+     score   int    not null,
+     gpa     real,
+     sat     int,
+     ts      bigint  default extract(epoch from now())::bigint
+   );
+   alter table leaderboard enable row level security;
+   -- 匿名可读榜
+   create policy "public read" on leaderboard for select using (true);
+   -- 匿名可写入（限制 ID≤10 字，避免垃圾写入可自行加校验/限流）
+   create policy "public insert" on leaderboard for insert with check (char_length(id) <= 10);
+   然后把本文件 LEADERBOARD 的 mode 改为 "supabase"，并填好 url / anonKey / table。
+   ============================================================ */
 </script>
 </body>
 </html>
