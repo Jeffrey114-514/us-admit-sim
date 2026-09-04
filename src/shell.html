@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申请人生 · College Life Sim</title>
+<!--CSS-->
+</head>
+<body>
+<div class="wrap">
+  <h1>申请人生</h1>
+  <p class="kicker">初三到高三 · 7 个学期 · 57 所大学</p>
+  <hr class="rule">
+
+  <section id="setup" class="screen on">
+    <div class="card">
+      <p class="label">人设模板</p>
+      <div class="tpl-row" id="tplRow"></div>
+      <div class="pts" id="ptsLeft"></div>
+      <div id="statEditors"></div>
+      <div style="margin-top:18px;display:flex;gap:8px">
+        <button class="btn" id="startBtn">开始</button>
+        <button class="btn ghost" id="randBtn">随机</button>
+        <button class="btn ghost" id="rerollTraitBtn">重抽特质</button>
+      </div>
+    </div>
+    <div class="card">
+      <p class="label">课程难度（影响 GPA 与申请）</p>
+      <div class="rigor-row" id="rigorRow"></div>
+      <div class="small" id="rigorDesc"></div>
+    </div>
+    <div class="card">
+      <p class="label">专业方向（影响录取 · 可规划）</p>
+      <div class="majors" id="majorRow"></div>
+      <div class="small" id="majorDesc"></div>
+    </div>
+    <div class="card">
+      <p class="label">天性特质（开局抽取）</p>
+      <div class="traits" id="traitBox"></div>
+    </div>
+    <div style="text-align:center"><button class="link" id="helpBtn1">玩法说明</button></div>
+  </section>
+
+  <section id="game" class="screen">
+    <div class="card status" id="status"></div>
+    <div class="card event" id="eventCard"></div>
+    <div class="card">
+      <p class="label">行动（基础行动按年级 + 随机 6 个 · 行动点：初三 3 / 高一 4 / 高二 5 / 高三上 8）</p>
+      <div class="acts" id="acts"></div>
+      <div class="foot">
+        <button class="btn ghost" id="endRoundBtn">结束回合</button>
+        <span id="roundHint" class="small" style="flex:1"></span>
+        <button class="link" id="helpBtn2">玩法说明</button>
+      </div>
+    </div>
+    <div class="card">
+      <p class="label">记录</p>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+
+  <section id="pick" class="screen">
+    <div class="card">
+      <p class="label">早申 ED（可选 · 绑定 1 所）</p>
+      <div class="narr" style="font-size:13.5px;margin-bottom:8px">ED（早决定）可选 1 所绑定提交，录取即入学。无 ED 的校（哈佛/斯坦福等 REA）与英/港校只能走 RD。</div>
+      <div class="searchbar">
+        <input id="edSearch" placeholder="搜索美国 ED 校（中/英文名）" list="edList">
+        <datalist id="edList"></datalist>
+        <button class="btn ghost" id="edPickBtn">选为 ED</button>
+        <button class="btn ghost" id="edClearBtn" style="display:none">清除 ED</button>
+      </div>
+      <div class="small" id="edHint"></div>
+      <div id="edMatches" class="ed-matches"></div>
+      <div id="edCard"></div>
+    </div>
+    <div class="card">
+      <p class="label">招生官眼里的你（六维通道 · 相对全池 57 校平均）</p>
+      <div id="aoPanel" class="ao-panel"></div>
+      <div class="small">招生官视角下的相对强弱：绿条=优势，红条=短板，专业契合度按 0–100% 展示。据此规划补强方向。</div>
+    </div>
+    <div class="card">
+      <p class="label">常规 RD（勾选 10–20 所）</p>
+      <div id="bandWarn" class="warn-banner" style="display:none"></div>
+      <div class="narr" id="rdDesc" style="font-size:13.5px;margin-bottom:8px"></div>
+      <div class="band">
+        <div class="bandhead"><span class="t">冲刺</span><span class="cnt" id="cntReach">0</span></div>
+        <div class="cands" id="candReach"></div>
+      </div>
+      <div class="band">
+        <div class="bandhead"><span class="t">匹配</span><span class="cnt" id="cntMatch">0</span></div>
+        <div class="cands" id="candMatch"></div>
+      </div>
+      <div class="band">
+        <div class="bandhead"><span class="t">保底</span><span class="cnt" id="cntSafety">0</span></div>
+        <div class="cands" id="candSafety"></div>
+      </div>
+      <div class="foot">
+        <button class="btn" id="confirmPickBtn" disabled>提交申请，看结果</button>
+        <span class="small" id="pickHint" style="flex:1"></span>
+        <button class="link" id="helpBtn3">玩法说明</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="summer" class="screen">
+    <div class="card">
+      <p class="label">高二升高三 · 夏校申请季</p>
+      <div class="narr" style="font-size:13.5px;margin-bottom:10px">顶尖夏校（RSI/SSP/MITES，录取率 3–10%）是冲顶尖校的“信号弹”。挑 1–2 个达标的提交，按达标程度摇号；录得越好，顶尖校加成越高。够不到？最下方可「跳过 · 苦心冲标化」：英语 +1 并多考一次 SAT。</div>
+      <div id="summerList" class="summer-list"></div>
+      <div class="foot">
+        <button class="btn" id="summerApplyBtn">确认</button>
+        <span class="small" id="summerHint" style="flex:1"></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="endgame" class="screen">
+    <div class="card">
+      <p class="label">人设卡</p>
+      <div class="tags" id="persTags"></div>
+      <div class="narr" id="persNarr"></div>
+      <div class="stats" id="finalChips" style="margin-top:18px;border-top:1px solid var(--line);"></div>
+    </div>
+    <div class="card">
+      <p class="label">成就</p>
+      <div class="achs" id="achList"></div>
+    </div>
+    <div class="card">
+      <p class="label">成绩单</p>
+      <div id="transcript"></div>
+    </div>
+    <div class="card">
+      <p class="label">录取结果</p>
+      <div id="edResult"></div>
+      <div class="tierlabel">常规 RD</div>
+      <div id="rdTable"></div>
+      <div class="foot">
+        <button class="btn" id="restartBtn">再玩一局</button>
+        <button class="btn ghost" id="allBtn">全部 57 校</button>
+      </div>
+      <div id="allTable" class="collapsed"></div>
+    </div>
+    <div class="card">
+      <p class="label">排行榜 · 录取最优战绩</p>
+      <div id="lbPanel"><div class="small">读取中…</div></div>
+    </div>
+  </section>
+
+  <section id="help" class="screen">
+    <div class="card" id="helpBody"></div>
+    <div style="text-align:center"><button class="btn ghost" id="helpBackBtn">返回</button></div>
+  </section>
+</div>
+
+<!-- 常驻排行榜入口：任何界面随时点开查看实时榜（仅查看，不含上传） -->
+<button id="lbFloatBtn" class="lb-float" title="查看实时排行榜">🏆 排行榜</button>
+<div id="lbModal" class="lb-overlay">
+  <div class="lb-modal">
+    <div class="lb-modal-head">
+      <span>🏆 实时排行榜 · 录取最优战绩</span>
+      <button id="lbModalClose" class="lb-x" title="关闭">✕</button>
+    </div>
+    <div id="lbModalPanel" class="lb-modal-body"><div class="small">读取中…</div></div>
+  </div>
+</div>
+
+<!-- 排行榜共享榜客户端：默认不加载外部脚本，避免阻塞页面渲染。只有在 LEADERBOARD.mode="supabase" 且填好 url/anonKey 时，才由 ensureSupabase() 按需异步注入 CDN 脚本；加载失败自动回退本地榜 -->
+<!--APP-->
+</body>
+</html>

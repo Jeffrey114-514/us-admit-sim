@@ -1,0 +1,95 @@
+[
+  {
+    "name": "RSI 研究夏校",
+    "sel": "≈3% 录取",
+    "need": {
+      "gpa": 3.9,
+      "sat": 1380,
+      "academic": 9.5,
+      "rep": 11
+    },
+    "boost": 0.9,
+    "desc": "MIT 旗下全免费研究型，全球最难进的夏校之一。"
+  },
+  {
+    "name": "SSP 科学夏校",
+    "sel": "≈7% 录取",
+    "need": {
+      "gpa": 3.85,
+      "sat": 1350,
+      "academic": 9,
+      "rep": 8
+    },
+    "boost": 0.8,
+    "desc": "天体物理/生化真实科研，校友多进 Caltech/MIT。"
+  },
+  {
+    "name": "MITES 工程夏校",
+    "sel": "≈5% 录取",
+    "need": {
+      "gpa": 3.78,
+      "sat": 1330,
+      "academic": 8.5,
+      "rep": 6
+    },
+    "boost": 0.75,
+    "desc": "MIT 全免费工程/科学项目，极难。"
+  },
+  {
+    "name": "斯坦福 SUMaC",
+    "sel": "≈10% 录取",
+    "need": {
+      "gpa": 3.68,
+      "sat": 1310,
+      "academic": 8.5,
+      "english": 5,
+      "rep": 6
+    },
+    "boost": 0.7,
+    "desc": "纯数学 immersion，冲刺顶尖理工。"
+  },
+  {
+    "name": "CMU SAMS 计算",
+    "sel": "≈12% 录取",
+    "need": {
+      "gpa": 3.52,
+      "sat": 1280,
+      "academic": 8,
+      "rep": 5
+    },
+    "boost": 0.6,
+    "desc": "卡耐基梅隆计算/领导力项目。"
+  },
+  {
+    "name": "耶鲁全球青年学者",
+    "sel": "≈10% 录取",
+    "need": {
+      "english": 4,
+      "social": 3.5,
+      "rep": 5
+    },
+    "boost": 0.6,
+    "desc": "人文社科向，耶鲁主办，只看英语/社交/声望（不看 GPA、不要求 SAT）。"
+  },
+  {
+    "name": "Garcia 材料科研",
+    "sel": "≈12% 录取",
+    "need": {
+      "gpa": 3.3,
+      "sat": 1270,
+      "academic": 7,
+      "rep": 4
+    },
+    "boost": 0.55,
+    "desc": "石溪大学材料科学真实科研。"
+  },
+  {
+    "name": "本地大学科研助理",
+    "sel": "中等",
+    "need": {
+      "academic": 5
+    },
+    "boost": 0.3,
+    "desc": "冷邮件争取的校内 lab 助理，只看学术、无 GPA/SAT/声望门槛（加成也最低）。"
+  }
+]

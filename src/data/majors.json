@@ -1,0 +1,78 @@
+[
+  {
+    "id": "und",
+    "name": "未定",
+    "icon": "star",
+    "desc": "先广泛探索，后期再聚焦。录取上不偏不倚。",
+    "related": []
+  },
+  {
+    "id": "cs",
+    "name": "计算机/工程",
+    "icon": "bolt",
+    "desc": "写代码、做项目、打 CTF。契合工程/CS 强校（如帝国理工、CMU 类）。",
+    "related": [
+      "code",
+      "research",
+      "contest"
+    ]
+  },
+  {
+    "id": "biz",
+    "name": "商科/经济",
+    "icon": "flag",
+    "desc": "商赛、创业、读财报。契合 LSE/沃顿类商强校。",
+    "related": [
+      "biz",
+      "club",
+      "contest",
+      "network"
+    ]
+  },
+  {
+    "id": "sci",
+    "name": "自然科学",
+    "icon": "book",
+    "desc": "进实验室、发论文。契合科研型大学。",
+    "related": [
+      "lab",
+      "research",
+      "contest"
+    ]
+  },
+  {
+    "id": "soc",
+    "name": "人文社科",
+    "icon": "people",
+    "desc": "调研、写作、辩论。契合 LSE/社科强校。",
+    "related": [
+      "debate",
+      "write",
+      "club",
+      "read"
+    ]
+  },
+  {
+    "id": "art",
+    "name": "艺术设计",
+    "icon": "bulb",
+    "desc": "创作、参展、作品集。契合艺术类/综合校艺术系。",
+    "related": [
+      "art",
+      "talent",
+      "contest",
+      "read"
+    ]
+  },
+  {
+    "id": "med",
+    "name": "医学预科",
+    "icon": "heart",
+    "desc": "医疗志愿、科研、生物。契合 Pre-med 强校。",
+    "related": [
+      "med",
+      "research",
+      "club"
+    ]
+  }
+]

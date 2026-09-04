@@ -1,0 +1,87 @@
+[
+  {
+    "id": "earlybird",
+    "name": "早起鸟",
+    "desc": "每回合额外恢复 6 点精力",
+    "fx": {
+      "energyRegen": 6
+    }
+  },
+  {
+    "id": "socialbf",
+    "name": "社牛",
+    "desc": "社交/人脉类行动收益 +35%，声望额外 +1",
+    "fx": {
+      "socialGain": 1.35,
+      "repBonus": 1
+    }
+  },
+  {
+    "id": "koi",
+    "name": "锦鲤",
+    "desc": "运气 +2",
+    "fx": {
+      "luck": 2
+    }
+  },
+  {
+    "id": "bookworm",
+    "name": "书虫",
+    "desc": "学术类行动收益 +35%",
+    "fx": {
+      "academicGain": 1.35
+    }
+  },
+  {
+    "id": "linguist",
+    "name": "语言天赋",
+    "desc": "英语类行动收益 +40%",
+    "fx": {
+      "englishGain": 1.4
+    }
+  },
+  {
+    "id": "athlete",
+    "name": "运动健将",
+    "desc": "精力上限 +8，压力增长 -15%",
+    "fx": {
+      "stamina": 8,
+      "stressMul": 0.85
+    }
+  },
+  {
+    "id": "iron",
+    "name": "抗压体质",
+    "desc": "压力增长 -30%",
+    "fx": {
+      "stressMul": 0.7
+    }
+  },
+  {
+    "id": "glass",
+    "name": "玻璃心",
+    "desc": "压力增长 +30%，但创造力 +1",
+    "fx": {
+      "stressMul": 1.3,
+      "creativity": 1
+    }
+  },
+  {
+    "id": "procras",
+    "name": "拖延症",
+    "desc": "行动精力消耗 +25%，但英语 +2 起步",
+    "fx": {
+      "energyCostMul": 1.25,
+      "english": 2
+    }
+  },
+  {
+    "id": "perfection",
+    "name": "完美主义",
+    "desc": "文书与推荐信成长 +30%，但压力增长 +10%",
+    "fx": {
+      "craftGain": 1.3,
+      "stressMul": 1.1
+    }
+  }
+]

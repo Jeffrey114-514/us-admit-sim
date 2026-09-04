@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- 本文件由 build.js 自动生成，请勿直接编辑。源码见 src/ -->
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -271,7 +272,6 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
 .aobar i{position:absolute;top:0;bottom:0;border-radius:5px}
 .aobar.center i{top:0;bottom:0}
 .aov{width:46px;flex:none;text-align:left;color:var(--mut);font-variant-numeric:tabular-nums}
-
 </style>
 </head>
 <body>
@@ -434,66 +434,1449 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
 
 <!-- 排行榜共享榜客户端：默认不加载外部脚本，避免阻塞页面渲染。只有在 LEADERBOARD.mode="supabase" 且填好 url/anonKey 时，才由 ensureSupabase() 按需异步注入 CDN 脚本；加载失败自动回退本地榜 -->
 <script>
+/* 00-schools.js — 学校池 SCHOOLS（数据来自 data/schools.json） */
 const SCHOOLS = [
-  {"rank":1,"nameEn":"Princeton University","nameZh":"普林斯顿大学","state":"NJ","type":"private","acceptRate":4.4,"acceptRateIntl":2.29,"sat25":1490,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.96,"toeflMin":null,"intlPct":14.1,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Intl rate = 250/10,897 (official). SCEA rate no longer published. Test-optional in 2025-26.","region":"US"},
-  {"rank":2,"nameEn":"Massachusetts Institute of Technology","nameZh":"麻省理工学院","state":"MA","type":"private","acceptRate":4.56,"acceptRateIntl":1.96,"sat25":1520,"sat75":1580,"act25":34,"act75":36,"gpaAvg":3.96,"toeflMin":90,"intlPct":10,"aidIntl":"need-blind","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT/ACT are ADMITTED-student mid-50 (M 780-800, ERW 740-780). EA 5.98%. Test-required.","region":"US","testReq":true},
-  {"rank":3,"nameEn":"Harvard University","nameZh":"哈佛大学","state":"MA","type":"private","acceptRate":4.18,"acceptRateIntl":2.51,"sat25":1450,"sat75":1560,"act25":33,"act75":35,"gpaAvg":3.95,"toeflMin":null,"intlPct":15.8,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT composite summed from CDS sections (ERW 720-770, M 730-790). CDS avg GPA 4.22 is weighted, so null.","region":"US"},
-  {"rank":4,"nameEn":"Stanford University","nameZh":"斯坦福大学","state":"CA","type":"private","acceptRate":3.8,"acceptRateIntl":2.28,"sat25":1520,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.94,"toeflMin":null,"intlPct":12.7,"aidIntl":"need-aware","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Last test-optional class; SAT/ACT required again from Class of 2030. No ED, REA only.","region":"US"},
-  {"rank":4,"nameEn":"Yale University","nameZh":"耶鲁大学","state":"CT","type":"private","acceptRate":4.8,"acceptRateIntl":2.88,"sat25":1480,"sat75":1560,"act25":33,"act75":35,"gpaAvg":3.94,"toeflMin":100,"intlPct":11,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-flexible (SAT/ACT/AP/IB). Official 4.8% (CDS 2,387/50,264). No published avg GPA.","region":"US"},
-  {"rank":6,"nameEn":"University of Chicago","nameZh":"芝加哥大学","state":"IL","type":"private","acceptRate":4.48,"acceptRateIntl":2.69,"sat25":1500,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.93,"toeflMin":null,"intlPct":13,"aidIntl":"need-aware","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-optional; offers EA + ED0/EDI/EDII. CDS avg GPA 4.54 is weighted, so gpaAvg null.","region":"US"},
-  {"rank":7,"nameEn":"Duke University","nameZh":"杜克大学","state":"NC","type":"private","acceptRate":5.2,"acceptRateIntl":3.12,"sat25":1520,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":12.6,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"SAT/ACT = mid-50 of admits who reported. Apply to Trinity or Pratt; Pratt is harder.","region":"US"},
-  {"rank":7,"nameEn":"Johns Hopkins University","nameZh":"约翰斯·霍普金斯大学","state":"MD","type":"private","acceptRate":5.14,"acceptRateIntl":3.08,"sat25":1530,"sat75":1570,"act25":35,"act75":35,"gpaAvg":3.95,"toeflMin":100,"intlPct":13.5,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":10.49,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Apply to Krieger or Whiting; Whiting harder. Official avg unweighted GPA 3.95; ACT mid-50 = 35.","region":"US"},
-  {"rank":7,"nameEn":"Northwestern University","nameZh":"西北大学","state":"IL","type":"private","acceptRate":7,"acceptRateIntl":4.2,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.92,"toeflMin":100,"intlPct":10,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":20,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Apply to one of 6 schools (Medill/McCormick/Bienen hardest). SAT/ACT = submitters' mid-50.","region":"US"},
-  {"rank":7,"nameEn":"University of Pennsylvania","nameZh":"宾夕法尼亚大学","state":"PA","type":"private","acceptRate":4.9,"acceptRateIntl":2.94,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.92,"toeflMin":100,"intlPct":15,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Wharton far harder than College/Nursing. SAT/ACT = enrolled submitters. Tests required from 2030.","region":"US"},
-  {"rank":11,"nameEn":"California Institute of Technology","nameZh":"加州理工学院","state":"CA","type":"private","acceptRate":3.78,"acceptRateIntl":2.27,"sat25":1550,"sat75":1580,"act25":35,"act75":36,"gpaAvg":3.95,"toeflMin":null,"intlPct":14,"aidIntl":"need-aware","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"REA only; Caltech says REA and RD both under 5%. SAT composite summed from CDS sections.","region":"US"},
-  {"rank":12,"nameEn":"Cornell University","nameZh":"康奈尔大学","state":"NY","type":"private","acceptRate":8.38,"acceptRateIntl":5.03,"sat25":1490,"sat75":1550,"act25":33,"act75":35,"gpaAvg":3.9,"toeflMin":100,"intlPct":9.8,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":18.78,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Admits by 7 colleges with very different rates (Engineering/Dyson lowest, Hotel/CALS highest).","region":"US"},
-  {"rank":13,"nameEn":"Brown University","nameZh":"布朗大学","state":"RI","type":"private","acceptRate":5.65,"acceptRateIntl":3.39,"sat25":1480,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.93,"toeflMin":100,"intlPct":14,"aidIntl":"need-blind","ed":true,"ea":false,"rea":false,"edAcceptRate":17.95,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Need-blind for internationals from Class of 2029. Test-required again since 2024-25 cycle.","region":"US"},
-  {"rank":13,"nameEn":"Dartmouth College","nameZh":"达特茅斯学院","state":"NH","type":"private","acceptRate":6.02,"acceptRateIntl":3.61,"sat25":1440,"sat75":1550,"act25":32,"act75":35,"gpaAvg":3.93,"toeflMin":null,"intlPct":12.8,"aidIntl":"need-blind","ed":true,"ea":false,"rea":false,"edAcceptRate":21.62,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"No longer publishes mid-50 SAT/ACT; shown values are CDS 2025-26 enrolled figures. ED-only.","region":"US"},
-  {"rank":15,"nameEn":"Columbia University","nameZh":"哥伦比亚大学","state":"NY","type":"private","acceptRate":4.94,"acceptRateIntl":2.96,"sat25":1510,"sat75":1560,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":105,"intlPct":16,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Permanently test-optional. SAT/ACT = enrolled submitters. Columbia Engineering harder than CC.","region":"US"},
-  {"rank":15,"nameEn":"University of California, Berkeley","nameZh":"加州大学伯克利分校","testBlind":true,"state":"CA","type":"public","acceptRate":11.4,"acceptRateIntl":5.8,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":80,"intlPct":11.4,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind. EECS/CS and capped majors far harder than campus average. No need aid for intl.","region":"US"},
-  {"rank":17,"nameEn":"Rice University","nameZh":"莱斯大学","state":"TX","type":"private","acceptRate":8.01,"acceptRateIntl":4.81,"sat25":1510,"sat75":1560,"act25":34,"act75":36,"gpaAvg":3.93,"toeflMin":100,"intlPct":13,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":13.2,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-optional (scores recommended). SAT/ACT = deposited students. ED I 13.2%, ED II 6.0%.","region":"US"},
-  {"rank":17,"nameEn":"University of California, Los Angeles","nameZh":"加州大学洛杉矶分校","testBlind":true,"state":"CA","type":"public","acceptRate":9.4,"acceptRateIntl":6.3,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.92,"toeflMin":87,"intlPct":8.4,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind. By school: Nursing 0.5%, Engineering 6.8%, College 11%. No need aid for intl.","region":"US"},
-  {"rank":17,"nameEn":"Vanderbilt University","nameZh":"范德堡大学","state":"TN","type":"private","acceptRate":4.7,"acceptRateIntl":2.82,"sat25":1510,"sat75":1560,"act25":34,"act75":35,"gpaAvg":3.9,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":13.2,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"ED I + ED II combined 13.2% (891/6,762); RD 3.3%. Test-optional through Class of 2031.","region":"US"},
-  {"rank":20,"nameEn":"Carnegie Mellon University","nameZh":"卡内基梅隆大学","state":"PA","type":"private","acceptRate":11.1,"acceptRateIntl":6.66,"sat25":1500,"sat75":1570,"act25":34,"act75":36,"gpaAvg":3.89,"toeflMin":102,"intlPct":19,"aidIntl":"none","ed":true,"ea":false,"rea":false,"edAcceptRate":20.6,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"SCS <5% vs Dietrich ~24%; CMU gives no need-based aid to internationals","region":"US","testReq":true},
-  {"rank":20,"nameEn":"University of Michigan--Ann Arbor","nameZh":"密歇根大学安娜堡分校","state":"MI","type":"public","acceptRate":16.4,"acceptRateIntl":9.84,"sat25":1370,"sat75":1530,"act25":32,"act75":34,"gpaAvg":3.9,"toeflMin":100,"intlPct":null,"aidIntl":"none","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"OOS/intl far below 16.4%; Ross 7.1%, CoE 14%; binding ED added for Class of 2030","region":"US"},
-  {"rank":20,"nameEn":"University of Notre Dame","nameZh":"圣母大学","state":"IN","type":"private","acceptRate":9,"acceptRateIntl":5.4,"sat25":1460,"sat75":1540,"act25":33,"act75":35,"gpaAvg":3.91,"toeflMin":100,"intlPct":8,"aidIntl":"need-blind","ed":false,"ea":false,"rea":true,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"REA 12.9% vs RD 6.7%; need-blind, no-loan aid for all students incl. international","region":"US"},
-  {"rank":20,"nameEn":"Washington University in St. Louis","nameZh":"圣路易斯华盛顿大学","state":"MO","type":"private","acceptRate":12,"acceptRateIntl":7.2,"sat25":1490,"sat75":1550,"act25":33,"act75":35,"gpaAvg":3.86,"toeflMin":100,"intlPct":12,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"61% of class via ED; need-aware for intl; EA being added for Class of 2031","region":"US"},
-  {"rank":24,"nameEn":"Emory University","nameZh":"埃默里大学","state":"GA","type":"private","acceptRate":10.3,"acceptRateIntl":6.3,"sat25":1500,"sat75":1570,"act25":33,"act75":35,"gpaAvg":3.83,"toeflMin":100,"intlPct":null,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":22.2,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"ED 22.2% vs RD 8.6%; Oxford Coll 13.3% vs Emory Coll 10.3%","region":"US"},
-  {"rank":24,"nameEn":"Georgetown University","nameZh":"乔治城大学","state":"DC","type":"private","acceptRate":12.2,"acceptRateIntl":7.32,"sat25":1410,"sat75":1530,"act25":32,"act75":35,"gpaAvg":3.89,"toeflMin":100,"intlPct":12,"aidIntl":"need-aware","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Admits by school (CAS/SFS/Health/Nursing); EA is restrictive; test-required","region":"US","testReq":true},
-  {"rank":26,"nameEn":"University of North Carolina--Chapel Hill","nameZh":"北卡罗来纳大学教堂山分校","state":"NC","type":"public","acceptRate":16.7,"acceptRateIntl":10.02,"sat25":1400,"sat75":1530,"act25":29,"act75":34,"gpaAvg":3.88,"toeflMin":null,"intlPct":5.6,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"82% of class must be NC residents; OOS/intl rate far lower than 16.7%","region":"US"},
-  {"rank":26,"nameEn":"University of Virginia","nameZh":"弗吉尼亚大学","state":"VA","type":"public","acceptRate":15.4,"acceptRateIntl":9.24,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.89,"toeflMin":90,"intlPct":null,"aidIntl":"none","ed":true,"ea":true,"rea":false,"edAcceptRate":25.8,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 23% vs OOS 12.5%; ED 25.8%, EA 16.1%, RD 9.7%; no aid for internationals","region":"US"},
-  {"rank":28,"nameEn":"University of Southern California","nameZh":"南加州大学","state":"CA","type":"private","acceptRate":11.2,"acceptRateIntl":6.72,"sat25":1470,"sat75":1540,"act25":32,"act75":35,"gpaAvg":3.86,"toeflMin":100,"intlPct":21,"aidIntl":"need-aware","ed":true,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Fall-only rate; SCA ~2-4%; ED = Marshall pilot only; need-blind domestic only","region":"US"},
-  {"rank":29,"nameEn":"University of California, San Diego","nameZh":"加州大学圣迭戈分校","testBlind":true,"state":"CA","type":"public","acceptRate":28.4,"acceptRateIntl":30.6,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":80,"intlPct":11,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; capped majors (CS/bioeng) far harder than 28.4%","region":"US"},
-  {"rank":30,"nameEn":"The University of Texas--Austin","nameZh":"德克萨斯大学奥斯汀分校","state":"TX","type":"public","acceptRate":22.2,"acceptRateIntl":13.32,"sat25":1300,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":79,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"TX top 6% auto-admit fills ~75% of in-state seats; OOS/intl ~10%; no ED","region":"US","testReq":true},
-  {"rank":30,"nameEn":"University of Florida","nameZh":"佛罗里达大学","state":"FL","type":"public","acceptRate":19.8,"acceptRateIntl":11.88,"sat25":1380,"sat75":1510,"act25":31,"act75":34,"gpaAvg":3.91,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"holistic","dataYear":"Fall 2025 (Class of 2029)","notes":"Published 4.5-4.7 GPA is WEIGHTED; 10,510 EA + 7,659 RD admits; tests required","region":"US","testReq":true},
-  {"rank":32,"nameEn":"Georgia Institute of Technology","nameZh":"佐治亚理工学院","state":"GA","type":"public","acceptRate":12.7,"acceptRateIntl":7.62,"sat25":1430,"sat75":1530,"act25":31,"act75":35,"gpaAvg":3.93,"toeflMin":90,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 30% vs non-resident 9%; EA1 ~33% (GA only) vs EA2 ~8%; test-required","region":"US","testReq":true},
-  {"rank":32,"nameEn":"New York University","nameZh":"纽约大学","state":"NY","type":"private","acceptRate":7.7,"acceptRateIntl":4.62,"sat25":1480,"sat75":1550,"act25":34,"act75":35,"gpaAvg":3.81,"toeflMin":100,"intlPct":26,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"CAS/Stern/Nursing <5% each; >50% of class via ED; ED rate not published","region":"US"},
-  {"rank":32,"nameEn":"University of California, Davis","nameZh":"加州大学戴维斯分校","testBlind":true,"state":"CA","type":"public","acceptRate":44.6,"acceptRateIntl":57.1,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.84,"toeflMin":80,"intlPct":12.8,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; UC-weighted GPA 4.00-4.26; admits by college","region":"US"},
-  {"rank":32,"nameEn":"University of California, Irvine","nameZh":"加州大学欧文分校","testBlind":true,"state":"CA","type":"public","acceptRate":28.7,"acceptRateIntl":42.8,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.84,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; Nursing 0.8%, CS 27.6%, Engineering 26.6%","region":"US"},
-  {"rank":36,"nameEn":"Boston College","nameZh":"波士顿学院","state":"MA","type":"private","acceptRate":14,"acceptRateIntl":8.4,"sat25":1440,"sat75":1520,"act25":33,"act75":35,"gpaAvg":3.87,"toeflMin":100,"intlPct":null,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"14% includes waitlist admits (initial ~12.6%); 4 undergrad schools","region":"US"},
-  {"rank":36,"nameEn":"Tufts University","nameZh":"塔夫茨大学","state":"MA","type":"private","acceptRate":10.5,"acceptRateIntl":6.3,"sat25":1480,"sat75":1540,"act25":33,"act75":35,"gpaAvg":3.88,"toeflMin":100,"intlPct":11,"aidIntl":"need-aware","ed":true,"ea":false,"rea":false,"edAcceptRate":32,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"ED I & II only (no EA); ED 32% vs RD 8.5%; scores from CDS enrolled profile","region":"US"},
-  {"rank":36,"nameEn":"University of Illinois Urbana-Champaign","nameZh":"伊利诺伊大学厄巴纳-香槟分校","state":"IL","type":"public","acceptRate":36.6,"acceptRateIntl":21.96,"sat25":1340,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.76,"toeflMin":79,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major-strict","dataYear":"Fall 2025 (Class of 2029)","notes":"First-choice-major rate 30.2% vs 36.6% campus; CS ~7-8%; Grainger Eng 21.1%","region":"US"},
-  {"rank":36,"nameEn":"University of Wisconsin--Madison","nameZh":"威斯康星大学麦迪逊分校","state":"WI","type":"public","acceptRate":40.8,"acceptRateIntl":31.6,"sat25":1340,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.86,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":true,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"In-state 56.4%, OOS 40.3%, intl 31.6%; admits by college/school","region":"US","testReq":null},
-  {"rank":40,"nameEn":"University of California, Santa Barbara","nameZh":"加州大学圣塔芭芭拉分校","testBlind":true,"state":"CA","type":"public","acceptRate":38.3,"acceptRateIntl":48.1,"sat25":null,"sat75":null,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":80,"intlPct":null,"aidIntl":"none","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"Fall 2025 (Class of 2029)","notes":"Test-blind; no early rounds; Engineering 21.3% vs 38.3% campus-wide","region":"US"},
-  {"rank":1,"nameEn":"University of Oxford","nameZh":"牛津大学","state":"UK","type":"public","acceptRate":16,"acceptRateIntl":9,"sat25":1460,"sat75":1560,"act25":null,"act75":null,"gpaAvg":3.95,"toeflMin":110,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":2,"nameEn":"University of Cambridge","nameZh":"剑桥大学","state":"UK","type":"public","acceptRate":21,"acceptRateIntl":13,"sat25":1460,"sat75":1560,"act25":null,"act75":null,"gpaAvg":3.95,"toeflMin":110,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":3,"nameEn":"Imperial College London","nameZh":"帝国理工学院","state":"UK","type":"public","acceptRate":14,"acceptRateIntl":11,"sat25":1440,"sat75":1550,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":92,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":4,"nameEn":"University College London","nameZh":"伦敦大学学院","state":"UK","type":"public","acceptRate":30,"acceptRateIntl":13,"sat25":1420,"sat75":1530,"act25":null,"act75":null,"gpaAvg":3.88,"toeflMin":92,"intlPct":50,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":5,"nameEn":"London School of Economics and Political Science","nameZh":"伦敦政治经济学院","state":"UK","type":"public","acceptRate":16,"acceptRateIntl":9,"sat25":1430,"sat75":1540,"act25":null,"act75":null,"gpaAvg":3.9,"toeflMin":100,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":6,"nameEn":"University of Edinburgh","nameZh":"爱丁堡大学","state":"UK","type":"public","acceptRate":47,"acceptRateIntl":20,"sat25":1400,"sat75":1520,"act25":null,"act75":null,"gpaAvg":3.82,"toeflMin":92,"intlPct":45,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":7,"nameEn":"King's College London","nameZh":"伦敦国王学院","state":"UK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1400,"sat75":1510,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":92,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":8,"nameEn":"University of Manchester","nameZh":"曼彻斯特大学","state":"UK","type":"public","acceptRate":56,"acceptRateIntl":25,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":90,"intlPct":35,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":9,"nameEn":"University of Warwick","nameZh":"华威大学","state":"UK","type":"public","acceptRate":50,"acceptRateIntl":18,"sat25":1390,"sat75":1510,"act25":null,"act75":null,"gpaAvg":3.83,"toeflMin":87,"intlPct":40,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":10,"nameEn":"University of Bristol","nameZh":"布里斯托大学","state":"UK","type":"public","acceptRate":68,"acceptRateIntl":22,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":90,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":11,"nameEn":"University of Glasgow","nameZh":"格拉斯哥大学","state":"UK","type":"public","acceptRate":70,"acceptRateIntl":25,"sat25":1370,"sat75":1490,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":90,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":12,"nameEn":"University of Southampton","nameZh":"南安普顿大学","state":"UK","type":"public","acceptRate":80,"acceptRateIntl":30,"sat25":1360,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.75,"toeflMin":81,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"英国本科 via UCAS，按专业录取；国际生录取率为估算。","region":"UK"},
-  {"rank":13,"nameEn":"University of Hong Kong","nameZh":"香港大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":12,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.8,"toeflMin":93,"intlPct":30,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},
-  {"rank":14,"nameEn":"Chinese University of Hong Kong","nameZh":"香港中文大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1360,"sat75":1480,"act25":null,"act75":null,"gpaAvg":3.78,"toeflMin":85,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},
-  {"rank":15,"nameEn":"Hong Kong University of Science and Technology","nameZh":"香港科技大学","state":"HK","type":"public","acceptRate":40,"acceptRateIntl":15,"sat25":1380,"sat75":1500,"act25":null,"act75":null,"gpaAvg":3.82,"toeflMin":85,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},
-  {"rank":16,"nameEn":"City University of Hong Kong","nameZh":"香港城市大学","state":"HK","type":"public","acceptRate":45,"acceptRateIntl":20,"sat25":1300,"sat75":1450,"act25":null,"act75":null,"gpaAvg":3.62,"toeflMin":79,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"},
-  {"rank":17,"nameEn":"Hong Kong Polytechnic University","nameZh":"香港理工大学","state":"HK","type":"public","acceptRate":50,"acceptRateIntl":25,"sat25":1280,"sat75":1430,"act25":null,"act75":null,"gpaAvg":3.6,"toeflMin":80,"intlPct":25,"aidIntl":"need-aware","ed":false,"ea":false,"rea":false,"edAcceptRate":null,"admitByMajor":"major","dataYear":"2025 entry (est.)","notes":"香港本科对内地生单列通道；录取率为估算。","region":"HK"}
+  {
+    "rank": 1,
+    "nameEn": "Princeton University",
+    "nameZh": "普林斯顿大学",
+    "state": "NJ",
+    "type": "private",
+    "acceptRate": 4.4,
+    "acceptRateIntl": 2.29,
+    "sat25": 1490,
+    "sat75": 1560,
+    "act25": 34,
+    "act75": 35,
+    "gpaAvg": 3.96,
+    "toeflMin": null,
+    "intlPct": 14.1,
+    "aidIntl": "need-blind",
+    "ed": false,
+    "ea": false,
+    "rea": true,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Intl rate = 250/10,897 (official). SCEA rate no longer published. Test-optional in 2025-26.",
+    "region": "US"
+  },
+  {
+    "rank": 2,
+    "nameEn": "Massachusetts Institute of Technology",
+    "nameZh": "麻省理工学院",
+    "state": "MA",
+    "type": "private",
+    "acceptRate": 4.56,
+    "acceptRateIntl": 1.96,
+    "sat25": 1520,
+    "sat75": 1580,
+    "act25": 34,
+    "act75": 36,
+    "gpaAvg": 3.96,
+    "toeflMin": 90,
+    "intlPct": 10,
+    "aidIntl": "need-blind",
+    "ed": false,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "SAT/ACT are ADMITTED-student mid-50 (M 780-800, ERW 740-780). EA 5.98%. Test-required.",
+    "region": "US",
+    "testReq": true
+  },
+  {
+    "rank": 3,
+    "nameEn": "Harvard University",
+    "nameZh": "哈佛大学",
+    "state": "MA",
+    "type": "private",
+    "acceptRate": 4.18,
+    "acceptRateIntl": 2.51,
+    "sat25": 1450,
+    "sat75": 1560,
+    "act25": 33,
+    "act75": 35,
+    "gpaAvg": 3.95,
+    "toeflMin": null,
+    "intlPct": 15.8,
+    "aidIntl": "need-blind",
+    "ed": false,
+    "ea": false,
+    "rea": true,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "SAT composite summed from CDS sections (ERW 720-770, M 730-790). CDS avg GPA 4.22 is weighted, so null.",
+    "region": "US"
+  },
+  {
+    "rank": 4,
+    "nameEn": "Stanford University",
+    "nameZh": "斯坦福大学",
+    "state": "CA",
+    "type": "private",
+    "acceptRate": 3.8,
+    "acceptRateIntl": 2.28,
+    "sat25": 1520,
+    "sat75": 1570,
+    "act25": 34,
+    "act75": 36,
+    "gpaAvg": 3.94,
+    "toeflMin": null,
+    "intlPct": 12.7,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": true,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Last test-optional class; SAT/ACT required again from Class of 2030. No ED, REA only.",
+    "region": "US"
+  },
+  {
+    "rank": 4,
+    "nameEn": "Yale University",
+    "nameZh": "耶鲁大学",
+    "state": "CT",
+    "type": "private",
+    "acceptRate": 4.8,
+    "acceptRateIntl": 2.88,
+    "sat25": 1480,
+    "sat75": 1560,
+    "act25": 33,
+    "act75": 35,
+    "gpaAvg": 3.94,
+    "toeflMin": 100,
+    "intlPct": 11,
+    "aidIntl": "need-blind",
+    "ed": false,
+    "ea": false,
+    "rea": true,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-flexible (SAT/ACT/AP/IB). Official 4.8% (CDS 2,387/50,264). No published avg GPA.",
+    "region": "US"
+  },
+  {
+    "rank": 6,
+    "nameEn": "University of Chicago",
+    "nameZh": "芝加哥大学",
+    "state": "IL",
+    "type": "private",
+    "acceptRate": 4.48,
+    "acceptRateIntl": 2.69,
+    "sat25": 1500,
+    "sat75": 1560,
+    "act25": 34,
+    "act75": 35,
+    "gpaAvg": 3.93,
+    "toeflMin": null,
+    "intlPct": 13,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-optional; offers EA + ED0/EDI/EDII. CDS avg GPA 4.54 is weighted, so gpaAvg null.",
+    "region": "US"
+  },
+  {
+    "rank": 7,
+    "nameEn": "Duke University",
+    "nameZh": "杜克大学",
+    "state": "NC",
+    "type": "private",
+    "acceptRate": 5.2,
+    "acceptRateIntl": 3.12,
+    "sat25": 1520,
+    "sat75": 1570,
+    "act25": 34,
+    "act75": 36,
+    "gpaAvg": 3.93,
+    "toeflMin": 100,
+    "intlPct": 11,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 12.6,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "SAT/ACT = mid-50 of admits who reported. Apply to Trinity or Pratt; Pratt is harder.",
+    "region": "US"
+  },
+  {
+    "rank": 7,
+    "nameEn": "Johns Hopkins University",
+    "nameZh": "约翰斯·霍普金斯大学",
+    "state": "MD",
+    "type": "private",
+    "acceptRate": 5.14,
+    "acceptRateIntl": 3.08,
+    "sat25": 1530,
+    "sat75": 1570,
+    "act25": 35,
+    "act75": 35,
+    "gpaAvg": 3.95,
+    "toeflMin": 100,
+    "intlPct": 13.5,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 10.49,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Apply to Krieger or Whiting; Whiting harder. Official avg unweighted GPA 3.95; ACT mid-50 = 35.",
+    "region": "US"
+  },
+  {
+    "rank": 7,
+    "nameEn": "Northwestern University",
+    "nameZh": "西北大学",
+    "state": "IL",
+    "type": "private",
+    "acceptRate": 7,
+    "acceptRateIntl": 4.2,
+    "sat25": 1510,
+    "sat75": 1560,
+    "act25": 34,
+    "act75": 35,
+    "gpaAvg": 3.92,
+    "toeflMin": 100,
+    "intlPct": 10,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 20,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Apply to one of 6 schools (Medill/McCormick/Bienen hardest). SAT/ACT = submitters' mid-50.",
+    "region": "US"
+  },
+  {
+    "rank": 7,
+    "nameEn": "University of Pennsylvania",
+    "nameZh": "宾夕法尼亚大学",
+    "state": "PA",
+    "type": "private",
+    "acceptRate": 4.9,
+    "acceptRateIntl": 2.94,
+    "sat25": 1510,
+    "sat75": 1560,
+    "act25": 34,
+    "act75": 35,
+    "gpaAvg": 3.92,
+    "toeflMin": 100,
+    "intlPct": 15,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Wharton far harder than College/Nursing. SAT/ACT = enrolled submitters. Tests required from 2030.",
+    "region": "US"
+  },
+  {
+    "rank": 11,
+    "nameEn": "California Institute of Technology",
+    "nameZh": "加州理工学院",
+    "state": "CA",
+    "type": "private",
+    "acceptRate": 3.78,
+    "acceptRateIntl": 2.27,
+    "sat25": 1550,
+    "sat75": 1580,
+    "act25": 35,
+    "act75": 36,
+    "gpaAvg": 3.95,
+    "toeflMin": null,
+    "intlPct": 14,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": true,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "REA only; Caltech says REA and RD both under 5%. SAT composite summed from CDS sections.",
+    "region": "US"
+  },
+  {
+    "rank": 12,
+    "nameEn": "Cornell University",
+    "nameZh": "康奈尔大学",
+    "state": "NY",
+    "type": "private",
+    "acceptRate": 8.38,
+    "acceptRateIntl": 5.03,
+    "sat25": 1490,
+    "sat75": 1550,
+    "act25": 33,
+    "act75": 35,
+    "gpaAvg": 3.9,
+    "toeflMin": 100,
+    "intlPct": 9.8,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 18.78,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Admits by 7 colleges with very different rates (Engineering/Dyson lowest, Hotel/CALS highest).",
+    "region": "US"
+  },
+  {
+    "rank": 13,
+    "nameEn": "Brown University",
+    "nameZh": "布朗大学",
+    "state": "RI",
+    "type": "private",
+    "acceptRate": 5.65,
+    "acceptRateIntl": 3.39,
+    "sat25": 1480,
+    "sat75": 1560,
+    "act25": 34,
+    "act75": 35,
+    "gpaAvg": 3.93,
+    "toeflMin": 100,
+    "intlPct": 14,
+    "aidIntl": "need-blind",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 17.95,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Need-blind for internationals from Class of 2029. Test-required again since 2024-25 cycle.",
+    "region": "US"
+  },
+  {
+    "rank": 13,
+    "nameEn": "Dartmouth College",
+    "nameZh": "达特茅斯学院",
+    "state": "NH",
+    "type": "private",
+    "acceptRate": 6.02,
+    "acceptRateIntl": 3.61,
+    "sat25": 1440,
+    "sat75": 1550,
+    "act25": 32,
+    "act75": 35,
+    "gpaAvg": 3.93,
+    "toeflMin": null,
+    "intlPct": 12.8,
+    "aidIntl": "need-blind",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 21.62,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "No longer publishes mid-50 SAT/ACT; shown values are CDS 2025-26 enrolled figures. ED-only.",
+    "region": "US"
+  },
+  {
+    "rank": 15,
+    "nameEn": "Columbia University",
+    "nameZh": "哥伦比亚大学",
+    "state": "NY",
+    "type": "private",
+    "acceptRate": 4.94,
+    "acceptRateIntl": 2.96,
+    "sat25": 1510,
+    "sat75": 1560,
+    "act25": 34,
+    "act75": 36,
+    "gpaAvg": 3.93,
+    "toeflMin": 105,
+    "intlPct": 16,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Permanently test-optional. SAT/ACT = enrolled submitters. Columbia Engineering harder than CC.",
+    "region": "US"
+  },
+  {
+    "rank": 15,
+    "nameEn": "University of California, Berkeley",
+    "nameZh": "加州大学伯克利分校",
+    "testBlind": true,
+    "state": "CA",
+    "type": "public",
+    "acceptRate": 11.4,
+    "acceptRateIntl": 5.8,
+    "sat25": null,
+    "sat75": null,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.9,
+    "toeflMin": 80,
+    "intlPct": 11.4,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major-strict",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-blind. EECS/CS and capped majors far harder than campus average. No need aid for intl.",
+    "region": "US"
+  },
+  {
+    "rank": 17,
+    "nameEn": "Rice University",
+    "nameZh": "莱斯大学",
+    "state": "TX",
+    "type": "private",
+    "acceptRate": 8.01,
+    "acceptRateIntl": 4.81,
+    "sat25": 1510,
+    "sat75": 1560,
+    "act25": 34,
+    "act75": 36,
+    "gpaAvg": 3.93,
+    "toeflMin": 100,
+    "intlPct": 13,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 13.2,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-optional (scores recommended). SAT/ACT = deposited students. ED I 13.2%, ED II 6.0%.",
+    "region": "US"
+  },
+  {
+    "rank": 17,
+    "nameEn": "University of California, Los Angeles",
+    "nameZh": "加州大学洛杉矶分校",
+    "testBlind": true,
+    "state": "CA",
+    "type": "public",
+    "acceptRate": 9.4,
+    "acceptRateIntl": 6.3,
+    "sat25": null,
+    "sat75": null,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.92,
+    "toeflMin": 87,
+    "intlPct": 8.4,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major-strict",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-blind. By school: Nursing 0.5%, Engineering 6.8%, College 11%. No need aid for intl.",
+    "region": "US"
+  },
+  {
+    "rank": 17,
+    "nameEn": "Vanderbilt University",
+    "nameZh": "范德堡大学",
+    "state": "TN",
+    "type": "private",
+    "acceptRate": 4.7,
+    "acceptRateIntl": 2.82,
+    "sat25": 1510,
+    "sat75": 1560,
+    "act25": 34,
+    "act75": 35,
+    "gpaAvg": 3.9,
+    "toeflMin": 100,
+    "intlPct": 11,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 13.2,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "ED I + ED II combined 13.2% (891/6,762); RD 3.3%. Test-optional through Class of 2031.",
+    "region": "US"
+  },
+  {
+    "rank": 20,
+    "nameEn": "Carnegie Mellon University",
+    "nameZh": "卡内基梅隆大学",
+    "state": "PA",
+    "type": "private",
+    "acceptRate": 11.1,
+    "acceptRateIntl": 6.66,
+    "sat25": 1500,
+    "sat75": 1570,
+    "act25": 34,
+    "act75": 36,
+    "gpaAvg": 3.89,
+    "toeflMin": 102,
+    "intlPct": 19,
+    "aidIntl": "none",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 20.6,
+    "admitByMajor": "major-strict",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "SCS <5% vs Dietrich ~24%; CMU gives no need-based aid to internationals",
+    "region": "US",
+    "testReq": true
+  },
+  {
+    "rank": 20,
+    "nameEn": "University of Michigan--Ann Arbor",
+    "nameZh": "密歇根大学安娜堡分校",
+    "state": "MI",
+    "type": "public",
+    "acceptRate": 16.4,
+    "acceptRateIntl": 9.84,
+    "sat25": 1370,
+    "sat75": 1530,
+    "act25": 32,
+    "act75": 34,
+    "gpaAvg": 3.9,
+    "toeflMin": 100,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": true,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "OOS/intl far below 16.4%; Ross 7.1%, CoE 14%; binding ED added for Class of 2030",
+    "region": "US"
+  },
+  {
+    "rank": 20,
+    "nameEn": "University of Notre Dame",
+    "nameZh": "圣母大学",
+    "state": "IN",
+    "type": "private",
+    "acceptRate": 9,
+    "acceptRateIntl": 5.4,
+    "sat25": 1460,
+    "sat75": 1540,
+    "act25": 33,
+    "act75": 35,
+    "gpaAvg": 3.91,
+    "toeflMin": 100,
+    "intlPct": 8,
+    "aidIntl": "need-blind",
+    "ed": false,
+    "ea": false,
+    "rea": true,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "REA 12.9% vs RD 6.7%; need-blind, no-loan aid for all students incl. international",
+    "region": "US"
+  },
+  {
+    "rank": 20,
+    "nameEn": "Washington University in St. Louis",
+    "nameZh": "圣路易斯华盛顿大学",
+    "state": "MO",
+    "type": "private",
+    "acceptRate": 12,
+    "acceptRateIntl": 7.2,
+    "sat25": 1490,
+    "sat75": 1550,
+    "act25": 33,
+    "act75": 35,
+    "gpaAvg": 3.86,
+    "toeflMin": 100,
+    "intlPct": 12,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "61% of class via ED; need-aware for intl; EA being added for Class of 2031",
+    "region": "US"
+  },
+  {
+    "rank": 24,
+    "nameEn": "Emory University",
+    "nameZh": "埃默里大学",
+    "state": "GA",
+    "type": "private",
+    "acceptRate": 10.3,
+    "acceptRateIntl": 6.3,
+    "sat25": 1500,
+    "sat75": 1570,
+    "act25": 33,
+    "act75": 35,
+    "gpaAvg": 3.83,
+    "toeflMin": 100,
+    "intlPct": null,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 22.2,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "ED 22.2% vs RD 8.6%; Oxford Coll 13.3% vs Emory Coll 10.3%",
+    "region": "US"
+  },
+  {
+    "rank": 24,
+    "nameEn": "Georgetown University",
+    "nameZh": "乔治城大学",
+    "state": "DC",
+    "type": "private",
+    "acceptRate": 12.2,
+    "acceptRateIntl": 7.32,
+    "sat25": 1410,
+    "sat75": 1530,
+    "act25": 32,
+    "act75": 35,
+    "gpaAvg": 3.89,
+    "toeflMin": 100,
+    "intlPct": 12,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Admits by school (CAS/SFS/Health/Nursing); EA is restrictive; test-required",
+    "region": "US",
+    "testReq": true
+  },
+  {
+    "rank": 26,
+    "nameEn": "University of North Carolina--Chapel Hill",
+    "nameZh": "北卡罗来纳大学教堂山分校",
+    "state": "NC",
+    "type": "public",
+    "acceptRate": 16.7,
+    "acceptRateIntl": 10.02,
+    "sat25": 1400,
+    "sat75": 1530,
+    "act25": 29,
+    "act75": 34,
+    "gpaAvg": 3.88,
+    "toeflMin": null,
+    "intlPct": 5.6,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "82% of class must be NC residents; OOS/intl rate far lower than 16.7%",
+    "region": "US"
+  },
+  {
+    "rank": 26,
+    "nameEn": "University of Virginia",
+    "nameZh": "弗吉尼亚大学",
+    "state": "VA",
+    "type": "public",
+    "acceptRate": 15.4,
+    "acceptRateIntl": 9.24,
+    "sat25": null,
+    "sat75": null,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.89,
+    "toeflMin": 90,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": true,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": 25.8,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "In-state 23% vs OOS 12.5%; ED 25.8%, EA 16.1%, RD 9.7%; no aid for internationals",
+    "region": "US"
+  },
+  {
+    "rank": 28,
+    "nameEn": "University of Southern California",
+    "nameZh": "南加州大学",
+    "state": "CA",
+    "type": "private",
+    "acceptRate": 11.2,
+    "acceptRateIntl": 6.72,
+    "sat25": 1470,
+    "sat75": 1540,
+    "act25": 32,
+    "act75": 35,
+    "gpaAvg": 3.86,
+    "toeflMin": 100,
+    "intlPct": 21,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Fall-only rate; SCA ~2-4%; ED = Marshall pilot only; need-blind domestic only",
+    "region": "US"
+  },
+  {
+    "rank": 29,
+    "nameEn": "University of California, San Diego",
+    "nameZh": "加州大学圣迭戈分校",
+    "testBlind": true,
+    "state": "CA",
+    "type": "public",
+    "acceptRate": 28.4,
+    "acceptRateIntl": 30.6,
+    "sat25": null,
+    "sat75": null,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.83,
+    "toeflMin": 80,
+    "intlPct": 11,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major-strict",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-blind; no early rounds; capped majors (CS/bioeng) far harder than 28.4%",
+    "region": "US"
+  },
+  {
+    "rank": 30,
+    "nameEn": "The University of Texas--Austin",
+    "nameZh": "德克萨斯大学奥斯汀分校",
+    "state": "TX",
+    "type": "public",
+    "acceptRate": 22.2,
+    "acceptRateIntl": 13.32,
+    "sat25": 1300,
+    "sat75": 1480,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.83,
+    "toeflMin": 79,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major-strict",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "TX top 6% auto-admit fills ~75% of in-state seats; OOS/intl ~10%; no ED",
+    "region": "US",
+    "testReq": true
+  },
+  {
+    "rank": 30,
+    "nameEn": "University of Florida",
+    "nameZh": "佛罗里达大学",
+    "state": "FL",
+    "type": "public",
+    "acceptRate": 19.8,
+    "acceptRateIntl": 11.88,
+    "sat25": 1380,
+    "sat75": 1510,
+    "act25": 31,
+    "act75": 34,
+    "gpaAvg": 3.91,
+    "toeflMin": 80,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "holistic",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Published 4.5-4.7 GPA is WEIGHTED; 10,510 EA + 7,659 RD admits; tests required",
+    "region": "US",
+    "testReq": true
+  },
+  {
+    "rank": 32,
+    "nameEn": "Georgia Institute of Technology",
+    "nameZh": "佐治亚理工学院",
+    "state": "GA",
+    "type": "public",
+    "acceptRate": 12.7,
+    "acceptRateIntl": 7.62,
+    "sat25": 1430,
+    "sat75": 1530,
+    "act25": 31,
+    "act75": 35,
+    "gpaAvg": 3.93,
+    "toeflMin": 90,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major-strict",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "In-state 30% vs non-resident 9%; EA1 ~33% (GA only) vs EA2 ~8%; test-required",
+    "region": "US",
+    "testReq": true
+  },
+  {
+    "rank": 32,
+    "nameEn": "New York University",
+    "nameZh": "纽约大学",
+    "state": "NY",
+    "type": "private",
+    "acceptRate": 7.7,
+    "acceptRateIntl": 4.62,
+    "sat25": 1480,
+    "sat75": 1550,
+    "act25": 34,
+    "act75": 35,
+    "gpaAvg": 3.81,
+    "toeflMin": 100,
+    "intlPct": 26,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "CAS/Stern/Nursing <5% each; >50% of class via ED; ED rate not published",
+    "region": "US"
+  },
+  {
+    "rank": 32,
+    "nameEn": "University of California, Davis",
+    "nameZh": "加州大学戴维斯分校",
+    "testBlind": true,
+    "state": "CA",
+    "type": "public",
+    "acceptRate": 44.6,
+    "acceptRateIntl": 57.1,
+    "sat25": null,
+    "sat75": null,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.84,
+    "toeflMin": 80,
+    "intlPct": 12.8,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-blind; no early rounds; UC-weighted GPA 4.00-4.26; admits by college",
+    "region": "US"
+  },
+  {
+    "rank": 32,
+    "nameEn": "University of California, Irvine",
+    "nameZh": "加州大学欧文分校",
+    "testBlind": true,
+    "state": "CA",
+    "type": "public",
+    "acceptRate": 28.7,
+    "acceptRateIntl": 42.8,
+    "sat25": null,
+    "sat75": null,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.84,
+    "toeflMin": 80,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-blind; no early rounds; Nursing 0.8%, CS 27.6%, Engineering 26.6%",
+    "region": "US"
+  },
+  {
+    "rank": 36,
+    "nameEn": "Boston College",
+    "nameZh": "波士顿学院",
+    "state": "MA",
+    "type": "private",
+    "acceptRate": 14,
+    "acceptRateIntl": 8.4,
+    "sat25": 1440,
+    "sat75": 1520,
+    "act25": 33,
+    "act75": 35,
+    "gpaAvg": 3.87,
+    "toeflMin": 100,
+    "intlPct": null,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "14% includes waitlist admits (initial ~12.6%); 4 undergrad schools",
+    "region": "US"
+  },
+  {
+    "rank": 36,
+    "nameEn": "Tufts University",
+    "nameZh": "塔夫茨大学",
+    "state": "MA",
+    "type": "private",
+    "acceptRate": 10.5,
+    "acceptRateIntl": 6.3,
+    "sat25": 1480,
+    "sat75": 1540,
+    "act25": 33,
+    "act75": 35,
+    "gpaAvg": 3.88,
+    "toeflMin": 100,
+    "intlPct": 11,
+    "aidIntl": "need-aware",
+    "ed": true,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": 32,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "ED I & II only (no EA); ED 32% vs RD 8.5%; scores from CDS enrolled profile",
+    "region": "US"
+  },
+  {
+    "rank": 36,
+    "nameEn": "University of Illinois Urbana-Champaign",
+    "nameZh": "伊利诺伊大学厄巴纳-香槟分校",
+    "state": "IL",
+    "type": "public",
+    "acceptRate": 36.6,
+    "acceptRateIntl": 21.96,
+    "sat25": 1340,
+    "sat75": 1500,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.76,
+    "toeflMin": 79,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major-strict",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "First-choice-major rate 30.2% vs 36.6% campus; CS ~7-8%; Grainger Eng 21.1%",
+    "region": "US"
+  },
+  {
+    "rank": 36,
+    "nameEn": "University of Wisconsin--Madison",
+    "nameZh": "威斯康星大学麦迪逊分校",
+    "state": "WI",
+    "type": "public",
+    "acceptRate": 40.8,
+    "acceptRateIntl": 31.6,
+    "sat25": 1340,
+    "sat75": 1500,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.86,
+    "toeflMin": 80,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": true,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "In-state 56.4%, OOS 40.3%, intl 31.6%; admits by college/school",
+    "region": "US",
+    "testReq": null
+  },
+  {
+    "rank": 40,
+    "nameEn": "University of California, Santa Barbara",
+    "nameZh": "加州大学圣塔芭芭拉分校",
+    "testBlind": true,
+    "state": "CA",
+    "type": "public",
+    "acceptRate": 38.3,
+    "acceptRateIntl": 48.1,
+    "sat25": null,
+    "sat75": null,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.78,
+    "toeflMin": 80,
+    "intlPct": null,
+    "aidIntl": "none",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "Fall 2025 (Class of 2029)",
+    "notes": "Test-blind; no early rounds; Engineering 21.3% vs 38.3% campus-wide",
+    "region": "US"
+  },
+  {
+    "rank": 1,
+    "nameEn": "University of Oxford",
+    "nameZh": "牛津大学",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 16,
+    "acceptRateIntl": 9,
+    "sat25": 1460,
+    "sat75": 1560,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.95,
+    "toeflMin": 110,
+    "intlPct": 45,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 2,
+    "nameEn": "University of Cambridge",
+    "nameZh": "剑桥大学",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 21,
+    "acceptRateIntl": 13,
+    "sat25": 1460,
+    "sat75": 1560,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.95,
+    "toeflMin": 110,
+    "intlPct": 40,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 3,
+    "nameEn": "Imperial College London",
+    "nameZh": "帝国理工学院",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 14,
+    "acceptRateIntl": 11,
+    "sat25": 1440,
+    "sat75": 1550,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.9,
+    "toeflMin": 92,
+    "intlPct": 40,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 4,
+    "nameEn": "University College London",
+    "nameZh": "伦敦大学学院",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 30,
+    "acceptRateIntl": 13,
+    "sat25": 1420,
+    "sat75": 1530,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.88,
+    "toeflMin": 92,
+    "intlPct": 50,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 5,
+    "nameEn": "London School of Economics and Political Science",
+    "nameZh": "伦敦政治经济学院",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 16,
+    "acceptRateIntl": 9,
+    "sat25": 1430,
+    "sat75": 1540,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.9,
+    "toeflMin": 100,
+    "intlPct": 45,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 6,
+    "nameEn": "University of Edinburgh",
+    "nameZh": "爱丁堡大学",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 47,
+    "acceptRateIntl": 20,
+    "sat25": 1400,
+    "sat75": 1520,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.82,
+    "toeflMin": 92,
+    "intlPct": 45,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 7,
+    "nameEn": "King's College London",
+    "nameZh": "伦敦国王学院",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 40,
+    "acceptRateIntl": 15,
+    "sat25": 1400,
+    "sat75": 1510,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.83,
+    "toeflMin": 92,
+    "intlPct": 40,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 8,
+    "nameEn": "University of Manchester",
+    "nameZh": "曼彻斯特大学",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 56,
+    "acceptRateIntl": 25,
+    "sat25": 1380,
+    "sat75": 1500,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.8,
+    "toeflMin": 90,
+    "intlPct": 35,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 9,
+    "nameEn": "University of Warwick",
+    "nameZh": "华威大学",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 50,
+    "acceptRateIntl": 18,
+    "sat25": 1390,
+    "sat75": 1510,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.83,
+    "toeflMin": 87,
+    "intlPct": 40,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 10,
+    "nameEn": "University of Bristol",
+    "nameZh": "布里斯托大学",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 68,
+    "acceptRateIntl": 22,
+    "sat25": 1380,
+    "sat75": 1500,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.8,
+    "toeflMin": 90,
+    "intlPct": 30,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 11,
+    "nameEn": "University of Glasgow",
+    "nameZh": "格拉斯哥大学",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 70,
+    "acceptRateIntl": 25,
+    "sat25": 1370,
+    "sat75": 1490,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.78,
+    "toeflMin": 90,
+    "intlPct": 30,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 12,
+    "nameEn": "University of Southampton",
+    "nameZh": "南安普顿大学",
+    "state": "UK",
+    "type": "public",
+    "acceptRate": 80,
+    "acceptRateIntl": 30,
+    "sat25": 1360,
+    "sat75": 1480,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.75,
+    "toeflMin": 81,
+    "intlPct": 30,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "英国本科 via UCAS，按专业录取；国际生录取率为估算。",
+    "region": "UK"
+  },
+  {
+    "rank": 13,
+    "nameEn": "University of Hong Kong",
+    "nameZh": "香港大学",
+    "state": "HK",
+    "type": "public",
+    "acceptRate": 40,
+    "acceptRateIntl": 12,
+    "sat25": 1380,
+    "sat75": 1500,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.8,
+    "toeflMin": 93,
+    "intlPct": 30,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "香港本科对内地生单列通道；录取率为估算。",
+    "region": "HK"
+  },
+  {
+    "rank": 14,
+    "nameEn": "Chinese University of Hong Kong",
+    "nameZh": "香港中文大学",
+    "state": "HK",
+    "type": "public",
+    "acceptRate": 40,
+    "acceptRateIntl": 15,
+    "sat25": 1360,
+    "sat75": 1480,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.78,
+    "toeflMin": 85,
+    "intlPct": 25,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "香港本科对内地生单列通道；录取率为估算。",
+    "region": "HK"
+  },
+  {
+    "rank": 15,
+    "nameEn": "Hong Kong University of Science and Technology",
+    "nameZh": "香港科技大学",
+    "state": "HK",
+    "type": "public",
+    "acceptRate": 40,
+    "acceptRateIntl": 15,
+    "sat25": 1380,
+    "sat75": 1500,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.82,
+    "toeflMin": 85,
+    "intlPct": 25,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "香港本科对内地生单列通道；录取率为估算。",
+    "region": "HK"
+  },
+  {
+    "rank": 16,
+    "nameEn": "City University of Hong Kong",
+    "nameZh": "香港城市大学",
+    "state": "HK",
+    "type": "public",
+    "acceptRate": 45,
+    "acceptRateIntl": 20,
+    "sat25": 1300,
+    "sat75": 1450,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.62,
+    "toeflMin": 79,
+    "intlPct": 25,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "香港本科对内地生单列通道；录取率为估算。",
+    "region": "HK"
+  },
+  {
+    "rank": 17,
+    "nameEn": "Hong Kong Polytechnic University",
+    "nameZh": "香港理工大学",
+    "state": "HK",
+    "type": "public",
+    "acceptRate": 50,
+    "acceptRateIntl": 25,
+    "sat25": 1280,
+    "sat75": 1430,
+    "act25": null,
+    "act75": null,
+    "gpaAvg": 3.6,
+    "toeflMin": 80,
+    "intlPct": 25,
+    "aidIntl": "need-aware",
+    "ed": false,
+    "ea": false,
+    "rea": false,
+    "edAcceptRate": null,
+    "admitByMajor": "major",
+    "dataYear": "2025 entry (est.)",
+    "notes": "香港本科对内地生单列通道；录取率为估算。",
+    "region": "HK"
+  }
 ];
 
+/* 01-utils.js — 通用工具与图标 */
 /* ---------- utils ---------- */
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -523,6 +1906,7 @@ const ICON={
 };
 const ic=(n,cls)=>'<span class="ico'+(cls?' '+cls:'')+'">'+(ICON[n]||ICON.star)+'</span>';
 
+/* 02-config.js — 数值常量 / 模板 / 成绩换算 / 课程难度 */
 /* ---------- config ---------- */
 const TOTAL_ROUNDS=7, AP_BY_ROUND=[3,3,4,4,5,5,8], DEALT=6, RD_PER_BAND=10, REACH_MAX=5, MATCH_MAX=10, SAFETY_MAX=10, RD_MAX=20;
 const SEM_W=[0.8,0.8,1.0,1.0,1.1,1.1,1.2];   // §4.6 学期权重：高年级成绩更重（美本“看趋势”），初三权重最低
@@ -558,22 +1942,99 @@ function snapGrade(raw){
   return best;
 }
 
+/* 03-traits.js — 天性特质 + 特质求和（数据来自 data/traits.json） */
 /* 天性特质 */
 const TRAITS=[
-  {id:"earlybird",name:"早起鸟",desc:"每回合额外恢复 6 点精力",fx:{energyRegen:6}},
-  {id:"socialbf", name:"社牛",  desc:"社交/人脉类行动收益 +35%，声望额外 +1",fx:{socialGain:1.35,repBonus:1}},
-  {id:"koi",      name:"锦鲤",  desc:"运气 +2",fx:{luck:2}},
-  {id:"bookworm", name:"书虫",  desc:"学术类行动收益 +35%",fx:{academicGain:1.35}},
-  {id:"linguist", name:"语言天赋",desc:"英语类行动收益 +40%",fx:{englishGain:1.4}},
-  {id:"athlete",  name:"运动健将",desc:"精力上限 +8，压力增长 -15%",fx:{stamina:8,stressMul:0.85}},
-  {id:"iron",     name:"抗压体质",desc:"压力增长 -30%",fx:{stressMul:0.7}},
-  {id:"glass",    name:"玻璃心",desc:"压力增长 +30%，但创造力 +1",fx:{stressMul:1.3,creativity:1}},
-  {id:"procras",  name:"拖延症",desc:"行动精力消耗 +25%，但英语 +2 起步",fx:{energyCostMul:1.25,english:2}},
-  {id:"perfection",name:"完美主义",desc:"文书与推荐信成长 +30%，但压力增长 +10%",fx:{craftGain:1.3,stressMul:1.1}}
+  {
+    "id": "earlybird",
+    "name": "早起鸟",
+    "desc": "每回合额外恢复 6 点精力",
+    "fx": {
+      "energyRegen": 6
+    }
+  },
+  {
+    "id": "socialbf",
+    "name": "社牛",
+    "desc": "社交/人脉类行动收益 +35%，声望额外 +1",
+    "fx": {
+      "socialGain": 1.35,
+      "repBonus": 1
+    }
+  },
+  {
+    "id": "koi",
+    "name": "锦鲤",
+    "desc": "运气 +2",
+    "fx": {
+      "luck": 2
+    }
+  },
+  {
+    "id": "bookworm",
+    "name": "书虫",
+    "desc": "学术类行动收益 +35%",
+    "fx": {
+      "academicGain": 1.35
+    }
+  },
+  {
+    "id": "linguist",
+    "name": "语言天赋",
+    "desc": "英语类行动收益 +40%",
+    "fx": {
+      "englishGain": 1.4
+    }
+  },
+  {
+    "id": "athlete",
+    "name": "运动健将",
+    "desc": "精力上限 +8，压力增长 -15%",
+    "fx": {
+      "stamina": 8,
+      "stressMul": 0.85
+    }
+  },
+  {
+    "id": "iron",
+    "name": "抗压体质",
+    "desc": "压力增长 -30%",
+    "fx": {
+      "stressMul": 0.7
+    }
+  },
+  {
+    "id": "glass",
+    "name": "玻璃心",
+    "desc": "压力增长 +30%，但创造力 +1",
+    "fx": {
+      "stressMul": 1.3,
+      "creativity": 1
+    }
+  },
+  {
+    "id": "procras",
+    "name": "拖延症",
+    "desc": "行动精力消耗 +25%，但英语 +2 起步",
+    "fx": {
+      "energyCostMul": 1.25,
+      "english": 2
+    }
+  },
+  {
+    "id": "perfection",
+    "name": "完美主义",
+    "desc": "文书与推荐信成长 +30%，但压力增长 +10%",
+    "fx": {
+      "craftGain": 1.3,
+      "stressMul": 1.1
+    }
+  }
 ];
 const sumFx=(k,d)=>{let v=d;G.traits.forEach(t=>{if(t.fx[k]!=null)v+=t.fx[k];});return v;};
 const mulFx=(k,d)=>{let v=d;G.traits.forEach(t=>{if(t.fx[k]!=null)v*=t.fx[k];});return v;};
 
+/* 04-achievements.js — 成就定义（含判定函数） */
 /* 成就 */
 const ACHIEVEMENTS=[
   {id:"sat1500", name:"SAT 1500+",        test:(r,s)=>r.satBest>=1500},
@@ -590,6 +2051,7 @@ const ACHIEVEMENTS=[
   {id:"balanced",name:"六维全部 6+",         test:(r,s)=>Object.values(s).every(v=>v>=6)}
 ];
 
+/* 05-state.js — 全局状态 / 精力 / 累计 GPA */
 /* ---------- state ---------- */
 let G=null;
 function freshState(stats,traits,rigor,major){
@@ -617,6 +2079,7 @@ function cumGPA(kind){
   return tot/totC;
 }
 
+/* 06-setup.js — 开局界面：六维配点 / 特质 / 难度 / 专业 */
 /* ---------- setup UI ---------- */
 let editStats={academic:4,english:4,stamina:4,creativity:4,social:4,luck:4};
 let editTraits=[], editRigor="mixed", editMajor="und";
@@ -691,6 +2154,7 @@ function normalizeTo24(){
   }
 }
 
+/* 07-stages.js — 学期表 STAGES */
 const STAGES=[
  {yr:"初三",sem:"上",theme:"中考备考 · 兴趣萌芽"},
  {yr:"初三",sem:"下",theme:"中考冲刺"},
@@ -702,6 +2166,7 @@ const STAGES=[
 ];
 const yrLabel=r=>STAGES[r].yr+STAGES[r].sem;
 
+/* 08-events.js — 随机事件表 EVENTS（300 行）+ 抽事件 */
 /* ---------- events ---------- */
 const EVENTS=[
   {
@@ -1022,15 +2487,86 @@ function drawEvent(){
   const e=weightedPick(src, ev=>ev.fit||3); G.usedEvents.push(e.id); if(G.usedEvents.length>20)G.usedEvents.shift(); return e;
 }
 
+
+/* 09-majors.js — 专业方向（数据来自 data/majors.json） */
 /* 专业方向：开局选择，影响录取与行动契合度 */
 const MAJORS=[
-  {id:"und", name:"未定",        icon:"star",   desc:"先广泛探索，后期再聚焦。录取上不偏不倚。", related:[]},
-  {id:"cs",  name:"计算机/工程",  icon:"bolt",   desc:"写代码、做项目、打 CTF。契合工程/CS 强校（如帝国理工、CMU 类）。", related:["code","research","contest"]},
-  {id:"biz", name:"商科/经济",    icon:"flag",   desc:"商赛、创业、读财报。契合 LSE/沃顿类商强校。", related:["biz","club","contest","network"]},
-  {id:"sci", name:"自然科学",      icon:"book",   desc:"进实验室、发论文。契合科研型大学。", related:["lab","research","contest"]},
-  {id:"soc", name:"人文社科",      icon:"people", desc:"调研、写作、辩论。契合 LSE/社科强校。", related:["debate","write","club","read"]},
-  {id:"art", name:"艺术设计",      icon:"bulb",   desc:"创作、参展、作品集。契合艺术类/综合校艺术系。", related:["art","talent","contest","read"]},
-  {id:"med", name:"医学预科",      icon:"heart",  desc:"医疗志愿、科研、生物。契合 Pre-med 强校。", related:["med","research","club"]}
+  {
+    "id": "und",
+    "name": "未定",
+    "icon": "star",
+    "desc": "先广泛探索，后期再聚焦。录取上不偏不倚。",
+    "related": []
+  },
+  {
+    "id": "cs",
+    "name": "计算机/工程",
+    "icon": "bolt",
+    "desc": "写代码、做项目、打 CTF。契合工程/CS 强校（如帝国理工、CMU 类）。",
+    "related": [
+      "code",
+      "research",
+      "contest"
+    ]
+  },
+  {
+    "id": "biz",
+    "name": "商科/经济",
+    "icon": "flag",
+    "desc": "商赛、创业、读财报。契合 LSE/沃顿类商强校。",
+    "related": [
+      "biz",
+      "club",
+      "contest",
+      "network"
+    ]
+  },
+  {
+    "id": "sci",
+    "name": "自然科学",
+    "icon": "book",
+    "desc": "进实验室、发论文。契合科研型大学。",
+    "related": [
+      "lab",
+      "research",
+      "contest"
+    ]
+  },
+  {
+    "id": "soc",
+    "name": "人文社科",
+    "icon": "people",
+    "desc": "调研、写作、辩论。契合 LSE/社科强校。",
+    "related": [
+      "debate",
+      "write",
+      "club",
+      "read"
+    ]
+  },
+  {
+    "id": "art",
+    "name": "艺术设计",
+    "icon": "bulb",
+    "desc": "创作、参展、作品集。契合艺术类/综合校艺术系。",
+    "related": [
+      "art",
+      "talent",
+      "contest",
+      "read"
+    ]
+  },
+  {
+    "id": "med",
+    "name": "医学预科",
+    "icon": "heart",
+    "desc": "医疗志愿、科研、生物。契合 Pre-med 强校。",
+    "related": [
+      "med",
+      "research",
+      "club"
+    ]
+  }
 ];
 const MAJOR_BYID={}; MAJORS.forEach(m=>MAJOR_BYID[m.id]=m);
 function bumpFit(n){
@@ -1040,6 +2576,8 @@ function bumpFit(n){
 }
 function majorGainFrom(a){ if(!G||G.major==="und"||!a) return 0; const m=MAJOR_BYID[G.major]; if(!m) return 0; if(a.major===G.major) return 8; if(m.related.includes(a.id)) return 6; return 0; }
 
+
+/* 10-actions.js — 行动池 + 各行动效果 + 压力 */
 /* ---------- actions ---------- */
 const ACTIONS=[
   {id:"vocab",   name:"背单词",   icon:"globe", energy:15, stress:5,  run:doVocab},
@@ -1269,6 +2807,7 @@ function stressDrag(){
   return Math.min(STRESS_GPA_DRAG_CAP, STRESS_GPA_DRAG_K*t*t);
 }
 
+/* 11-semester.js — 每学期成绩单生成与结算 */
 /* ---------- GPA：每学期成绩单 ---------- */
 // 年级加成：低年级（初三/高一）课程更易拿 A，降低 GPA 刷取难度；
 // 高三还原真实压力。索引对应 round 0..6（初三上 … 高三上）。
@@ -1314,6 +2853,8 @@ function closeSemester(){
   return sem;
 }
 
+
+/* 12-flow.js — 回合流程：事件 / 行动 / 状态渲染 */
 /* ---------- game flow ---------- */
 function startGame(){
   const stats=Object.assign({},editStats);
@@ -1475,6 +3016,8 @@ function renderActions(){
   wrap.appendChild(rand);
 }
 
+
+/* 13-pick.js — 选校分档（概率划分法）/ ED / RD 交互 */
 /* ---------- 选校 / 申请 ---------- */
 let PICK={p:null,bands:{},cand:{},off:{},edSel:null,rdSel:[]};
 // 选校分档采用「概率划分法」：按该生录取概率 P 硬分三档，档位即概率区间，无需锁定/随机难池。
@@ -1634,18 +3177,105 @@ function clearED(){
 
 /* ---------- 夏校申请季（高二升高三） ---------- */
 // 门槛按「夏校时刻各属性实测分位数」标定（蒙特卡洛 400 局/档，含休息、优先刷 SAT 的真实策略）：
+
+/* 14-summer.js — 夏校申请季（数据来自 data/summer.json） */
 // - GPA 用加权（未加权三档雷同≈2.9 无法区分；加权 p50 3.18/3.81/4.20 体现课程难度选择）
 // - SAT 在真实策略下 100% 必刷（高二起基础行动池常驻，刷不动就休息回血），故可作通用门槛
 // - 声望是真正的稀缺资源（p50≈10、p90≈20，原 ≥45 根本不可能），故统一压到 4~11 的可达区间
 const SUMMER_PROGRAMS=[
-  {name:"RSI 研究夏校",   sel:"≈3% 录取",  need:{gpa:3.90,sat:1380,academic:9.5,rep:11},           boost:0.9,  desc:"MIT 旗下全免费研究型，全球最难进的夏校之一。"},
-  {name:"SSP 科学夏校",   sel:"≈7% 录取",  need:{gpa:3.85,sat:1350,academic:9,rep:8},             boost:0.8,  desc:"天体物理/生化真实科研，校友多进 Caltech/MIT。"},
-  {name:"MITES 工程夏校", sel:"≈5% 录取",  need:{gpa:3.78,sat:1330,academic:8.5,rep:6},            boost:0.75, desc:"MIT 全免费工程/科学项目，极难。"},
-  {name:"斯坦福 SUMaC",   sel:"≈10% 录取", need:{gpa:3.68,sat:1310,academic:8.5,english:5,rep:6},  boost:0.7,  desc:"纯数学 immersion，冲刺顶尖理工。"},
-  {name:"CMU SAMS 计算",  sel:"≈12% 录取", need:{gpa:3.52,sat:1280,academic:8,rep:5},              boost:0.6,  desc:"卡耐基梅隆计算/领导力项目。"},
-  {name:"耶鲁全球青年学者",sel:"≈10% 录取", need:{english:4,social:3.5,rep:5},                      boost:0.6,  desc:"人文社科向，耶鲁主办，只看英语/社交/声望（不看 GPA、不要求 SAT）。"},
-  {name:"Garcia 材料科研", sel:"≈12% 录取", need:{gpa:3.30,sat:1270,academic:7,rep:4},            boost:0.55, desc:"石溪大学材料科学真实科研。"},
-  {name:"本地大学科研助理",sel:"中等",       need:{academic:5},                                      boost:0.3,  desc:"冷邮件争取的校内 lab 助理，只看学术、无 GPA/SAT/声望门槛（加成也最低）。"}
+  {
+    "name": "RSI 研究夏校",
+    "sel": "≈3% 录取",
+    "need": {
+      "gpa": 3.9,
+      "sat": 1380,
+      "academic": 9.5,
+      "rep": 11
+    },
+    "boost": 0.9,
+    "desc": "MIT 旗下全免费研究型，全球最难进的夏校之一。"
+  },
+  {
+    "name": "SSP 科学夏校",
+    "sel": "≈7% 录取",
+    "need": {
+      "gpa": 3.85,
+      "sat": 1350,
+      "academic": 9,
+      "rep": 8
+    },
+    "boost": 0.8,
+    "desc": "天体物理/生化真实科研，校友多进 Caltech/MIT。"
+  },
+  {
+    "name": "MITES 工程夏校",
+    "sel": "≈5% 录取",
+    "need": {
+      "gpa": 3.78,
+      "sat": 1330,
+      "academic": 8.5,
+      "rep": 6
+    },
+    "boost": 0.75,
+    "desc": "MIT 全免费工程/科学项目，极难。"
+  },
+  {
+    "name": "斯坦福 SUMaC",
+    "sel": "≈10% 录取",
+    "need": {
+      "gpa": 3.68,
+      "sat": 1310,
+      "academic": 8.5,
+      "english": 5,
+      "rep": 6
+    },
+    "boost": 0.7,
+    "desc": "纯数学 immersion，冲刺顶尖理工。"
+  },
+  {
+    "name": "CMU SAMS 计算",
+    "sel": "≈12% 录取",
+    "need": {
+      "gpa": 3.52,
+      "sat": 1280,
+      "academic": 8,
+      "rep": 5
+    },
+    "boost": 0.6,
+    "desc": "卡耐基梅隆计算/领导力项目。"
+  },
+  {
+    "name": "耶鲁全球青年学者",
+    "sel": "≈10% 录取",
+    "need": {
+      "english": 4,
+      "social": 3.5,
+      "rep": 5
+    },
+    "boost": 0.6,
+    "desc": "人文社科向，耶鲁主办，只看英语/社交/声望（不看 GPA、不要求 SAT）。"
+  },
+  {
+    "name": "Garcia 材料科研",
+    "sel": "≈12% 录取",
+    "need": {
+      "gpa": 3.3,
+      "sat": 1270,
+      "academic": 7,
+      "rep": 4
+    },
+    "boost": 0.55,
+    "desc": "石溪大学材料科学真实科研。"
+  },
+  {
+    "name": "本地大学科研助理",
+    "sel": "中等",
+    "need": {
+      "academic": 5
+    },
+    "boost": 0.3,
+    "desc": "冷邮件争取的校内 lab 助理，只看学术、无 GPA/SAT/声望门槛（加成也最低）。"
+  }
 ];
 let SUMMER={list:[],sel:[],grind:false};
 function summerQualify(pp){
@@ -1748,6 +3378,8 @@ function finishSummer(logMsg){
   enterEvent();
 }
 
+
+/* 15-admit.js — 画像构建 buildProfile + 录取概率 admitProb */
 /* ---------- 结局 ---------- */
 function buildProfile(){
   const s=G.stats,r=G.results;
@@ -1963,6 +3595,8 @@ function goEnd(){
   if(lbHasUploaded()) hideUploadUI(rdBox);
 }
 
+
+/* 16-leaderboard.js — 排行榜：本地/Supabase 双路 + 弹层渲染 */
 /* ---------- 排行榜（评级拆 offer 后上传 / 共享榜）---------- */
 // 默认本地榜（localStorage，仅本机可见，开箱即用）。
 // 只有在【官方域名】下才自动切到 supabase 共享榜——这样 fork 自建 / 本地开发的测试数据
@@ -2121,6 +3755,7 @@ function maybeRevealRating(rdBox){
   }
 }
 
+/* 17-help.js — 玩法说明文本 HELP */
 /* ---------- 说明 ---------- */
 const HELP=`<div class="help-sec"><h3>这游戏在玩什么</h3>
 <p>初三上到高三上共 <b>7 个学期</b>。每学期：先抽一张随机事件（部分需二选一），再用行动点行动——基础行动随年级变化（背单词、啃硬课常驻；初三加中考复习，高二起加托福、高二下加 SAT、高三加打磨文书）加休息，其余行动每回合随机抽 6 个。行动点随年级递增：初三 3 / 高一 4 / 高二 5 / 高三上 8。学期末生成成绩单。7 学期后进入申请季：可选 1 所 ED，再在 RD 勾选 10–20 所，逐封拆 offer。</p></div>
@@ -2188,6 +3823,7 @@ const HELP=`<div class="help-sec"><h3>这游戏在玩什么</h3>
 <p>结局页结算 12 项成就，作重复游玩目标。</p></div>`;
 
 
+/* 18-main.js — 按钮接线与启动（必须最后） */
 /* ---------- wire up ---------- */
 $("startBtn").onclick=()=>{
   if(ptsUsed()!==START_POINTS){ $("ptsLeft").textContent=`点数必须为 ${START_POINTS}（当前 ${ptsUsed()}），请先点“随机”或手动调整。`; return; }   // #9：开局校验点数恰好 24
@@ -2227,6 +3863,8 @@ lbModal.addEventListener("click", e=>{ if(e.target===lbModal) lbModal.classList.
 rollTraits();
 renderSetup();
 
+/* 19-footer.js — 附录：Supabase 建表 SQL 注释 */
+
 /* ============================================================
    共享榜（Supabase）建表 SQL —— 在 Supabase SQL Editor 执行：
    ------------------------------------------------------------
@@ -2247,6 +3885,7 @@ renderSetup();
    --   create policy "public all" on leaderboard for all to anon using (true) with check (char_length(id) <= 10);
    -- 本文件 LEADERBOARD 已置 mode:"supabase" 并填好 url / anonKey / table，可直接使用。
    ============================================================ */
+
 </script>
 </body>
 </html>

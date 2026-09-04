@@ -12,7 +12,7 @@
 
 ## ✨ 特性
 
-- **零依赖、零构建**：整个游戏就一个 `index.html`，双击就能玩，也能直接丢到任何静态托管上。
+- **零依赖、零构建（对玩家 / 部署者）**：分发形态依然是一个 `index.html`，双击就能玩，丢到任何静态托管上就能跑，不需要任何构建命令。（只有想改代码的开发者才需要跑一次 `node build.js`，见下方「开发」）
 - **真实录取数据**：内置 **57 所**学校（40 所美国 + 12 所英国 + 5 所中国香港），含国际生录取率、SAT / ACT 区间、GPA 均值、助学金政策等（数据源：各校 Common Data Set，Fall 2025 / Class of 2029）。
 - **有血有肉的养成**：六维属性、10 种天性特质、7 个专业方向、3 档课程难度，外加一套会真的拖垮 GPA 的**压力系统**。
 - **讲道理的录取模型**：`admitProb()` 用 logit 综合学术 / 标化 / 语言 / 课外 / 推荐信，国际生走国际生录取率，还会叠加**"本季共同冲击"**——好年全校好录，坏年一起翻车。
@@ -104,9 +104,29 @@ const LEADERBOARD = {
 
 ```
 us-admit-sim/
-├── index.html              # 游戏本体（单文件，全部逻辑 + 数据都在这里）
+├── index.html              # 【构建产物】单文件游戏本体，双击即玩 / 部署就用它（勿直接编辑）
+├── build.js                # 把 src/ 打包成上面的 index.html：node build.js
+├── src/                    # 源码 —— 所有修改请改这里
+│   ├── shell.html          #   HTML 骨架，CSS / JS 由构建注入
+│   ├── styles.css          #   全部样式
+│   ├── data/               #   纯数据（JSON，调数值最方便）
+│   │   ├── schools.json    #     57 所学校
+│   │   ├── traits.json     #     10 种天性特质
+│   │   ├── majors.json     #     7 个专业方向
+│   │   └── summer.json     #     8 个夏校项目
+│   └── js/                 #   逻辑，按加载顺序编号（详见 CONTRIBUTING.md）
+│       ├── 00-schools.js   #     学校池（数据注入自 schools.json）
+│       ├── 01-utils.js     #     工具 / 图标
+│       ├── 02-config.js    #     数值常量 / 模板 / 成绩换算
+│       ├── 03-traits.js …  #     特质 / 成就 / 状态 / 开局界面
+│       ├── 08-events.js    #     随机事件表（300 行）
+│       ├── 10-actions.js   #     行动池与效果
+│       ├── 13-pick.js      #     选校分档 / ED / RD
+│       ├── 15-admit.js     #     buildProfile + admitProb（录取模型核心）
+│       ├── 16-leaderboard.js #   排行榜（本地 / Supabase 双路）
+│       └── 18-main.js      #     按钮接线与启动（必须最后）
 ├── README.md               # 你正在看的这个
-├── CONTRIBUTING.md         # 贡献指南
+├── CONTRIBUTING.md         # 贡献指南（含模块说明与踩坑提醒）
 ├── LICENSE                 # MIT
 ├── docs/
 │   ├── GAME_SPEC.md        # 完整数值与机制规范（改数值前必读）
@@ -114,6 +134,24 @@ us-admit-sim/
 │   └── admissions_doc.html # 录取模型逐校参数与权重核对表
 └── .github/                # issue / PR 模板
 ```
+
+---
+
+## 🛠 开发
+
+根目录的 `index.html` 是**构建产物**。改代码请按下面两步：
+
+```bash
+# 1. 改 src/ 下的源码（数据改 JSON，逻辑改 js/，样式改 styles.css）
+# 2. 重新打包
+node build.js
+```
+
+- `build.js` 会把 `src/data/*.json` 内联进 JS、再把所有模块 + CSS 内联进 `shell.html`，输出根目录的单文件 `index.html`。
+- 构建产物仍是**单个 `<script>` 块**——和拆分前结构一致，测试脚本与部署方式都不受影响。
+- 无第三方依赖，只需 Node（任意现代版本）。
+
+**想验证改动没破坏平衡性？** 见 `CONTRIBUTING.md` 末尾的「回归检查清单」。
 
 ---
 
