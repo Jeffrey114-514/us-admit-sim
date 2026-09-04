@@ -159,8 +159,8 @@ function doNetwork(){
   return ["good",`经营人脉，社交 +${s.toFixed(2)}、推荐信 ${G.results.recQuality.toFixed(1)}/10、声望 +2。`];
 }
 function doRest(){
-  // 精力/压力由 doAction 依据行动元数据（energy:-45, stress:-25）统一结算，这里不再重复施加
-  return ["good","睡了个好觉，精力回血、压力 −25。"];
+  // 精力/压力由 doAction 依据行动元数据（energy:-45, stress:-20）统一结算，这里不再重复施加
+  return ["good",`睡了个好觉，精力回血、压力 −${Math.abs(REST.stress)}。`];
 }
 function doCode(){
   const g=mulFx('academicGain',1)*0.4*pen();
