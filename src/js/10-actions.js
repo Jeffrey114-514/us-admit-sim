@@ -22,7 +22,7 @@ const ACTIONS=[
   {id:"art",     name:"艺术创作", icon:"bulb", energy:18, stress:5,  major:"art", run:doArt},
   {id:"med",     name:"医疗志愿", icon:"heart", energy:20, stress:6,  major:"med", run:doMed}
 ];
-const REST={id:"rest",name:"休息",icon:"moon",energy:-45,stress:-14,run:doRest};   // 压力系统②：减压由 -25→-14，休息不再“随便补偿”
+const REST={id:"rest",name:"休息",icon:"moon",energy:-45,stress:-20,run:doRest};   // 压力系统②：减压由 -25→-14→-20，休息可较明显地回血但不完全抵消
 function dealActions(){
   const r=G.round;
   let basicIds=["vocab","study"];
