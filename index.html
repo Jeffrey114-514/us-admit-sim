@@ -3034,8 +3034,11 @@ function dedupeB(a){const s=new Set(),o=[];a.forEach(x=>{if(!s.has(x.sc.nameEn))
 function buildBands(p){
   // —— 概率划分法：按该生录取概率 P 硬分三档 ——
   const T1=0.10, T2=0.30;                          // 阈值：≤10% 冲刺 / 10–30% 匹配 / >30% 保底
-  // 全部学校按该生 P 分类（不丢任何校：每所都会落入某一档）
-  const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc),band:null}));
+  // §5.1 共同冲击：分档必须与卡片展示、最终摇号使用同一份季节 ε，否则“好年”时
+  // 展示/摇号概率越过 10% 门槛，却仍被算作冲刺，出现“冲刺里概率>10%”的矛盾。
+  const eps=(typeof G!=="undefined" && typeof G.seasonEps==="number")?G.seasonEps:0;
+  // 全部学校按该生（含本季 ε 的）P 分类（不丢任何校：每所都会落入某一档）
+  const all=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc,false,eps),band:null}));
   const reachPool =all.filter(x=>x.P<=T1).sort((a,b)=>a.P-b.P);     // 最难（最低 P）在前
   const matchPool =all.filter(x=>x.P>T1 && x.P<=T2).sort((a,b)=>a.P-b.P);
   const safetyPool=all.filter(x=>x.P>T2).sort((a,b)=>b.P-a.P);      // 最易（最高 P）在前
@@ -3122,7 +3125,7 @@ function renderPick(){
   if(wm){ warn.style.display="block"; warn.innerHTML=wm; } else { warn.style.display="none"; }
   // 动态档位数量说明
   const rc=PICK.cand.reach.length, mc=PICK.cand.match.length, sc=PICK.cand.safety.length;
-  $("rdDesc").innerHTML=`RD 可海投。冲刺 <b>${rc}</b> 所（录取率 ≤10%）· 匹配 <b>${mc}</b> 所（10%–30%）· 保底 <b>${sc}</b> 所（&gt;30%）。按档勾选，已选 <b id="rdCount">0</b> / 20。`;
+  $("rdDesc").innerHTML=`RD 可海投。冲刺 <b>${rc}</b> 所（录取率 ≤10%）· 匹配 <b>${mc}</b> 所（10%–30%）· 保底 <b>${sc}</b> 所（&gt;30%）。<small>档位随本季录取气候（好/坏年）浮动，与卡片显示的录取率一致。</small>按档勾选，已选 <b id="rdCount">0</b> / 20。`;
 
   ["reach","match","safety"].forEach(k=>{
     const box=$("cand"+cap(k)); box.innerHTML="";
