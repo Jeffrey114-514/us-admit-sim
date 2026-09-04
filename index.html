@@ -2834,14 +2834,18 @@ function genSemesterCourses(){
 }
 function closeSemester(){
   const courses=genSemesterCourses();
-  const credits=SEM_W[G.round]*courses.reduce((a,c)=>a+c.credit,0);   // §4.6 学期权重：高年级学分更“重”
+  const baseCredits=courses.reduce((a,c)=>a+c.credit,0);
+  const credits=SEM_W[G.round]*baseCredits;   // §4.6 学期权重：高年级学分更“重”，用于累计 GPA 加权
   const qpU=courses.reduce((a,c)=>a+c.p*c.credit,0);
   const qpW=courses.reduce((a,c)=>a+c.wp*c.credit,0);
-  const sem={i:G.round,courses,gpaU:clamp(qpU/credits,0,4),gpaW:clamp(qpW/credits,0,4),credits};
+  // 学期 GPA 改为「真实平均分」：用 baseCredits 做分母，避免 SEM_W 把初三 GPA 放大、高三 GPA 压扁。
+  // 加权 GPA 上限 5.0（AP A=5.0），未加权上限 4.0。
+  const gpaU=clamp(qpU/baseCredits,0,4);
+  const gpaW=clamp(qpW/baseCredits,0,5);
+  const sem={i:G.round,courses,gpaU,gpaW,credits};
   G.results.semesters.push(sem);
-  const avgU=courses.reduce((a,c)=>a+c.p,0)/courses.length;
-  pushLog(avgU>=3.7?"good":avgU>=3.0?"warn":"bad",
-    `【第 ${G.round+1} 学期成绩单】${courses.map(c=>c.g).join(" ")} · 学期 GPA ${sem.gpaU.toFixed(2)}（加权 ${sem.gpaW.toFixed(2)}）`);
+  pushLog(gpaU>=3.7?"good":gpaU>=3.0?"warn":"bad",
+    `【第 ${G.round+1} 学期成绩单】${courses.map(c=>c.g).join(" ")} · 学期 GPA ${gpaU.toFixed(2)}（加权 ${gpaW.toFixed(2)}）`);
   // 学期成长：六维（学术/英语/精力/创造力/社交/运气）里随机 3 个 +0.5，影响后续学期
   const growKeys=shuffle(Object.keys(STAT_NAMES)).slice(0,3);
   growKeys.forEach(k=>{ G.stats[k]=clamp(G.stats[k]+0.5,1,12); });
