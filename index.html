@@ -3599,8 +3599,18 @@ function goEnd(){
     ra.onclick=()=>{ rdBox.querySelectorAll('.offer').forEach(el=>el.classList.add('flipped')); rdBox.querySelector('#rdReveal').classList.remove('collapsed'); rdBox.querySelector('#rdSummary').classList.remove('collapsed'); ra.textContent='已拆开 ✓'; ra.disabled=true; renderLeaderboard(); };
     rdBox.querySelector('#uploadBtn').onclick=()=>openUploadForm(rdBox);
   }
-  const asc=SCHOOLS.map(sc=>({sc,P:admitProb(p,sc)})).sort((a,b)=>b.P-a.P);
-  $("allTable").innerHTML=`<div class="small" style="margin-bottom:6px">表中为<b>模型期望录取率（未含本季共同冲击 ε）</b>；实际摇号概率已含 ε，故会与表中数值略有偏差。</div><table class="mini"><tr><th>排名</th><th>中文</th><th>英文</th><th>RD 概率</th></tr>${asc.slice().reverse().map(x=>`<tr><td>${tagOf(x.sc)}</td><td>${x.sc.nameZh}</td><td>${x.sc.nameEn}</td><td>${(x.P*100).toFixed(1)}%</td></tr>`).join("")}</table>`;
+  // 与选校卡片、拆 offer 共用同一份本季 ε：这样表中数值与玩家在选校页看到的概率、最终摇号概率完全一致，
+  // 不再出现“表里 8%、卡片里 12%”的割裂（上一轮已把分档/卡片/摇号统一到 ε）。
+  const asc=SCHOOLS.map(sc=>{
+    const P=admitProb(p,sc,false,eps);
+    return {sc,P,
+      intl: sc.acceptRateIntl!=null?sc.acceptRateIntl.toFixed(1)+"%":"—",
+      satMid: sc.sat25!=null?Math.round((sc.sat25+sc.sat75)/2):"—"};
+  }).sort((a,b)=>b.P-a.P);
+  const epsNote = eps>0.01 ? `本季为「好年」（ε=${eps.toFixed(2)}），整体略高于中性基准。`
+                : eps<-0.01 ? `本季为「坏年」（ε=${eps.toFixed(2)}），整体略低于中性基准。`
+                : `本季为中性基准年。`;
+  $("allTable").innerHTML=`<div class="small" style="margin-bottom:6px">表中为<b>本季录取气候下（含共同冲击 ε）的 RD 期望录取率</b>，与上方选校卡片、拆 offer 时的概率<b>完全一致</b>。${epsNote}按由难到易（录取率从低到高）排列。</div><table class="mini"><tr><th>排名</th><th>中文</th><th>英文</th><th>国际录取率</th><th>SAT 中</th><th>RD 概率</th></tr>${asc.slice().reverse().map(x=>`<tr><td>${tagOf(x.sc)}</td><td>${x.sc.nameZh}</td><td>${x.sc.nameEn}</td><td>${x.intl}</td><td>${x.satMid}</td><td>${(x.P*100).toFixed(1)}%</td></tr>`).join("")}</table>`;
   renderLeaderboard();
   if(lbHasUploaded()) hideUploadUI(rdBox);
 }
