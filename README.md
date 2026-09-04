@@ -78,9 +78,9 @@ const LEADERBOARD = {
 **想让你自己的部署也用上共享榜？** 两种方式：
 
 1. 把你的域名加进 `LB_CLOUD_HOSTS` 正则里；
-2. 或者干脆建个自己的 Supabase 项目（免费），把 `mode` 改成 `"supabase"` 并填上你的 `url` 和 `anonKey`。建表 SQL 在 `index.html` 底部注释里。
+2. 或者干脆建个自己的 Supabase 项目（免费），把 `mode` 改成 `"supabase"` 并填上你的 `url` 和 `anonKey`。建表 SQL 与 **RLS 加固语句**见 [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md)。
 
-> ⚠️ 仓库里的 `anonKey` 是 Supabase 的**公开匿名密钥**，设计上就是可以暴露在前端的，安全性由 RLS 策略保证（匿名用户只能读、以及写入受约束的成绩，**没有删除权限**）。即便如此，它属于本项目维护者的线上数据库，请不要拿去做本项目以外的事。
+> ⚠️ 仓库里的 `anonKey` 是 Supabase 的**公开匿名密钥**，设计上就是可以暴露在前端的，安全性由 RLS 策略保证（匿名用户只能读、以及写入受约束的成绩，**没有删除权限**）。上线前务必按 `docs/SUPABASE_SETUP.md` 的「RLS 加固 SQL」执行，否则任何人都能清空榜单。它属于本项目维护者的线上数据库，请不要拿去做本项目以外的事。
 
 ---
 
