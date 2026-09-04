@@ -2,7 +2,7 @@
 
 > 用途：供其他 AI / 分析者完整理解本游戏的数值、公式与机制。单文件 HTML 游戏（`index.html`），无后端、无依赖（云端共享榜为可选 Supabase 外接）。
 > 本项目已开源（MIT 协议），欢迎贡献——见 [CONTRIBUTING.md](../CONTRIBUTING.md)。
-> 本文档对应代码状态：截至 2026-09-02（含压力系统①②③、评级拆 offer 后才显示、排行榜**默认本地且按域名判定**是否启用云端共享榜、上传后入口消失彻底防刷榜；已 commit/push）。
+> 本文档对应代码状态：截至 2026-09-04（含**压力机制重构：移除直接扣 GPA 的 `stressDrag`，改为 `pen()` 乘子让每次行动收益随压力递减**；评级拆 offer 后才显示；排行榜默认本地、按域名判定是否启用云端共享榜；上传后入口消失彻底防刷榜；源码拆分 + build.js 构建；已 commit/push）。
 
 ---
 
@@ -75,7 +75,7 @@
 ### 3.2 行动点、精力、压力
 - 每点行动消耗 1 AP + 行动自身 `energy`，并增加 `stress`。
 - `maxEnergy = 50 + 6*stamina + Σ(stamina 特质)`；开局精力 50（§4.3 斜率加陡：stamina 更值钱）。
-- `pen()`：当 `stress >= 70` 时行动收益 ×0.5（精力类/学术类生效减半）。
+- `pen()`：**压力→行动收益乘子**（核心压力机制，替代旧版直接扣 GPA）。`pen() = 1 - (1-FLOOR)*clamp((stress-START)/(100-START), 0, 1)`，常量 `STRESS_BENEFIT_START=20`、`STRESS_BENEFIT_FLOOR=0.5`（src/js/10-actions.js 顶部）。即压力 ≤20 收益不减，之后线性递减，压力 100 时收益降至 50%。**所有 `doXxx` 行动函数的收益都已乘以 `pen()`**，故高压时"每次行动收益更小"。
 - 休息（REST）：`energy -45, stress -14`（回血减压，但补偿有限，压力更黏）。
 - 回合结束 `endRound`：精力 `+10 + regen`，压力 `-2`（自动回落幅度小，需主动管理）。
 - 每学期自动减压小、事件/行动加压力为主，故全局 <30 不易达，需刻意休息。
@@ -85,7 +85,6 @@
 ```
 raw = 2.6 + 0.117*academic
     + (eRatio - 0.5)*0.45            # eRatio = 本学期平均精力 / maxEnergy
-    - (strAvg/100)*0.30               # strAvg = 本学期平均压力（用均值，避免“最后一动休息”刷 GPA）
     + (luck - 6)*0.03
     - LEVEL_DIFF[lvl]                 # AP:0.20  H:0.10  R:0
     + gauss(0, 0.22)                  # 随机波动
@@ -93,7 +92,7 @@ raw = 2.6 + 0.117*academic
 raw = clamp(raw, 0, 4.0)
 grade = snapGrade(raw)                # 取 GRADE_SCALE 最近点
 ```
-- **压力系统③（长期高压拖累 GPA）**：`closeSemester` 在算出 `gpaU/gpaW` 后，再减去 `stressDrag = K*(avgStress/10)²`（封顶 `CAP`），`K=0.008, CAP=0.45`。例：平均压力 30→扣 0.072、50→0.20、70→0.39、100→0.45。幅度轻但随压力二次加速，越高越明显；仅当 `drag>0.05` 时提示「长期高压拖累成绩」。
+- **压力不再直接扣 GPA**：旧版"压力系统③"（`stressDrag` 直接减 GPA）已移除。压力现在只通过 `pen()` 让"每次行动收益更小"来间接影响成绩（见 3.2）。`closeSemester` 仅 `clamp(qpU/credits, 0, 4)` 算 GPA，不再减 `drag`。
 - `GRADE_EASE = [0.6, 0.6, 0.3, 0.3, 0.1, 0.1, 0]`（索引 = round 0..6，初三/高一更易拿 A）。
 - `GRADE_SCALE`（绩点）：A4.0 / A-3.7 / B+3.3 / B3.0 / B-2.7 / C+2.3 / C2.0 / C-1.7 / D+1.3 / D1.0 / F0.0。
 - 未加权：`gpaU` 用 `p`（原始绩点）；加权：`gpaW` 用 `wp = min(5, p + LEVEL_BONUS[lvl])`（`AP:+1.0 / H:+0.5 / R:0`）。

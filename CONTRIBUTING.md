@@ -59,6 +59,76 @@ python3 -m http.server 8000     # 推荐用本地服务，避免个别浏览器�
 
 ---
 
+## 数据文件字段说明（改数据前先看这里）
+
+四个文件都是**纯 JSON，不能写注释**，所以字段含义统一记在这里。
+
+### `src/data/schools.json`（57 条，每条一所校）
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `rank` | int | 难度序号，`#1` 最难，仅用于展示与排序 |
+| `nameEn` / `nameZh` | str | 英文名 / 中文名 |
+| `state` | str | 美国州缩写（US 校）；其它地区可空 |
+| `type` | str | `private` / `public`（US 校展示用） |
+| `acceptRate` | float(%) | 总录取率，国内生基准 |
+| `acceptRateIntl` | float(%) | **国际生录取率——游戏对国际生玩家读的就是这个字段**；缺失时按 `acceptRate×0.6` 保守估算 |
+| `sat25` / `sat75` | int | SAT 25/75 分位，用于算录取概率的"真实中点" |
+| `act25` / `act75` | int | ACT 分位（当前模型只用 SAT，这两个字段预留） |
+| `gpaAvg` | float | 该校录取者平均未加权 GPA，是录取公式里 GPA 的 z 分数锚点 |
+| `toeflMin` | int \| null | 托福参考线；`null` 表示无硬性线（回退到 95） |
+| `intlPct` / `aidIntl` | — | 展示用（国际生占比 / 助学金政策） |
+| `ed` / `ea` / `rea` | bool | 是否提供 ED / EA / 限制性 EA（决定能否被选为 ED 校、展示用） |
+| `edAcceptRate` | float \| null | ED 录取率；`null` 表示无 ED。用于算 ED 相对 RD 的提升倍数（钳制 1~3 倍） |
+| `admitByMajor` | str | `holistic` / `major`（展示用） |
+| `dataYear` | str | **务必填真实数据年份 + 来源**（如 `"Fall 2025 (Class of 2029)"`），不要凭印象填 |
+| `notes` | str | 备注（数据出处、特殊政策等） |
+| `region` | str | `US` / `UK` / `HK`——决定榜单标签与录取口径 |
+
+### `src/data/traits.json`（10 条，开局随机抽 2 个）
+
+- `id` / `name` / `desc`：标识与展示文案
+- `fx`：特质加成对象。键是加成类型，分两类：
+  - **加性**（`sumFx(k)` 求和）：`energyRegen`（每回合精力恢复）、`luck` / `creativity` / `english`（开局六维加法）、`stamina` 等
+  - **乘性**（`mulFx(k)` 求积）：`stressMul`（压力增长倍率）、`energyCostMul`（精力消耗倍率）、`academicGain` / `socialGain` / `craftGain` / `englishGain`（对应行动收益倍率）
+
+### `src/data/majors.json`（7 条）
+
+- `id` / `name` / `icon` / `desc`：标识与展示
+- `related`：与该专业"对口"的**行动 id 数组**（如 `cs` 的 `["code","lab"]`）。对口行动收益更高、且持续涨"专业契合度"
+
+### `src/data/summer.json`（8 条，夏校申请季）
+
+- `name` / `sel` / `desc`：名称、展示录取率、简介
+- `need`：`{gpa, sat, academic, rep}` 准入门槛，达到才解锁（面板按此判定）
+- `boost`：float，通过该夏校给的 spike / summerPts 加成量
+
+> 改完数据记得 `node build.js` 重新生成 `index.html`。
+
+---
+
+## 常见修改速查表
+
+| 我想改… | 去哪里改 |
+|---|---|
+| 加 / 改一所学校 | `src/data/schools.json`（见上表字段） |
+| 加一个天性特质 | `src/data/traits.json` + 在 `fx` 里写加成键 |
+| 加一个专业方向 | `src/data/majors.json` + 填 `related` 对口行动 |
+| 加一个夏校 | `src/data/summer.json`（含 `need` 门槛与 `boost`） |
+| 调行动收益（标化 / 活动 / 文书…） | `src/js/10-actions.js` 里对应的 `doXxx()` 函数 |
+| 调**压力→收益**曲线 | `src/js/10-actions.js` 顶部的 `STRESS_BENEFIT_START` / `STRESS_BENEFIT_FLOOR`（`pen()` 函数） |
+| 调 GPA 公式 / 学期权重 | `src/js/11-semester.js`（公式）+ `src/js/02-config.js` 的 `SEM_W` / `GRADE_EASE` |
+| 调录取概率 / 分档 | `src/js/15-admit.js` 的 `admitProb()` + `src/js/02-config.js` 的 `ADMIT_SCALE`；分档阈值在 `src/js/13-pick.js` 的 `buildBands()` |
+| 加随机事件 | `src/js/08-events.js` 的 `EVENTS`（`stage` 字段必须匹配年级） |
+| 加成就 | `src/js/04-achievements.js` 的 `ACHIEVEMENTS`（`test` 判定函数） |
+| 改玩法说明文案 | `src/js/17-help.js` 的 `HELP` |
+| 改 UI 样式 | `src/styles.css`（优先动 CSS 变量，别硬编码颜色） |
+| 改排行榜（本地 / Supabase） | `src/js/16-leaderboard.js` + `src/js/02-config.js` 的 `LEADERBOARD` |
+
+
+
+---
+
 ## 常见改动怎么改
 
 ### 加一所学校 / 更新录取数据
@@ -92,6 +162,7 @@ python3 -m http.server 8000     # 推荐用本地服务，避免个别浏览器�
 3. **赛季共同冲击 ε 只在 `goPick` 里抽一次**，存进 `G.seasonEps`，之后 ED 卡片、RD 候选卡、拆 offer 摇号全部复用它。如果在 `goEnd` 里再抽一次，玩家会看到"拆 offer 前的概率和拆完的不一样"，像是 bug。
 4. **排行榜上传后入口要消失**：这是防刷榜设计（本机标记 `usadmit_lb_uploaded`）。改动上传流程时别把这个行为弄丢了。
 5. **默认本地榜**：`LEADERBOARD.mode` 靠 `LB_CLOUD_HOSTS` 正则判断是否官方域名。请不要无条件改成 `"supabase"`，否则所有 fork 的测试数据都会灌进正式榜单。
+6. **压力机制只有一条通路**：压力**不再直接扣 GPA**，而是靠 `src/js/10-actions.js` 里的 `pen()` 乘子让"每次行动收益随压力递减"（覆盖常规行动与随机行动）。**不要再加回直接减 GPA 的代码**（旧的 `stressDrag()` / `raw -= strAvg/...` 已移除）。要调压力强度，只改 `STRESS_BENEFIT_START` / `STRESS_BENEFIT_FLOOR` 两个常量即可。
 
 ---
 

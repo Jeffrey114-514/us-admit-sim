@@ -215,15 +215,16 @@ function doZk(){
   G.results.reputation=clamp(G.results.reputation+1,0,100);
   return ["good",`中考刷题，学术 +${g.toFixed(2)}、履历 +1、声望 +1。`];
 }
-function pen(){ return 1 - 0.45*clamp((G.stress-45)/45,0,1); }   // §4.2 去悬崖：45 分起线性衰减，不再有“卡 69 免疫”
-// #7：事件造成的压力统一走此函数，套用抗压/玻璃心等 stressMul 特质倍率（动作压力已在 doAction 走倍率，事件此前绕过）
-function addStress(g,n){ g.stress=clamp(g.stress + n*mulFx('stressMul',1), 0, 100); }
-// 压力系统③：长期高压拖累 GPA——压力越高拖累越明显（每 ~10 点加速），但幅度很轻。
-// 用「本学期平均压力」衡量，避免玩家靠期末前休息刷掉惩罚；二次项让高压力区效果更显著。
-const STRESS_GPA_DRAG_K=0.008;      // 二次项系数：drag = K*(avgStress/10)^2
-const STRESS_GPA_DRAG_CAP=0.45;     // 单学期 GPA 最多被拖累的点数（封顶，避免极端值摧毁成绩）
-function stressDrag(){
-  const s = (G.semAcc && G.semAcc.n) ? G.semAcc.sSum/G.semAcc.n : G.stress;  // 本学期平均压力
-  const t = s/10;
-  return Math.min(STRESS_GPA_DRAG_CAP, STRESS_GPA_DRAG_K*t*t);
+// 压力 → 行动收益乘子（核心压力机制，替代旧版「直接扣 GPA」）
+// 设计意图：压力不再直接对 GPA 做减法；改为「压力越高，常规行动与随机行动的每次收益越小」。
+// 所有 doX 行动函数都已把各自的收益乘以 pen()，所以调低 pen() 即全局削弱高压下的成长效率。
+// 调参只看下面两个常量：
+//   STRESS_BENEFIT_START：压力低于此值收益不减（默认 20，单位 0~100）
+//   STRESS_BENEFIT_FLOOR：高压时收益乘子的下限（默认 0.5，即最高压时收益降至 50%）。
+const STRESS_BENEFIT_START=20;
+const STRESS_BENEFIT_FLOOR=0.5;
+function pen(){
+  return 1 - (1-STRESS_BENEFIT_FLOOR)*clamp((G.stress-STRESS_BENEFIT_START)/(100-STRESS_BENEFIT_START),0,1);
 }
+// 事件造成的压力统一走此函数，套用抗压/玻璃心等 stressMul 特质倍率（行动压力在 doAction 已走倍率）
+function addStress(g,n){ g.stress=clamp(g.stress + n*mulFx('stressMul',1), 0, 100); }

@@ -2794,18 +2794,19 @@ function doZk(){
   G.results.reputation=clamp(G.results.reputation+1,0,100);
   return ["good",`中考刷题，学术 +${g.toFixed(2)}、履历 +1、声望 +1。`];
 }
-function pen(){ return 1 - 0.45*clamp((G.stress-45)/45,0,1); }   // §4.2 去悬崖：45 分起线性衰减，不再有“卡 69 免疫”
-// #7：事件造成的压力统一走此函数，套用抗压/玻璃心等 stressMul 特质倍率（动作压力已在 doAction 走倍率，事件此前绕过）
-function addStress(g,n){ g.stress=clamp(g.stress + n*mulFx('stressMul',1), 0, 100); }
-// 压力系统③：长期高压拖累 GPA——压力越高拖累越明显（每 ~10 点加速），但幅度很轻。
-// 用「本学期平均压力」衡量，避免玩家靠期末前休息刷掉惩罚；二次项让高压力区效果更显著。
-const STRESS_GPA_DRAG_K=0.008;      // 二次项系数：drag = K*(avgStress/10)^2
-const STRESS_GPA_DRAG_CAP=0.45;     // 单学期 GPA 最多被拖累的点数（封顶，避免极端值摧毁成绩）
-function stressDrag(){
-  const s = (G.semAcc && G.semAcc.n) ? G.semAcc.sSum/G.semAcc.n : G.stress;  // 本学期平均压力
-  const t = s/10;
-  return Math.min(STRESS_GPA_DRAG_CAP, STRESS_GPA_DRAG_K*t*t);
+// 压力 → 行动收益乘子（核心压力机制，替代旧版「直接扣 GPA」）
+// 设计意图：压力不再直接对 GPA 做减法；改为「压力越高，常规行动与随机行动的每次收益越小」。
+// 所有 doX 行动函数都已把各自的收益乘以 pen()，所以调低 pen() 即全局削弱高压下的成长效率。
+// 调参只看下面两个常量：
+//   STRESS_BENEFIT_START：压力低于此值收益不减（默认 20，单位 0~100）
+//   STRESS_BENEFIT_FLOOR：高压时收益乘子的下限（默认 0.5，即最高压时收益降至 50%）。
+const STRESS_BENEFIT_START=20;
+const STRESS_BENEFIT_FLOOR=0.5;
+function pen(){
+  return 1 - (1-STRESS_BENEFIT_FLOOR)*clamp((G.stress-STRESS_BENEFIT_START)/(100-STRESS_BENEFIT_START),0,1);
 }
+// 事件造成的压力统一走此函数，套用抗压/玻璃心等 stressMul 特质倍率（行动压力在 doAction 已走倍率）
+function addStress(g,n){ g.stress=clamp(g.stress + n*mulFx('stressMul',1), 0, 100); }
 
 /* 11-semester.js — 每学期成绩单生成与结算 */
 /* ---------- GPA：每学期成绩单 ---------- */
@@ -2815,13 +2816,11 @@ const GRADE_EASE=[0.6,0.6,0.3,0.3,0.1,0.1,0];
 function genSemesterCourses(){
   const plan=RIGOR[G.rigor].mix, courses=[];
   const eRatio=G.semAcc.n ? G.semAcc.eSum/G.semAcc.n : G.energy/maxEnergy();
-  const strAvg=G.semAcc.n ? G.semAcc.sSum/G.semAcc.n : G.stress;
   const ease=GRADE_EASE[G.round]||0;
   for(const [lvl,n] of plan){
     for(let i=0;i<n;i++){
       let raw=2.6+0.117*G.stats.academic;
       raw+=(eRatio-0.5)*0.45;
-      raw-=strAvg/100*0.30;   // #3 用学期压力均值，避免“最后一动休息”微操刷 GPA
       raw+=(G.stats.luck-6)*0.03;
       raw-=LEVEL_DIFF[lvl];
       raw+=ease;   // 低年级更易拿 A：中低学术也能全 A
@@ -2838,13 +2837,11 @@ function closeSemester(){
   const credits=SEM_W[G.round]*courses.reduce((a,c)=>a+c.credit,0);   // §4.6 学期权重：高年级学分更“重”
   const qpU=courses.reduce((a,c)=>a+c.p*c.credit,0);
   const qpW=courses.reduce((a,c)=>a+c.wp*c.credit,0);
-  const drag=stressDrag();   // 压力系统③：高压拖累本学期 GPA
-  const sem={i:G.round,courses,gpaU:clamp(qpU/credits-drag,0,4),gpaW:clamp(qpW/credits-drag,0,4),credits,drag};
+  const sem={i:G.round,courses,gpaU:clamp(qpU/credits,0,4),gpaW:clamp(qpW/credits,0,4),credits};
   G.results.semesters.push(sem);
   const avgU=courses.reduce((a,c)=>a+c.p,0)/courses.length;
   pushLog(avgU>=3.7?"good":avgU>=3.0?"warn":"bad",
     `【第 ${G.round+1} 学期成绩单】${courses.map(c=>c.g).join(" ")} · 学期 GPA ${sem.gpaU.toFixed(2)}（加权 ${sem.gpaW.toFixed(2)}）`);
-  if(drag>0.05) pushLog("warn",`😰 长期高压拖累成绩：本学期 GPA 被扣 ${drag.toFixed(2)} 点。`);   // 压力系统③：略显压力后果
   // 学期成长：六维（学术/英语/精力/创造力/社交/运气）里随机 3 个 +0.5，影响后续学期
   const growKeys=shuffle(Object.keys(STAT_NAMES)).slice(0,3);
   growKeys.forEach(k=>{ G.stats[k]=clamp(G.stats[k]+0.5,1,12); });
@@ -3776,7 +3773,8 @@ const HELP=`<div class="help-sec"><h3>这游戏在玩什么</h3>
 
 <div class="help-sec"><h3>GPA</h3>
 <p>每学期 5 门课，按公式算连续分再就近映射字母等级（A=4.0…F=0）：</p>
-<p><code>2.6 + 0.117×学术 + (精力占比−0.5)×0.45 − 压力×0.30 + (运气−6)×0.03 − 难度惩罚 + 随机</code></p>
+<p><code>2.6 + 0.117×学术 + (精力占比−0.5)×0.45 + (运气−6)×0.03 − 难度惩罚 + 随机</code></p>
+<p style="margin-top:4px"><small>注：压力不再直接扣 GPA，而是通过「压力越高、每次行动收益越小」间接影响成绩（见下方「精力、压力、声望」）。</small></p>
 <ul>
 <li>难度惩罚：AP −0.20 / Honors −0.10 / 常规 0（AP 更难拿 A，但加权更高）。</li>
 <li>加权绩点：AP +1.0 / Honors +0.5 / 常规 0，上限 5.0。</li>
@@ -3795,7 +3793,7 @@ const HELP=`<div class="help-sec"><h3>这游戏在玩什么</h3>
 <div class="help-sec"><h3>精力、压力、声望</h3>
 <ul>
 <li><b>精力</b>：行动消耗，低则拉低成绩；休息常驻可回血。</li>
-<li><b>压力</b>：行动会加压力，高压时收益减半、考试扣分。休息仅降 14、每学期自动回落仅 2 点——压力更黏；压力越高，本学期 GPA 还会被悄悄拖累。</li>
+<li><b>压力</b>：行动会加压力；<b>压力越高，常规行动与随机行动的每次收益越小</b>（不再直接扣 GPA）。高压时考试也会扣分；休息仅降 14、每学期自动回落仅 2 点——压力更黏，所以要及时休息。</li>
 <li><b>声望</b>：社团/人脉/竞赛累积，影响推荐信与录取（最高 +0.12）。</li>
 </ul></div>
 
