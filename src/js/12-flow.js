@@ -68,6 +68,12 @@ function doAction(a){
   G.stress=clamp(G.stress+ds,0,100);
   G.results.stressMax=Math.max(G.results.stressMax,G.stress);
   let r=a.run();
+  // 压力可见化：pen()<1 表示当前压力正在削减本次行动收益，在记录里标注出来，
+  // 否则玩家完全看不到「压力造成的效果」。rest 没有可削减的收益；sat/toefl 已有自己的「高压扣分」标注，不再重复。
+  const pf=pen();
+  if(pf<0.98 && !["rest","sat","toefl"].includes(a.id)){
+    r[1]+=`（压力 ${Math.round(G.stress)}%：本次收益 ×${pf.toFixed(2)}）`;
+  }
   const mg=majorGainFrom(a);
   if(mg){ bumpFit(mg); r[1]+=`（契合专业，契合度 +${mg}）`; }
   pushLog(r[0],`【${a.name}】${r[1]}`);
