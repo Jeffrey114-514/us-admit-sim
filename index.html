@@ -195,6 +195,17 @@ table.mini th,table.mini td,table.trans th,table.trans td{padding:6px 8px;border
 table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase}
 .gpill{display:inline-block;min-width:20px;text-align:center;border:1px solid var(--line2);font-size:11px;padding:0 4px;margin-right:3px}
 .collapsed{display:none}
+
+/* 常驻排行榜浮窗 + 弹层 */
+.lb-float{position:fixed;right:16px;bottom:16px;z-index:50;display:inline-flex;align-items:center;gap:6px;padding:10px 15px;border:1px solid var(--line2);border-radius:999px;background:var(--accent);color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 5px 16px rgba(0,0,0,.2)}
+.lb-float:hover{filter:brightness(1.07)}
+.lb-overlay{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(20,18,15,.45);padding:18px}
+.lb-overlay.show{display:flex}
+.lb-modal{width:min(560px,94vw);max-height:86vh;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line2);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden}
+.lb-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);font-weight:700;color:var(--ink)}
+.lb-x{border:none;background:transparent;color:var(--mut);font-size:18px;line-height:1;cursor:pointer;padding:2px 7px;border-radius:8px}
+.lb-x:hover{background:var(--paper);color:var(--ink)}
+.lb-modal-body{padding:14px 16px;overflow:auto}
 /* 拆 offer 翻牌 */
 .rdbar{display:flex;gap:10px;align-items:center;margin:2px 0 12px;flex-wrap:wrap}
 .offers{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
@@ -407,6 +418,18 @@ table.mini th,table.trans th{color:var(--mut);font-weight:600;font-size:10px;let
     <div class="card" id="helpBody"></div>
     <div style="text-align:center"><button class="btn ghost" id="helpBackBtn">返回</button></div>
   </section>
+</div>
+
+<!-- 常驻排行榜入口：任何界面随时点开查看实时榜（仅查看，不含上传） -->
+<button id="lbFloatBtn" class="lb-float" title="查看实时排行榜">🏆 排行榜</button>
+<div id="lbModal" class="lb-overlay">
+  <div class="lb-modal">
+    <div class="lb-modal-head">
+      <span>🏆 实时排行榜 · 录取最优战绩</span>
+      <button id="lbModalClose" class="lb-x" title="关闭">✕</button>
+    </div>
+    <div id="lbModalPanel" class="lb-modal-body"><div class="small">读取中…</div></div>
+  </div>
 </div>
 
 <!-- 排行榜共享榜客户端：默认不加载外部脚本，避免阻塞页面渲染。只有在 LEADERBOARD.mode="supabase" 且填好 url/anonKey 时，才由 ensureSupabase() 按需异步注入 CDN 脚本；加载失败自动回退本地榜 -->
@@ -2036,14 +2059,20 @@ function lbDedupe(rows){
   (rows||[]).forEach(e=>{ if(!byId[e.id] || (e.score||0)>(byId[e.id].score||0)) byId[e.id]=e; });
   return Object.values(byId).sort((a,b)=>(b.score||0)-(a.score||0));
 }
-async function renderLeaderboard(){
-  const el=document.getElementById("lbPanel"); if(!el) return;
+async function renderLeaderboard(el, opts){
+  el = el || document.getElementById("lbPanel"); if(!el) return;
+  opts = opts || {};
   const rows=lbDedupe(await lbFetch());
-  if(!rows.length){ el.innerHTML=`<div class="small">还没有人上传成绩。拆开 offer 后，点「上传到排行榜」留下你的名字吧！</div>`; return; }
-  const uploaded=lbHasUploaded();
-  const note = uploaded
-    ? `<div class="small" style="margin-top:6px">本机已留名 · <a href="#" id="lbReset" style="color:var(--good)">重新上传</a></div>`
-    : (LEADERBOARD.mode==="supabase"?`<div class="small" style="margin-top:6px">共享榜（Supabase）· 实时</div>`:`<div class="small" style="margin-top:6px">本地榜（本机）· 在 LEADERBOARD 配置里填好 Supabase 即可升级为跨玩家共享榜</div>`);
+  if(!rows.length){ el.innerHTML=`<div class="small">还没有人上传成绩。${opts.upload===false?'':'拆开 offer 后，点「上传到排行榜」留下你的名字吧！'}</div>`; return; }
+  let note='';
+  if(opts.upload===false){
+    note=`<div class="small" style="margin-top:6px">${LEADERBOARD.mode==="supabase"?"共享榜（Supabase）· 实时":"本地榜（本机）"}</div>`;
+  }else{
+    const uploaded=lbHasUploaded();
+    note = uploaded
+      ? `<div class="small" style="margin-top:6px">本机已留名 · <a href="#" id="lbReset" style="color:var(--good)">重新上传</a></div>`
+      : (LEADERBOARD.mode==="supabase"?`<div class="small" style="margin-top:6px">共享榜（Supabase）· 实时</div>`:`<div class="small" style="margin-top:6px">本地榜（本机）· 在 LEADERBOARD 配置里填好 Supabase 即可升级为跨玩家共享榜</div>`);
+  }
   el.innerHTML=`<table class="mini"><tr><th>#</th><th>玩家</th><th>最佳录取</th><th>评级</th><th>分数</th></tr>`+
     rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.school)}（${escapeHtml(r.band)}）</td><td>${escapeHtml(r.grade)}</td><td><b>${r.score}</b></td></tr>`).join("")+`</table>`+note;
   const reset=el.querySelector('#lbReset');
@@ -2185,6 +2214,16 @@ $("helpBackBtn").onclick=()=>{
 $("edPickBtn").onclick=edPick;
 $("edClearBtn").onclick=clearED;
 $("summerApplyBtn").onclick=summerApply;
+// 常驻排行榜弹层：任何界面随时查看实时榜
+const lbModal=$("lbModal");
+function openLbModal(){
+  lbModal.classList.add("show");
+  $("lbModalPanel").innerHTML=`<div class="small">读取中…</div>`;
+  renderLeaderboard($("lbModalPanel"), {upload:false});
+}
+$("lbFloatBtn").onclick=openLbModal;
+$("lbModalClose").onclick=()=>lbModal.classList.remove("show");
+lbModal.addEventListener("click", e=>{ if(e.target===lbModal) lbModal.classList.remove("show"); });
 rollTraits();
 renderSetup();
 
